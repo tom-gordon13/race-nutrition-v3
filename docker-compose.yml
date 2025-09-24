@@ -1,0 +1,47 @@
+services:
+  ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      # Mount source code for hot reloading (simplified)
+      - ./ui/src:/app/src
+      - ./ui/public:/app/public
+      # Mount data directory for SQLite database access
+      - ./data:/app/data
+    env_file:
+      - ./ui/.env.local
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+      - DATABASE_URL=sqlite:///app/data/race_nutrition.db
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    depends_on:
+      - db-init
+
+  db-init:
+    image: alpine:latest
+    volumes:
+      - ./data:/data
+      - ./db/init.sql:/init.sql
+    command: >
+      sh -c "
+        apk add --no-cache sqlite &&
+        mkdir -p /data &&
+        if [ ! -f /data/race_nutrition.db ]; then
+          echo 'Creating new database...' &&
+          if [ -f /init.sql ]; then
+            sqlite3 /data/race_nutrition.db < /init.sql;
+          else
+            sqlite3 /data/race_nutrition.db 'CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);';
+          fi &&
+          echo 'Database created successfully';
+        else
+          echo 'Database already exists, skipping initialization';
+        fi
+      "
+    restart: "no"

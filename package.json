@@ -1,0 +1,17 @@
+{
+    "name": "race-nutrition",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "cd ui && npm run dev",
+        "build": "cd ui && npm run build",
+        "lint": "cd ui && npm run lint",
+        "preview": "cd ui && npm run preview",
+        "install:ui": "cd ui && npm install",
+        "clean": "rm -rf dist"
+    },
+    "dependencies": {
+        "@auth0/auth0-react": "^2.4.0"
+    }
+}
