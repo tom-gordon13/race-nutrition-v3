@@ -3,7 +3,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import Nav from './Nav';
 import Home from './Home';
 
-function App() {
+const App = () => {
   const { loginWithRedirect, isAuthenticated, isLoading } = useAuth0();
 
   if (isLoading) {

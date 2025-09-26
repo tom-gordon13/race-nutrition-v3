@@ -4,7 +4,7 @@ interface NavProps {
   className?: string;
 }
 
-function Nav({ className = "" }: NavProps) {
+const Nav = ({ className = "" }: NavProps) => {
   const { logout, user } = useAuth0();
 
   const handleSignOut = () => {
@@ -20,7 +20,7 @@ function Nav({ className = "" }: NavProps) {
         <div className="nav-right">
           <div className="nav-user">
             <span className="user-name">Hello, {user?.name}</span>
-            <button 
+            <button
               onClick={handleSignOut}
               className="sign-out-btn"
             >
