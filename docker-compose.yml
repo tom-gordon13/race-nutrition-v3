@@ -1,4 +1,25 @@
 services:
+  api:
+    build:
+      context: .
+      dockerfile: ./api/Dockerfile
+    ports:
+      - "3001:3001"
+    volumes:
+      # Mount source code for hot reloading
+      - ./api/src:/app/api/src
+      # Mount prisma directory for migrations
+      - ./prisma:/app/prisma
+      # Mount prisma config
+      - ./prisma.config.ts:/app/prisma.config.ts
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=file:./dev.db
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    command: sh -c "echo 'Generating Prisma client...' && npx prisma generate --schema=./prisma/schema.prisma && echo 'Running migrations...' && npx prisma migrate deploy && echo 'Starting server...' && npx tsx watch api/src/server.ts"
+
   ui:
     build:
       context: ./ui
@@ -9,39 +30,14 @@ services:
       # Mount source code for hot reloading (simplified)
       - ./ui/src:/app/src
       - ./ui/public:/app/public
-      # Mount data directory for SQLite database access
-      - ./data:/app/data
     env_file:
       - ./ui/.env.local
     environment:
       - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=true
-      - DATABASE_URL=sqlite:///app/data/race_nutrition.db
+      - VITE_API_URL=http://localhost:3001
     stdin_open: true
     tty: true
     restart: unless-stopped
     depends_on:
-      - db-init
-
-  db-init:
-    image: alpine:latest
-    volumes:
-      - ./data:/data
-      - ./db/init.sql:/init.sql
-    command: >
-      sh -c "
-        apk add --no-cache sqlite &&
-        mkdir -p /data &&
-        if [ ! -f /data/race_nutrition.db ]; then
-          echo 'Creating new database...' &&
-          if [ -f /init.sql ]; then
-            sqlite3 /data/race_nutrition.db < /init.sql;
-          else
-            sqlite3 /data/race_nutrition.db 'CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);';
-          fi &&
-          echo 'Database created successfully';
-        else
-          echo 'Database already exists, skipping initialization';
-        fi
-      "
-    restart: "no"
+      - api
