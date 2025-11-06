@@ -32,6 +32,9 @@ const Events = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  // Selected event state
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+
   // Form state
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [eventType, setEventType] = useState('');
@@ -138,124 +141,156 @@ const Events = () => {
   }
 
   return (
-    <div>
-      <h2>My Events</h2>
+    <div className={`events-container ${selectedEvent ? 'split-view' : ''}`}>
+      <div className={`events-panel ${selectedEvent ? 'vertical' : ''}`}>
+        <h2>My Events</h2>
 
-      {error && <div className="error-message">{error}</div>}
-      {success && <div className="success-message">{success}</div>}
+        {error && <div className="error-message">{error}</div>}
+        {success && <div className="success-message">{success}</div>}
 
-      <div style={{ marginBottom: '1rem' }}>
-        <button
-          onClick={() => setShowCreateForm(!showCreateForm)}
-          className="add-nutrient-btn"
-        >
-          {showCreateForm ? 'Cancel' : '+ Create New Event'}
-        </button>
+        <div style={{ marginBottom: '1rem' }}>
+          <button
+            onClick={() => setShowCreateForm(!showCreateForm)}
+            className="add-nutrient-btn"
+          >
+            {showCreateForm ? 'Cancel' : '+ Create New Event'}
+          </button>
+        </div>
+
+        {showCreateForm && (
+          <div className="create-food-item" style={{ marginBottom: '2rem' }}>
+            <h3>Create New Event</h3>
+            <form onSubmit={handleCreateEvent}>
+              <div className="form-group">
+                <label htmlFor="eventType">Event Type *</label>
+                <input
+                  type="text"
+                  id="eventType"
+                  value={eventType}
+                  onChange={(e) => setEventType(e.target.value)}
+                  required
+                  placeholder="e.g., Marathon, Half Marathon, 10K"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Expected Duration</label>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <div>
+                    <input
+                      type="number"
+                      id="hoursInput"
+                      value={hoursInput}
+                      onChange={(e) => setHoursInput(e.target.value)}
+                      min={0}
+                      step={1}
+                      placeholder="Hours"
+                      inputMode="numeric"
+                      style={{ width: '6rem' }}
+                    />
+                    <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>hours</div>
+                  </div>
+                  <div>
+                    <input
+                      type="number"
+                      id="minutesInput"
+                      value={minutesInput}
+                      onChange={(e) => setMinutesInput(e.target.value)}
+                      min={0}
+                      max={59}
+                      step={1}
+                      placeholder="Minutes"
+                      inputMode="numeric"
+                      style={{ width: '6rem' }}
+                    />
+                    <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>minutes</div>
+                  </div>
+                  <div>
+                    <input
+                      type="number"
+                      id="secondsInput"
+                      value={secondsInput}
+                      onChange={(e) => setSecondsInput(e.target.value)}
+                      min={0}
+                      max={59}
+                      step={1}
+                      placeholder="Seconds"
+                      inputMode="numeric"
+                      style={{ width: '6rem' }}
+                    />
+                    <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>seconds</div>
+                  </div>
+                </div>
+                {(hoursInput !== '' || minutesInput !== '' || secondsInput !== '') && (
+                  <small style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                    {previewSeconds !== null
+                      ? `→ ${previewSeconds}s (${formatDuration(previewSeconds)})`
+                      : 'Enter valid time (mm and ss 0–59)'}
+                  </small>
+                )}
+              </div>
+
+              <button type="submit" disabled={submitting || !eventType || previewSeconds === null} className="submit-btn">
+                {submitting ? 'Creating...' : 'Create Event'}
+              </button>
+            </form>
+          </div>
+        )}
+
+        <p>Total Events: {events.length}</p>
+
+        {events.length === 0 ? (
+          <p>No events found. Create your first event above!</p>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Event Type</th>
+                <th>Expected Duration</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody>
+              {events.map((event) => (
+                <tr
+                  key={event.id}
+                  onClick={() => setSelectedEvent(event)}
+                  className={selectedEvent?.id === event.id ? 'selected' : ''}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <td>{event.type}</td>
+                  <td>{formatDuration(event.expected_duration)}</td>
+                  <td>{new Date(event.created_at).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
-      {showCreateForm && (
-        <div className="create-food-item" style={{ marginBottom: '2rem' }}>
-          <h3>Create New Event</h3>
-          <form onSubmit={handleCreateEvent}>
-            <div className="form-group">
-              <label htmlFor="eventType">Event Type *</label>
-              <input
-                type="text"
-                id="eventType"
-                value={eventType}
-                onChange={(e) => setEventType(e.target.value)}
-                required
-                placeholder="e.g., Marathon, Half Marathon, 10K"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Expected Duration</label>
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                <div>
-                  <input
-                    type="number"
-                    id="hoursInput"
-                    value={hoursInput}
-                    onChange={(e) => setHoursInput(e.target.value)}
-                    min={0}
-                    step={1}
-                    placeholder="Hours"
-                    inputMode="numeric"
-                    style={{ width: '6rem' }}
-                  />
-                  <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>hours</div>
-                </div>
-                <div>
-                  <input
-                    type="number"
-                    id="minutesInput"
-                    value={minutesInput}
-                    onChange={(e) => setMinutesInput(e.target.value)}
-                    min={0}
-                    max={59}
-                    step={1}
-                    placeholder="Minutes"
-                    inputMode="numeric"
-                    style={{ width: '6rem' }}
-                  />
-                  <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>minutes</div>
-                </div>
-                <div>
-                  <input
-                    type="number"
-                    id="secondsInput"
-                    value={secondsInput}
-                    onChange={(e) => setSecondsInput(e.target.value)}
-                    min={0}
-                    max={59}
-                    step={1}
-                    placeholder="Seconds"
-                    inputMode="numeric"
-                    style={{ width: '6rem' }}
-                  />
-                  <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>seconds</div>
-                </div>
-              </div>
-              {(hoursInput !== '' || minutesInput !== '' || secondsInput !== '') && (
-                <small style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-                  {previewSeconds !== null
-                    ? `→ ${previewSeconds}s (${formatDuration(previewSeconds)})`
-                    : 'Enter valid time (mm and ss 0–59)'}
-                </small>
-              )}
-            </div>
-
-            <button type="submit" disabled={submitting || !eventType || previewSeconds === null} className="submit-btn">
-              {submitting ? 'Creating...' : 'Create Event'}
+      {selectedEvent && (
+        <div className="event-detail-panel">
+          <div className="event-detail-header">
+            <h3>{selectedEvent.type}</h3>
+            <button
+              onClick={() => setSelectedEvent(null)}
+              className="close-btn"
+            >
+              ✕
             </button>
-          </form>
+          </div>
+          <div className="event-timeline">
+            <div className="timeline-section"></div>
+            <div className="timeline-divider"></div>
+            <div className="timeline-section"></div>
+            <div className="timeline-divider"></div>
+            <div className="timeline-section"></div>
+            <div className="timeline-divider"></div>
+            <div className="timeline-section"></div>
+            <div className="timeline-divider"></div>
+            <div className="timeline-section"></div>
+          </div>
         </div>
-      )}
-
-      <p>Total Events: {events.length}</p>
-
-      {events.length === 0 ? (
-        <p>No events found. Create your first event above!</p>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Event Type</th>
-              <th>Expected Duration</th>
-              <th>Created</th>
-            </tr>
-          </thead>
-          <tbody>
-            {events.map((event) => (
-              <tr key={event.id}>
-                <td>{event.type}</td>
-                <td>{formatDuration(event.expected_duration)}</td>
-                <td>{new Date(event.created_at).toLocaleDateString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
       )}
     </div>
   );
