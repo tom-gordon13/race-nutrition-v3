@@ -7,24 +7,16 @@ export const useUserSync = () => {
   const { user, isAuthenticated, isLoading } = useAuth0();
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
-  const [hasSynced, setHasSynced] = useState(false);
-
-  console.log('useUserSync - isAuthenticated:', isAuthenticated, 'isLoading:', isLoading, 'user:', user?.sub);
+  const [hasSynced, setHasSynced] = useState(false)
 
   useEffect(() => {
     const syncUser = async () => {
-      console.log('syncUser called - checking conditions...');
-      console.log('- isAuthenticated:', isAuthenticated);
-      console.log('- user:', user?.sub);
-      console.log('- isLoading:', isLoading);
-      console.log('- hasSynced:', hasSynced);
 
       if (!isAuthenticated || !user || isLoading || hasSynced) {
         console.log('Early return - conditions not met');
         return;
       }
 
-      console.log('Starting user sync to:', `${API_URL}/api/auth/sync-user`);
       setIsSyncing(true);
       setSyncError(null);
 

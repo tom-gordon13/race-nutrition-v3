@@ -9,8 +9,6 @@ router.post('/sync-user', async (req, res) => {
   try {
     const { auth0Sub, email, firstName, lastName } = req.body;
 
-    console.log('User login - Auth0 Username:', auth0Sub);
-    console.log('User details:', { email, firstName, lastName });
 
     if (!auth0Sub || !firstName || !lastName) {
       return res.status(400).json({

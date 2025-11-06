@@ -133,6 +133,55 @@
   box-sizing: border-box;
 }
 
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.tab {
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: none;
+  color: rgba(255, 255, 255, 0.87);
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 8px 8px 0 0;
+  margin-bottom: 0;
+  transition: all 0.25s;
+}
+
+.tab:hover {
+  background-color: rgba(100, 108, 255, 0.15);
+  border-color: rgba(100, 108, 255, 0.3);
+}
+
+.tab.active {
+  background-color: rgba(100, 108, 255, 0.2);
+  color: #646cff;
+  border-color: #646cff;
+  border-bottom-color: transparent;
+  font-weight: 600;
+}
+
+.tab-content {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Login container for unauthenticated users */
 .login-container {
   display: flex;
@@ -202,20 +251,214 @@
   }
 }
 
+/* Table styles */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+thead {
+  background-color: rgba(100, 108, 255, 0.1);
+}
+
+th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #646cff;
+  border-bottom: 2px solid rgba(100, 108, 255, 0.3);
+}
+
+td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+tbody tr:hover {
+  background-color: rgba(100, 108, 255, 0.05);
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Form styles */
+.create-food-item {
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 2rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.create-food-item h2 {
+  margin-top: 0;
+  color: #646cff;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+  flex: 1;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.87);
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background-color: rgba(0, 0, 0, 0.2);
+  color: rgba(255, 255, 255, 0.87);
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #646cff;
+  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);
+}
+
+.form-group input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.nutrients-section {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+.nutrients-section h3 {
+  margin-top: 0;
+  color: rgba(255, 255, 255, 0.87);
+}
+
+.nutrient-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  align-items: flex-end;
+}
+
+.add-nutrient-btn {
+  background-color: rgba(100, 108, 255, 0.2);
+  color: #646cff;
+  border: 1px solid #646cff;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.25s;
+}
+
+.add-nutrient-btn:hover {
+  background-color: rgba(100, 108, 255, 0.3);
+}
+
+.remove-btn {
+  background-color: rgba(255, 50, 50, 0.2);
+  color: #ff6b6b;
+  border: 1px solid #ff6b6b;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.25s;
+  white-space: nowrap;
+}
+
+.remove-btn:hover {
+  background-color: rgba(255, 50, 50, 0.3);
+}
+
+.submit-btn {
+  background-color: #646cff;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.25s;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background-color: #535bf2;
+}
+
+.submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error-message {
+  background-color: rgba(255, 50, 50, 0.2);
+  color: #ff6b6b;
+  padding: 1rem;
+  border-radius: 6px;
+  border: 1px solid #ff6b6b;
+  margin-bottom: 1rem;
+}
+
+.success-message {
+  background-color: rgba(50, 255, 50, 0.2);
+  color: #69db7c;
+  padding: 1rem;
+  border-radius: 6px;
+  border: 1px solid #69db7c;
+  margin-bottom: 1rem;
+}
+
 @media (max-width: 768px) {
   .nav {
     padding: 0 1rem;
   }
-  
+
   .nav-brand h2 {
     font-size: 1.25rem;
   }
-  
+
   .user-name {
     display: none;
   }
-  
+
   .main-content {
     padding: 1rem;
+  }
+
+  table {
+    font-size: 0.875rem;
+  }
+
+  th, td {
+    padding: 0.5rem;
+  }
+
+  .create-food-item {
+    padding: 1rem;
+  }
+
+  .nutrient-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .remove-btn {
+    width: 100%;
   }
 }
