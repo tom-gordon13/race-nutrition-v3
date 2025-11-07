@@ -3,6 +3,15 @@ import { useAuth0 } from '@auth0/auth0-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
+const FOOD_CATEGORIES = [
+  'ENERGY_GEL',
+  'ENERGY_BAR',
+  'SPORTS_DRINK',
+  'FRUIT',
+  'SNACK',
+  'OTHER'
+] as const;
+
 interface Nutrient {
   id: string;
   nutrient_name: string;
@@ -18,6 +27,8 @@ interface FoodItemNutrient {
 const CreateFoodItem = () => {
   const { user } = useAuth0();
   const [itemName, setItemName] = useState('');
+  const [brand, setBrand] = useState('');
+  const [category, setCategory] = useState('');
   const [nutrients, setNutrients] = useState<Nutrient[]>([]);
   const [foodItemNutrients, setFoodItemNutrients] = useState<FoodItemNutrient[]>([
     { nutrient_id: '', quantity: '', unit: '' }
@@ -86,6 +97,8 @@ const CreateFoodItem = () => {
 
       const payload = {
         item_name: itemName,
+        brand: brand || undefined,
+        category: category || undefined,
         auth0_sub: user.sub,
         nutrients: validNutrients
       };
@@ -110,6 +123,8 @@ const CreateFoodItem = () => {
 
       // Reset form
       setItemName('');
+      setBrand('');
+      setCategory('');
       setFoodItemNutrients([{ nutrient_id: '', quantity: '', unit: '' }]);
 
     } catch (err) {
@@ -146,6 +161,33 @@ const CreateFoodItem = () => {
             required
             placeholder="e.g., Banana, Energy Gel, Sports Drink"
           />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="brand">Brand (Optional)</label>
+          <input
+            type="text"
+            id="brand"
+            value={brand}
+            onChange={(e) => setBrand(e.target.value)}
+            placeholder="e.g., GU, Clif, Gatorade"
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="category">Category (Optional)</label>
+          <select
+            id="category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          >
+            <option value="">Select a category</option>
+            {FOOD_CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat.replace(/_/g, ' ')}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="nutrients-section">

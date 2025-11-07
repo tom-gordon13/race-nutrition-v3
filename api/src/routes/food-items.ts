@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 
 router.get('/', async (req, res) => {
   try {
-    const { auth0_sub } = req.query;
+    const { auth0_sub, my_items_only } = req.query;
 
     // Validate required fields
     if (!auth0_sub || typeof auth0_sub !== 'string') {
@@ -26,11 +26,14 @@ router.get('/', async (req, res) => {
       });
     }
 
-    // Fetch all food items created by this user with their nutrients
+    // Determine if we should filter by user or fetch all items
+    const shouldFilterByUser = my_items_only === 'true';
+
+    // Fetch food items with optional user filter
     const foodItems = await prisma.foodItem.findMany({
-      where: {
+      where: shouldFilterByUser ? {
         created_by: user.id
-      },
+      } : undefined,
       include: {
         foodItemNutrients: {
           include: {
@@ -43,7 +46,7 @@ router.get('/', async (req, res) => {
       }
     });
 
-    console.log(`Fetched ${foodItems.length} food items for user ${user.id}`);
+    console.log(`Fetched ${foodItems.length} food items${shouldFilterByUser ? ` for user ${user.id}` : ' (all users)'}`);
 
     return res.status(200).json({
       foodItems,
@@ -62,9 +65,9 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     console.log('Received request body:', req.body);
-    const { item_name, auth0_sub, nutrients } = req.body;
+    const { item_name, brand, category, auth0_sub, nutrients } = req.body;
 
-    console.log('Extracted values:', { item_name, auth0_sub, nutrientsCount: nutrients?.length });
+    console.log('Extracted values:', { item_name, brand, category, auth0_sub, nutrientsCount: nutrients?.length });
 
     // Validate required fields
     if (!item_name || !auth0_sub) {
@@ -109,6 +112,8 @@ router.post('/', async (req, res) => {
       const foodItem = await tx.foodItem.create({
         data: {
           item_name,
+          brand: brand || null,
+          category: category || null,
           created_by: user.id
         }
       });

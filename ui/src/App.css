@@ -92,6 +92,36 @@
   font-size: 1.5rem;
 }
 
+.nav-center {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.nav-tab {
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.87);
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.25s;
+  white-space: nowrap;
+}
+
+.nav-tab:hover {
+  background-color: rgba(100, 108, 255, 0.15);
+  border-color: rgba(100, 108, 255, 0.3);
+}
+
+.nav-tab.active {
+  background-color: rgba(100, 108, 255, 0.2);
+  color: #646cff;
+  border-color: #646cff;
+  font-weight: 600;
+}
+
 .nav-right {
   display: flex;
   align-items: center;
@@ -163,6 +193,41 @@
   color: #646cff;
   border-color: #646cff;
   border-bottom-color: transparent;
+  font-weight: 600;
+}
+
+/* Sub-tabs within panels */
+.sub-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sub-tab {
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.87);
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.25s;
+  white-space: nowrap;
+  flex: 1;
+  text-align: center;
+}
+
+.sub-tab:hover {
+  background-color: rgba(100, 108, 255, 0.15);
+  border-color: rgba(100, 108, 255, 0.3);
+}
+
+.sub-tab.active {
+  background-color: rgba(100, 108, 255, 0.2);
+  color: #646cff;
+  border-color: #646cff;
   font-weight: 600;
 }
 
@@ -465,22 +530,30 @@ tbody tr:last-child td {
 /* Events split-panel layout */
 .events-container {
   width: 100%;
-  height: 100%;
+  height: calc(88vh - 6rem);
   display: flex;
   gap: 2rem;
   transition: all 0.4s ease;
+  align-items: stretch;
 }
 
 .events-panel {
   width: 100%;
   transition: all 0.4s ease;
-  overflow-y: auto;
+  overflow: visible;
 }
 
 .events-container.split-view .events-panel {
   width: 25%;
   max-width: 25%;
   flex-shrink: 0;
+}
+
+/* Events table container with scrolling */
+.events-table-container {
+  max-height: calc(88vh - 12rem);
+  overflow-y: auto;
+  margin-top: 1rem;
 }
 
 /* Highlighted selected row */
@@ -493,6 +566,7 @@ tbody tr.selected {
 .event-detail-panel {
   width: 75%;
   flex: 1;
+  max-height: 100%;
   background-color: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -550,6 +624,35 @@ tbody tr.selected {
   color: #ff6b6b;
 }
 
+.edit-mode-btn {
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.87);
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+  height: 2.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s;
+  white-space: nowrap;
+}
+
+.edit-mode-btn:hover {
+  background-color: rgba(100, 108, 255, 0.2);
+  border-color: #646cff;
+  color: #646cff;
+}
+
+.edit-mode-btn.active {
+  background-color: rgba(255, 140, 60, 0.3);
+  border-color: #d87a36;
+  color: #ff8c3c;
+  font-weight: 600;
+}
+
 /* Event timeline component */
 .event-timeline {
   flex: 1;
@@ -559,6 +662,7 @@ tbody tr.selected {
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
 }
 
 .timeline-section {
@@ -590,6 +694,321 @@ tbody tr.selected {
   background: rgba(255, 255, 255, 0.1);
   top: 50%;
   transform: translateY(-50%);
+}
+
+/* Food instance boxes */
+.food-instance-box {
+  z-index: 10;
+  padding: 0.75rem;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.food-instance-box[draggable="true"]:active {
+  cursor: grabbing !important;
+  opacity: 0.7;
+}
+
+.food-instance-content {
+  background-color: rgba(100, 108, 255, 0.3);
+  border: 2px solid #646cff;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  color: rgba(255, 255, 255, 0.87);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.25s;
+  cursor: pointer;
+}
+
+.food-instance-content:hover {
+  background-color: rgba(100, 108, 255, 0.4);
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(100, 108, 255, 0.4);
+}
+
+.food-instance-content strong {
+  color: #646cff;
+  font-size: 1rem;
+}
+
+/* Edit mode styling for food instances */
+.food-instance-content.edit-mode {
+  background-color: rgba(255, 140, 60, 0.3);
+  border-color: #d87a36;
+}
+
+.food-instance-content.edit-mode:hover {
+  background-color: rgba(255, 140, 60, 0.4);
+  box-shadow: 0 4px 12px rgba(255, 140, 60, 0.4);
+}
+
+.food-instance-content.edit-mode strong {
+  color: #ff8c3c;
+}
+
+/* Food instance tooltip */
+.food-instance-tooltip {
+  position: absolute;
+  left: 110%;
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 180px;
+  max-width: 240px;
+  background-color: rgba(30, 30, 30, 0.98);
+  border: 1px solid rgba(100, 108, 255, 0.6);
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem;
+  z-index: 9999;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  animation: fadeIn 0.2s ease-in;
+  font-size: 0.75rem;
+}
+
+.tooltip-header {
+  margin-bottom: 0.4rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.tooltip-header strong {
+  color: #646cff;
+  font-size: 0.8rem;
+  display: block;
+  line-height: 1.2;
+}
+
+.tooltip-brand {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.7rem;
+  margin-top: 0.15rem;
+  font-style: italic;
+  line-height: 1.2;
+}
+
+.tooltip-category {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.65rem;
+  margin-top: 0.15rem;
+  text-transform: capitalize;
+  line-height: 1.2;
+}
+
+.tooltip-servings {
+  color: rgba(255, 255, 255, 0.87);
+  font-size: 0.75rem;
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.tooltip-nutrients {
+  margin-top: 0.3rem;
+}
+
+.tooltip-section-title {
+  color: #646cff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  line-height: 1.2;
+}
+
+.tooltip-nutrient-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.15rem 0;
+  color: rgba(255, 255, 255, 0.87);
+  font-size: 0.7rem;
+  line-height: 1.2;
+  gap: 0.5rem;
+}
+
+.nutrient-name {
+  color: rgba(255, 255, 255, 0.7);
+  flex-shrink: 0;
+}
+
+.nutrient-amount {
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 500;
+  text-align: right;
+}
+
+/* Food filters container */
+.food-filters-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+/* My items checkbox filter */
+.my-items-filter {
+  padding: 0.75rem;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-input {
+  width: 1.1rem;
+  height: 1.1rem;
+  cursor: pointer;
+  accent-color: #646cff;
+}
+
+.checkbox-text {
+  color: rgba(255, 255, 255, 0.87);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Category filter */
+.category-filter-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.category-filter-label {
+  color: rgba(255, 255, 255, 0.87);
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.category-filter-select {
+  flex: 1;
+  padding: 0.5rem;
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.87);
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-transform: capitalize;
+}
+
+.category-filter-select:focus {
+  outline: none;
+  border-color: #646cff;
+  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);
+}
+
+.category-filter-select option {
+  background-color: #1a1a1a;
+  color: rgba(255, 255, 255, 0.87);
+  text-transform: capitalize;
+}
+
+/* Draggable food items grid */
+.food-items-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  max-height: calc(88vh - 12rem);
+  overflow-y: auto;
+  overflow-x: visible;
+  padding-right: 0.5rem;
+}
+
+.draggable-food-item {
+  position: relative;
+  cursor: grab;
+  transition: all 0.2s ease;
+}
+
+.draggable-food-item:active {
+  cursor: grabbing;
+  opacity: 0.7;
+}
+
+.food-item-content {
+  background-color: rgba(100, 108, 255, 0.3);
+  border: 2px solid #646cff;
+  border-radius: 8px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  transition: all 0.25s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.draggable-food-item:hover .food-item-content {
+  background-color: rgba(100, 108, 255, 0.4);
+  border-color: #646cff;
+  transform: translateX(2px);
+  box-shadow: 0 4px 12px rgba(100, 108, 255, 0.4);
+}
+
+.drag-handle {
+  position: absolute;
+  left: 0.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #646cff;
+  font-size: 1rem;
+  line-height: 1;
+  font-weight: bold;
+  letter-spacing: -2px;
+  user-select: none;
+}
+
+.food-item-name {
+  color: #646cff;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-left: 1.5rem;
+  line-height: 1.3;
+}
+
+.food-item-brand {
+  color: rgba(255, 255, 255, 0.87);
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-left: 1.5rem;
+  line-height: 1.2;
+  margin-bottom: 0.35rem;
+}
+
+.food-item-category {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.75rem;
+  text-transform: capitalize;
+  margin-left: 1.5rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.food-item-nutrients {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-top: 0.35rem;
+  margin-left: 1.5rem;
+}
+
+.food-item-nutrient {
+  color: rgba(255, 255, 255, 0.87);
+  font-size: 0.75rem;
+  line-height: 1.2;
+  font-weight: 500;
 }
 
 /* Responsive adjustments for split view */

@@ -1,52 +1,26 @@
-import { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import { Routes, Route } from "react-router-dom";
 import Nutrients from "./Nutrients";
 import CreateFoodItem from "./CreateFoodItem";
 import FoodItems from "./FoodItems";
 import Events from "./Events";
 
-type Tab = 'food-items' | 'events' | 'nutrients';
-
 function Home() {
   const { user } = useAuth0();
-  const [activeTab, setActiveTab] = useState<Tab>('food-items');
 
   return (
     <div className="home">
-
-      <div className="tabs">
-        <button
-          className={`tab ${activeTab === 'food-items' ? 'active' : ''}`}
-          onClick={() => setActiveTab('food-items')}
-        >
-          Food Items
-        </button>
-        <button
-          className={`tab ${activeTab === 'events' ? 'active' : ''}`}
-          onClick={() => setActiveTab('events')}
-        >
-          Events
-        </button>
-        <button
-          className={`tab ${activeTab === 'nutrients' ? 'active' : ''}`}
-          onClick={() => setActiveTab('nutrients')}
-        >
-          Nutrients
-        </button>
-      </div>
-
-      <div className="tab-content">
-        {activeTab === 'food-items' && (
+      <Routes>
+        <Route path="/" element={
           <>
             <CreateFoodItem />
             <FoodItems />
           </>
-        )}
-
-        {activeTab === 'events' && <Events />}
-
-        {activeTab === 'nutrients' && <Nutrients />}
-      </div>
+        } />
+        <Route path="/events" element={<Events />} />
+        <Route path="/events/:eventId" element={<Events />} />
+        <Route path="/nutrients" element={<Nutrients />} />
+      </Routes>
     </div>
   );
 }

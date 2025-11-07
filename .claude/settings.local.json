@@ -4,7 +4,9 @@
       "Bash(test:*)",
       "Bash(sqlite3:*)",
       "Bash(npx prisma:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(docker ps:*)",
+      "Bash(docker logs:*)"
     ],
     "deny": [],
     "ask": []
