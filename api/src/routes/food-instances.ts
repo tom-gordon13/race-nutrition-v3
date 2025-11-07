@@ -209,4 +209,48 @@ router.put('/:instanceId', async (req, res) => {
   }
 });
 
+// DELETE a food instance
+router.delete('/:instanceId', async (req, res) => {
+  try {
+    const { instanceId } = req.params;
+
+    // Validate instanceId is provided
+    if (!instanceId) {
+      return res.status(400).json({
+        error: 'Missing required parameter: instanceId'
+      });
+    }
+
+    // Verify the food instance exists
+    const existingInstance = await prisma.foodInstance.findUnique({
+      where: { id: instanceId }
+    });
+
+    if (!existingInstance) {
+      return res.status(404).json({
+        error: 'Food instance not found'
+      });
+    }
+
+    // Delete the food instance
+    await prisma.foodInstance.delete({
+      where: { id: instanceId }
+    });
+
+    console.log(`Deleted food instance ${instanceId}`);
+
+    return res.status(200).json({
+      message: 'Food instance deleted successfully',
+      deletedInstanceId: instanceId
+    });
+
+  } catch (error) {
+    console.error('Error deleting food instance:', error);
+    return res.status(500).json({
+      error: 'Failed to delete food instance',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 export default router;

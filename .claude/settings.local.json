@@ -6,7 +6,9 @@
       "Bash(npx prisma:*)",
       "Bash(cat:*)",
       "Bash(docker ps:*)",
-      "Bash(docker logs:*)"
+      "Bash(docker logs:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

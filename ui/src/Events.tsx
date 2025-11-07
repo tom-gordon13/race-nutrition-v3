@@ -1,18 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useParams } from 'react-router-dom';
+import {
+  EventForm,
+  EventsTable,
+  FoodItemsList,
+  EventTimeline,
+  NutritionSummary
+} from './components/events';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-
-const FOOD_CATEGORIES = [
-  'ALL',
-  'ENERGY_GEL',
-  'ENERGY_BAR',
-  'SPORTS_DRINK',
-  'FRUIT',
-  'SNACK',
-  'OTHER'
-] as const;
 
 interface Event {
   id: string;
@@ -53,19 +50,6 @@ interface FoodInstance {
   foodItem: FoodItem;
 }
 
-// Compute seconds from three inputs (hours, minutes, seconds)
-const computeSecondsFromInputs = (hStr: string, mStr: string, sStr: string): number | null => {
-  const toInt = (v: string) => (v.trim() === '' ? 0 : Number(v));
-  const h = toInt(hStr);
-  const m = toInt(mStr);
-  const s = toInt(sStr);
-
-  if (![h, m, s].every((n) => Number.isInteger(n) && n >= 0)) return null;
-  if (m > 59 || s > 59) return null;
-
-  return h * 3600 + m * 60 + s;
-};
-
 const Events = () => {
   const { user } = useAuth0();
   const { eventId } = useParams<{ eventId: string }>();
@@ -83,27 +67,16 @@ const Events = () => {
   const [leftPanelTab, setLeftPanelTab] = useState<'food-items' | 'events'>('food-items');
   const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
   const [loadingFoodItems, setLoadingFoodItems] = useState(false);
-  const [hoveredFoodItemId, setHoveredFoodItemId] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
   const [myItemsOnly, setMyItemsOnly] = useState<boolean>(true);
 
   // Form state
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [eventType, setEventType] = useState('');
-  const [hoursInput, setHoursInput] = useState('');
-  const [minutesInput, setMinutesInput] = useState('');
-  const [secondsInput, setSecondsInput] = useState('');
-  const [submitting, setSubmitting] = useState(false);
 
   // Edit mode state
   const [editMode, setEditMode] = useState(false);
-  const [editableEvent, setEditableEvent] = useState<Event | null>(null);
   const [editableFoodInstances, setEditableFoodInstances] = useState<FoodInstance[]>([]);
   const [draggingInstanceId, setDraggingInstanceId] = useState<string | null>(null);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-
-  // Hover state for tooltip
-  const [hoveredInstanceId, setHoveredInstanceId] = useState<string | null>(null);
 
   // State for dragging food items from left panel
   const [draggingFoodItemId, setDraggingFoodItemId] = useState<string | null>(null);
@@ -198,20 +171,17 @@ const Events = () => {
     }
     // Reset edit mode when event changes
     setEditMode(false);
-    setEditableEvent(null);
     setEditableFoodInstances([]);
   }, [selectedEvent]);
 
   const toggleEditMode = async () => {
     if (!editMode && selectedEvent) {
       // Entering edit mode - copy data to editable state
-      setEditableEvent({ ...selectedEvent });
       setEditableFoodInstances(foodInstances.map(instance => ({ ...instance })));
       setEditMode(true);
     } else if (editMode) {
       // Exiting edit mode - save changes
       await saveChanges();
-      setEditableEvent(null);
       setEditableFoodInstances([]);
       setEditMode(false);
     }
@@ -251,15 +221,10 @@ const Events = () => {
     }
   };
 
-  const handleDragStart = (e: React.DragEvent, instanceId: string, currentTop: number) => {
+  const handleDragStart = (_e: React.DragEvent, instanceId: string, _currentTop: number) => {
     if (!editMode) return;
 
     setDraggingInstanceId(instanceId);
-    const rect = (e.target as HTMLElement).getBoundingClientRect();
-    setDragOffset({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    });
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -336,78 +301,39 @@ const Events = () => {
     setDraggingFoodItemId(null);
   };
 
-  const handleFoodItemDragStart = (e: React.DragEvent, foodItemId: string) => {
+  const handleFoodItemDragStart = (_e: React.DragEvent, foodItemId: string) => {
     setDraggingFoodItemId(foodItemId);
   };
 
-  // Calculate horizontal offsets for overlapping instances
-  const calculateHorizontalOffsets = (instances: FoodInstance[]) => {
-    if (!selectedEvent) return {};
+  const handleDeleteInstance = async (instanceId: string) => {
+    if (!selectedEvent) return;
 
-    const ITEM_HEIGHT_PERCENT = 8; // Approximate height of each box as percentage of timeline
-    const ITEM_WIDTH_PERCENT = 16.67; // Width of each box as percentage
-
-    // Sort instances by time
-    const sorted = [...instances].sort((a, b) =>
-      a.time_elapsed_at_consumption - b.time_elapsed_at_consumption
-    );
-
-    const offsets: { [key: string]: number } = {};
-    const lanes: Array<{ id: string; topPercent: number; bottomPercent: number }[]> = [[]];
-
-    sorted.forEach((instance) => {
-      const topPercent = (instance.time_elapsed_at_consumption / selectedEvent.expected_duration) * 100;
-      const bottomPercent = topPercent + ITEM_HEIGHT_PERCENT;
-
-      // Find the first available lane
-      let assignedLane = -1;
-      for (let i = 0; i < lanes.length; i++) {
-        const lane = lanes[i];
-        const hasOverlap = lane.some((item) => {
-          // Check if this instance overlaps with any item in this lane
-          return !(bottomPercent <= item.topPercent || topPercent >= item.bottomPercent);
-        });
-
-        if (!hasOverlap) {
-          assignedLane = i;
-          break;
-        }
-      }
-
-      // If no available lane found, create a new one
-      if (assignedLane === -1) {
-        assignedLane = lanes.length;
-        lanes.push([]);
-      }
-
-      // Add this instance to the assigned lane
-      lanes[assignedLane].push({
-        id: instance.id,
-        topPercent,
-        bottomPercent,
+    try {
+      const response = await fetch(`${API_URL}/api/food-instances/${instanceId}`, {
+        method: 'DELETE',
       });
 
-      // Calculate the horizontal offset
-      offsets[instance.id] = assignedLane * ITEM_WIDTH_PERCENT;
-    });
+      if (!response.ok) {
+        throw new Error('Failed to delete food instance');
+      }
 
-    return offsets;
+      // Refresh food instances after deletion
+      await fetchFoodInstances(selectedEvent.id);
+      setSuccess('Food instance deleted successfully!');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      console.error('Error deleting food instance:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    }
   };
 
-  const handleCreateEvent = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
+  const handleCreateEvent = async (eventType: string, expectedDuration: number) => {
     setError(null);
     setSuccess(null);
 
     try {
       if (!user || !user.sub) {
         throw new Error('User not authenticated');
-      }
-
-      const seconds = computeSecondsFromInputs(hoursInput, minutesInput, secondsInput);
-      if (seconds === null) {
-        throw new Error('Please enter valid time values. Minutes and seconds must be 0–59.');
       }
 
       const response = await fetch(`${API_URL}/api/events`, {
@@ -417,7 +343,7 @@ const Events = () => {
         },
         body: JSON.stringify({
           auth0_sub: user.sub,
-          expected_duration: seconds,
+          expected_duration: expectedDuration,
           type: eventType
         }),
       });
@@ -430,31 +356,16 @@ const Events = () => {
       const data = await response.json();
       setSuccess(`Event "${data.event.type}" created successfully!`);
 
-      // Reset form
-      setEventType('');
-      setHoursInput('');
-      setMinutesInput('');
-      setSecondsInput('');
       setShowCreateForm(false);
 
       // Refresh events list
       fetchEvents();
-
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
       console.error('Error creating event:', err);
-    } finally {
-      setSubmitting(false);
+      throw err;
     }
   };
-
-  const formatDuration = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    return `${hours}h ${minutes}m`;
-  };
-
-  const previewSeconds = computeSecondsFromInputs(hoursInput, minutesInput, secondsInput);
 
   if (loading) {
     return <div>Loading events...</div>;
@@ -501,236 +412,31 @@ const Events = () => {
         )}
 
         {showCreateForm && (
-          <div className="create-food-item" style={{ marginBottom: '2rem' }}>
-            <h3>Create New Event</h3>
-            <form onSubmit={handleCreateEvent}>
-              <div className="form-group">
-                <label htmlFor="eventType">Event Type *</label>
-                <input
-                  type="text"
-                  id="eventType"
-                  value={eventType}
-                  onChange={(e) => setEventType(e.target.value)}
-                  required
-                  placeholder="e.g., Marathon, Half Marathon, 10K"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Expected Duration</label>
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                  <div>
-                    <input
-                      type="number"
-                      id="hoursInput"
-                      value={hoursInput}
-                      onChange={(e) => setHoursInput(e.target.value)}
-                      min={0}
-                      step={1}
-                      placeholder="Hours"
-                      inputMode="numeric"
-                      style={{ width: '6rem' }}
-                    />
-                    <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>hours</div>
-                  </div>
-                  <div>
-                    <input
-                      type="number"
-                      id="minutesInput"
-                      value={minutesInput}
-                      onChange={(e) => setMinutesInput(e.target.value)}
-                      min={0}
-                      max={59}
-                      step={1}
-                      placeholder="Minutes"
-                      inputMode="numeric"
-                      style={{ width: '6rem' }}
-                    />
-                    <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>minutes</div>
-                  </div>
-                  <div>
-                    <input
-                      type="number"
-                      id="secondsInput"
-                      value={secondsInput}
-                      onChange={(e) => setSecondsInput(e.target.value)}
-                      min={0}
-                      max={59}
-                      step={1}
-                      placeholder="Seconds"
-                      inputMode="numeric"
-                      style={{ width: '6rem' }}
-                    />
-                    <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>seconds</div>
-                  </div>
-                </div>
-                {(hoursInput !== '' || minutesInput !== '' || secondsInput !== '') && (
-                  <small style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-                    {previewSeconds !== null
-                      ? `→ ${previewSeconds}s (${formatDuration(previewSeconds)})`
-                      : 'Enter valid time (mm and ss 0–59)'}
-                  </small>
-                )}
-              </div>
-
-              <button type="submit" disabled={submitting || !eventType || previewSeconds === null} className="submit-btn">
-                {submitting ? 'Creating...' : 'Create Event'}
-              </button>
-            </form>
-          </div>
+          <EventForm
+            onSubmit={handleCreateEvent}
+            onCancel={() => setShowCreateForm(false)}
+          />
         )}
 
         {(!selectedEvent || leftPanelTab === 'events') && (
-          <>
-            <p>Total Events: {events.length}</p>
-
-            {events.length === 0 ? (
-              <p>No events found. Create your first event above!</p>
-            ) : (
-              <div className="events-table-container">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Event Type</th>
-                      <th>Expected Duration</th>
-                      <th>Created</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {events.map((event) => (
-                      <tr
-                        key={event.id}
-                        onClick={() => setSelectedEvent(event)}
-                        className={selectedEvent?.id === event.id ? 'selected' : ''}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        <td>{event.type}</td>
-                        <td>{formatDuration(event.expected_duration)}</td>
-                        <td>{new Date(event.created_at).toLocaleDateString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </>
+          <EventsTable
+            events={events}
+            selectedEvent={selectedEvent}
+            onEventSelect={setSelectedEvent}
+          />
         )}
 
         {selectedEvent && leftPanelTab === 'food-items' && (
-          <>
-            <div className="food-filters-container">
-              <div className="my-items-filter">
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    className="checkbox-input"
-                    checked={myItemsOnly}
-                    onChange={(e) => setMyItemsOnly(e.target.checked)}
-                  />
-                  <span className="checkbox-text">My items</span>
-                </label>
-              </div>
-
-              <div className="category-filter-container">
-                <label htmlFor="category-filter" className="category-filter-label">Category:</label>
-                <select
-                  id="category-filter"
-                  className="category-filter-select"
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                >
-                  {FOOD_CATEGORIES.map((category) => (
-                    <option key={category} value={category}>
-                      {category === 'ALL' ? 'All Categories' : category.toLowerCase().replace(/_/g, ' ')}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {(() => {
-              const filteredItems = categoryFilter === 'ALL'
-                ? foodItems
-                : foodItems.filter(item => item.category === categoryFilter);
-
-              return (
-                <>
-                  <p>Total Food Items: {filteredItems.length}</p>
-
-                  {loadingFoodItems ? (
-                    <p>Loading food items...</p>
-                  ) : filteredItems.length === 0 ? (
-                    <p>No food items found.</p>
-                  ) : (
-                    <div className="food-items-grid">
-                      {filteredItems.map((item) => {
-                  // Find carbohydrates and sodium
-                  const carbs = item.foodItemNutrients.find(
-                    fin => fin.nutrient.nutrient_name.toLowerCase().includes('carbohydrate')
-                  );
-                  const sodium = item.foodItemNutrients.find(
-                    fin => fin.nutrient.nutrient_name.toLowerCase().includes('sodium')
-                  );
-
-                  return (
-                    <div
-                      key={item.id}
-                      className="draggable-food-item"
-                      draggable
-                      onDragStart={(e) => handleFoodItemDragStart(e, item.id)}
-                      onDragEnd={handleDragEnd}
-                      onMouseEnter={() => setHoveredFoodItemId(item.id)}
-                      onMouseLeave={() => setHoveredFoodItemId(null)}
-                    >
-                      <div className="food-item-content">
-                        <div className="drag-handle">⋮⋮</div>
-                        <div className="food-item-name">{item.item_name}</div>
-                        {item.brand && <div className="food-item-brand">{item.brand}</div>}
-
-                        <div className="food-item-nutrients">
-                          {carbs && (
-                            <div className="food-item-nutrient">
-                              Carbs: {carbs.quantity}{carbs.unit}
-                            </div>
-                          )}
-                          {sodium && (
-                            <div className="food-item-nutrient">
-                              Sodium: {sodium.quantity}{sodium.unit}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {hoveredFoodItemId === item.id && (
-                        <div className="food-instance-tooltip" style={{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)', marginLeft: '0.5rem' }}>
-                          <div className="tooltip-header">
-                            <strong>{item.item_name}</strong>
-                            {item.brand && <div className="tooltip-brand">{item.brand}</div>}
-                            {item.category && <div className="tooltip-category">{item.category.toLowerCase().replace(/_/g, ' ')}</div>}
-                          </div>
-
-                          <div className="tooltip-nutrients">
-                            <div className="tooltip-section-title">Nutrients (per serving)</div>
-                            {item.foodItemNutrients.map((fin) => (
-                              <div key={fin.id} className="tooltip-nutrient-row">
-                                <span className="nutrient-name">{fin.nutrient.nutrient_name}</span>
-                                <span className="nutrient-amount">
-                                  {fin.quantity} {fin.unit}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </>
-              );
-            })()}
-          </>
+          <FoodItemsList
+            foodItems={foodItems}
+            categoryFilter={categoryFilter}
+            myItemsOnly={myItemsOnly}
+            loadingFoodItems={loadingFoodItems}
+            onCategoryFilterChange={setCategoryFilter}
+            onMyItemsOnlyChange={setMyItemsOnly}
+            onFoodItemDragStart={handleFoodItemDragStart}
+            onFoodItemDragEnd={handleDragEnd}
+          />
         )}
       </div>
 
@@ -754,222 +460,22 @@ const Events = () => {
             </div>
           </div>
           <div className="event-timeline-container">
-            {/* Y-axis with tick marks */}
-            <div className="timeline-y-axis">
-              {(() => {
-                const THREE_HOURS = 3 * 3600; // 3 hours in seconds
-                const ONE_HOUR = 3600;
-                const HALF_HOUR = 1800;
-
-                // Determine tick interval based on event duration
-                const tickInterval = selectedEvent.expected_duration > THREE_HOURS ? ONE_HOUR : HALF_HOUR;
-                const ticks = [];
-
-                // Generate tick marks from 0 to event duration
-                for (let time = 0; time <= selectedEvent.expected_duration; time += tickInterval) {
-                  const percentage = (time / selectedEvent.expected_duration) * 100;
-                  ticks.push({ time, percentage });
-                }
-
-                return ticks.map((tick, index) => (
-                  <div
-                    key={index}
-                    className="timeline-tick"
-                    style={{ top: `${tick.percentage}%` }}
-                  >
-                    <span className="tick-label">{formatDuration(tick.time)}</span>
-                    <span className="tick-mark"></span>
-                  </div>
-                ));
-              })()}
-            </div>
-
-            {/* Timeline content area */}
-            <div
-              className="event-timeline"
+            <EventTimeline
+              event={selectedEvent}
+              foodInstances={editMode ? editableFoodInstances : foodInstances}
+              editMode={editMode}
+              loadingInstances={loadingInstances}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
-            >
-              {loadingInstances ? (
-                <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255, 255, 255, 0.6)' }}>
-                  Loading food instances...
-                </div>
-              ) : (
-                <>
-                  {/* Generate dividers to match tick marks */}
-                  {(() => {
-                    const THREE_HOURS = 3 * 3600;
-                    const ONE_HOUR = 3600;
-                    const HALF_HOUR = 1800;
-                    const tickInterval = selectedEvent.expected_duration > THREE_HOURS ? ONE_HOUR : HALF_HOUR;
-                    const dividers = [];
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDeleteInstance={handleDeleteInstance}
+            />
 
-                    for (let time = tickInterval; time < selectedEvent.expected_duration; time += tickInterval) {
-                      const percentage = (time / selectedEvent.expected_duration) * 100;
-                      dividers.push(
-                        <div
-                          key={time}
-                          className="timeline-divider"
-                          style={{ top: `${percentage}%`, position: 'absolute', width: '100%' }}
-                        ></div>
-                      );
-                    }
-
-                    return dividers;
-                  })()}
-
-                {(() => {
-                  const currentInstances = editMode ? editableFoodInstances : foodInstances;
-                  const horizontalOffsets = calculateHorizontalOffsets(currentInstances);
-
-                  return currentInstances.map((instance) => {
-                    const position = (instance.time_elapsed_at_consumption / selectedEvent.expected_duration) * 100;
-                    const isHovered = hoveredInstanceId === instance.id;
-                    const leftOffset = horizontalOffsets[instance.id] || 0;
-
-                    return (
-                      <div
-                        key={instance.id}
-                        className="food-instance-box"
-                        draggable={editMode}
-                        onDragStart={(e) => editMode ? handleDragStart(e, instance.id, position) : undefined}
-                        onDragEnd={editMode ? handleDragEnd : undefined}
-                        onMouseEnter={() => setHoveredInstanceId(instance.id)}
-                        onMouseLeave={() => setHoveredInstanceId(null)}
-                        style={{
-                          position: 'absolute',
-                          top: `${position}%`,
-                          left: `${leftOffset}%`,
-                          width: '16.67%',
-                          cursor: editMode ? 'grab' : 'pointer',
-                        }}
-                      >
-                      <div className={`food-instance-content ${editMode ? 'edit-mode' : ''}`}>
-                        <strong>{instance.foodItem.item_name}</strong>
-                        {instance.foodItem.brand && <span> - {instance.foodItem.brand}</span>}
-                        <div style={{ fontSize: '0.85rem', opacity: 0.8 }}>
-                          {formatDuration(instance.time_elapsed_at_consumption)} • {instance.servings} serving(s)
-                        </div>
-                      </div>
-
-                      {isHovered && (
-                        <div className="food-instance-tooltip">
-                          <div className="tooltip-header">
-                            <strong>{instance.foodItem.item_name}</strong>
-                            {instance.foodItem.brand && <div className="tooltip-brand">{instance.foodItem.brand}</div>}
-                            {instance.foodItem.category && (
-                              <div className="tooltip-category">{instance.foodItem.category.replace(/_/g, ' ')}</div>
-                            )}
-                          </div>
-                          <div className="tooltip-servings">
-                            Servings: {instance.servings}
-                          </div>
-                          {instance.foodItem.foodItemNutrients && instance.foodItem.foodItemNutrients.length > 0 && (
-                            <div className="tooltip-nutrients">
-                              <div className="tooltip-section-title">Total Nutrients:</div>
-                              {instance.foodItem.foodItemNutrients.map((fin) => {
-                                const totalAmount = fin.quantity * instance.servings;
-                                return (
-                                  <div key={fin.id} className="tooltip-nutrient-row">
-                                    <span className="nutrient-name">{fin.nutrient.nutrient_name}:</span>
-                                    <span className="nutrient-amount">{totalAmount} {fin.unit}</span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    );
-                  });
-                })()}
-              </>
-            )}
-          </div>
-
-          {/* Nutrition Summary Panel */}
-          <div className="nutrition-summary-panel">
-            {(() => {
-              const THREE_HOURS = 3 * 3600;
-              const ONE_HOUR = 3600;
-              const HALF_HOUR = 1800;
-              const tickInterval = selectedEvent.expected_duration > THREE_HOURS ? ONE_HOUR : HALF_HOUR;
-
-              const currentInstances = editMode ? editableFoodInstances : foodInstances;
-              const windows = [];
-
-              // Create time windows
-              for (let startTime = 0; startTime < selectedEvent.expected_duration; startTime += tickInterval) {
-                const endTime = Math.min(startTime + tickInterval, selectedEvent.expected_duration);
-                const topPercentage = (startTime / selectedEvent.expected_duration) * 100;
-                const bottomPercentage = (endTime / selectedEvent.expected_duration) * 100;
-                const height = bottomPercentage - topPercentage;
-
-                // Filter instances in this window
-                const instancesInWindow = currentInstances.filter(instance =>
-                  instance.time_elapsed_at_consumption >= startTime &&
-                  instance.time_elapsed_at_consumption < endTime
-                );
-
-                // Calculate total nutrients for this window
-                const nutrientTotals: { [key: string]: { name: string; total: number; unit: string } } = {};
-
-                instancesInWindow.forEach(instance => {
-                  instance.foodItem.foodItemNutrients.forEach(fin => {
-                    const nutrientKey = fin.nutrient.id;
-                    const amount = fin.quantity * instance.servings;
-
-                    if (!nutrientTotals[nutrientKey]) {
-                      nutrientTotals[nutrientKey] = {
-                        name: fin.nutrient.nutrient_name,
-                        total: 0,
-                        unit: fin.unit
-                      };
-                    }
-                    nutrientTotals[nutrientKey].total += amount;
-                  });
-                });
-
-                windows.push({
-                  startTime,
-                  endTime,
-                  topPercentage,
-                  height,
-                  nutrientTotals: Object.values(nutrientTotals)
-                });
-              }
-
-              return windows.map((window, index) => (
-                <div
-                  key={index}
-                  className="nutrition-window"
-                  style={{
-                    top: `${window.topPercentage}%`,
-                    height: `${window.height}%`
-                  }}
-                >
-                  <div className="nutrition-window-header">
-                    {formatDuration(window.startTime)} - {formatDuration(window.endTime)}
-                  </div>
-                  <div className="nutrition-window-content">
-                    {window.nutrientTotals.length === 0 ? (
-                      <div className="no-nutrition">No items</div>
-                    ) : (
-                      window.nutrientTotals.map((nutrient, nIndex) => (
-                        <div key={nIndex} className="nutrient-summary-row">
-                          <span className="nutrient-summary-name">{nutrient.name}:</span>
-                          <span className="nutrient-summary-amount">
-                            {Math.round(nutrient.total * 10) / 10} {nutrient.unit}
-                          </span>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              ));
-            })()}
-          </div>
+            <NutritionSummary
+              event={selectedEvent}
+              foodInstances={editMode ? editableFoodInstances : foodInstances}
+            />
           </div>
         </div>
       )}
