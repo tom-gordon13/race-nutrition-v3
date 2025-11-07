@@ -1085,18 +1085,62 @@ tbody tr.selected {
 
 /* Nutrition Summary Panel */
 .nutrition-summary-panel {
-  width: 250px;
   position: relative;
   background-color: rgba(0, 0, 0, 0.3);
   border-left: 2px solid rgba(100, 108, 255, 0.3);
   flex-shrink: 0;
-  overflow-y: auto;
   height: 100%;
+  display: flex;
+  transition: all 0.3s ease;
+}
+
+.nutrition-summary-panel.expanded {
+  width: 250px;
+}
+
+.nutrition-summary-panel.collapsed {
+  width: 40px;
+}
+
+.nutrition-panel-toggle {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(100, 108, 255, 0.2);
+  border: 1px solid #646cff;
+  color: #646cff;
+  font-size: 1.5rem;
+  font-weight: bold;
+  width: 28px;
+  height: 48px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.2s;
+  line-height: 1;
+  z-index: 10;
+}
+
+.nutrition-panel-toggle:hover {
+  background-color: rgba(100, 108, 255, 0.3);
+  border-color: #535bf2;
+  transform: translateY(-50%) scale(1.05);
+}
+
+.nutrition-panel-content {
+  width: 100%;
+  position: relative;
+  overflow-y: auto;
+  padding-left: 48px;
 }
 
 .nutrition-window {
   position: absolute;
-  left: 0;
+  left: 48px;
   right: 0;
   padding: 0.75rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);

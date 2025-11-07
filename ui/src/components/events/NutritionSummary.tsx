@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 interface FoodItemNutrient {
   id: string;
   food_item_id: string;
@@ -49,6 +51,7 @@ const formatDuration = (seconds: number) => {
 };
 
 export const NutritionSummary = ({ event, foodInstances }: NutritionSummaryProps) => {
+  const [isExpanded, setIsExpanded] = useState(true);
   const THREE_HOURS = 3 * 3600;
   const ONE_HOUR = 3600;
   const HALF_HOUR = 1800;
@@ -102,35 +105,47 @@ export const NutritionSummary = ({ event, foodInstances }: NutritionSummaryProps
   };
 
   return (
-    <div className="nutrition-summary-panel">
-      {generateWindows().map((window, index) => (
-        <div
-          key={index}
-          className="nutrition-window"
-          style={{
-            top: `${window.topPercentage}%`,
-            height: `${window.height}%`
-          }}
-        >
-          <div className="nutrition-window-header">
-            {formatDuration(window.startTime)} - {formatDuration(window.endTime)}
-          </div>
-          <div className="nutrition-window-content">
-            {window.nutrientTotals.length === 0 ? (
-              <div className="no-nutrition">No items</div>
-            ) : (
-              window.nutrientTotals.map((nutrient, nIndex) => (
-                <div key={nIndex} className="nutrient-summary-row">
-                  <span className="nutrient-summary-name">{nutrient.name}:</span>
-                  <span className="nutrient-summary-amount">
-                    {Math.round(nutrient.total * 10) / 10} {nutrient.unit}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
+    <div className={`nutrition-summary-panel ${isExpanded ? 'expanded' : 'collapsed'}`}>
+      <button
+        className="nutrition-panel-toggle"
+        onClick={() => setIsExpanded(!isExpanded)}
+        title={isExpanded ? 'Collapse nutrition panel' : 'Expand nutrition panel'}
+      >
+        {isExpanded ? '›' : '‹'}
+      </button>
+
+      {isExpanded && (
+        <div className="nutrition-panel-content">
+          {generateWindows().map((window, index) => (
+            <div
+              key={index}
+              className="nutrition-window"
+              style={{
+                top: `${window.topPercentage}%`,
+                height: `${window.height}%`
+              }}
+            >
+              <div className="nutrition-window-header">
+                {formatDuration(window.startTime)} - {formatDuration(window.endTime)}
+              </div>
+              <div className="nutrition-window-content">
+                {window.nutrientTotals.length === 0 ? (
+                  <div className="no-nutrition">No items</div>
+                ) : (
+                  window.nutrientTotals.map((nutrient, nIndex) => (
+                    <div key={nIndex} className="nutrient-summary-row">
+                      <span className="nutrient-summary-name">{nutrient.name}:</span>
+                      <span className="nutrient-summary-amount">
+                        {Math.round(nutrient.total * 10) / 10} {nutrient.unit}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
     </div>
   );
 };
