@@ -50,6 +50,7 @@ interface EventTimelineProps {
   onDragStart: (e: DragEvent, instanceId: string, currentTop: number) => void;
   onDragEnd: () => void;
   onDeleteInstance: (instanceId: string) => void;
+  onUpdateInstance: (instanceId: string, time: number, servings: number) => Promise<void>;
   timelineStyle?: React.CSSProperties;
 }
 
@@ -57,6 +58,12 @@ const formatDuration = (seconds: number) => {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   return `${hours}h ${minutes}m`;
+};
+
+const formatTimeHHMM = (seconds: number) => {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  return `${hours}:${minutes.toString().padStart(2, '0')}`;
 };
 
 // Calculate horizontal offsets for overlapping instances
@@ -121,9 +128,13 @@ export const EventTimeline = ({
   onDragStart,
   onDragEnd,
   onDeleteInstance,
+  onUpdateInstance,
   timelineStyle
 }: EventTimelineProps) => {
   const [hoveredInstanceId, setHoveredInstanceId] = useState<string | null>(null);
+  const [editingInstanceId, setEditingInstanceId] = useState<string | null>(null);
+  const [editTime, setEditTime] = useState<string>('');
+  const [editServings, setEditServings] = useState<string>('');
 
   const THREE_HOURS = 3 * 3600;
   const ONE_HOUR = 3600;
@@ -153,6 +164,41 @@ export const EventTimeline = ({
   };
 
   const horizontalOffsets = calculateHorizontalOffsets(foodInstances, event);
+
+  // Handler to enter edit mode for an instance
+  const handleDoubleClick = (instance: FoodInstance) => {
+    setEditingInstanceId(instance.id);
+    // Convert seconds to HH:MM format
+    const hours = Math.floor(instance.time_elapsed_at_consumption / 3600);
+    const minutes = Math.floor((instance.time_elapsed_at_consumption % 3600) / 60);
+    setEditTime(`${hours}:${minutes.toString().padStart(2, '0')}`);
+    setEditServings(instance.servings.toString());
+  };
+
+  // Handler to save changes
+  const handleSaveEdit = async () => {
+    if (!editingInstanceId) return;
+
+    // Parse time from HH:MM format to seconds
+    const [hours, minutes] = editTime.split(':').map(Number);
+    const timeInSeconds = (hours * 3600) + (minutes * 60);
+    const servings = parseFloat(editServings);
+
+    if (isNaN(timeInSeconds) || isNaN(servings) || servings <= 0) {
+      alert('Please enter valid time and servings');
+      return;
+    }
+
+    try {
+      await onUpdateInstance(editingInstanceId, timeInSeconds, servings);
+      setEditingInstanceId(null);
+      setEditTime('');
+      setEditServings('');
+    } catch (err) {
+      console.error('Error updating instance:', err);
+      alert('Failed to update food instance');
+    }
+  };
 
   return (
     <>
@@ -195,6 +241,7 @@ export const EventTimeline = ({
             {foodInstances.map((instance) => {
               const position = (instance.time_elapsed_at_consumption / event.expected_duration) * 100;
               const isHovered = hoveredInstanceId === instance.id;
+              const isEditing = editingInstanceId === instance.id;
               // Use custom horizontal offset if set, otherwise use calculated offset
               const leftOffset = instance.horizontalOffset !== undefined
                 ? instance.horizontalOffset
@@ -204,38 +251,88 @@ export const EventTimeline = ({
                 <div
                   key={instance.id}
                   className="food-instance-box"
-                  draggable={editMode}
-                  onDragStart={(e) => editMode ? onDragStart(e, instance.id, position) : undefined}
+                  draggable={editMode && !isEditing}
+                  onDragStart={(e) => (editMode && !isEditing) ? onDragStart(e, instance.id, position) : undefined}
                   onDragEnd={editMode ? onDragEnd : undefined}
-                  onMouseEnter={() => setHoveredInstanceId(instance.id)}
+                  onMouseEnter={() => !isEditing && setHoveredInstanceId(instance.id)}
                   onMouseLeave={() => setHoveredInstanceId(null)}
+                  onDoubleClick={() => !isEditing && handleDoubleClick(instance)}
                   style={{
                     position: 'absolute',
                     top: `${position}%`,
                     left: `${leftOffset}%`,
                     width: '16.67%',
-                    cursor: editMode ? 'grab' : 'pointer',
+                    cursor: isEditing ? 'default' : (editMode ? 'grab' : 'pointer'),
                   }}
                 >
-                  <div className={`food-instance-content ${editMode ? 'edit-mode' : ''}`}>
+                  <div className={`food-instance-content ${editMode ? 'edit-mode' : ''} ${isEditing ? 'instance-editing' : ''}`}>
                     <button
                       className="delete-instance-btn"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onDeleteInstance(instance.id);
+                        if (!isEditing) {
+                          onDeleteInstance(instance.id);
+                        }
                       }}
                       title="Delete food instance"
+                      style={{ display: isEditing ? 'none' : 'flex' }}
                     >
                       ✕
                     </button>
-                    <strong>{instance.foodItem.item_name}</strong>
-                    {instance.foodItem.brand && <span> - {instance.foodItem.brand}</span>}
-                    <div style={{ fontSize: '0.85rem', opacity: 0.8 }}>
-                      {formatDuration(instance.time_elapsed_at_consumption)} • {instance.servings} serving(s)
-                    </div>
+
+                    {isEditing ? (
+                      // Edit mode UI
+                      <div className="instance-edit-form">
+                        <strong>{instance.foodItem.item_name}</strong>
+                        <div className="edit-inputs">
+                          <div>
+                            <span>Time:</span>
+                            <input
+                              type="text"
+                              value={editTime}
+                              onChange={(e) => setEditTime(e.target.value)}
+                              placeholder="HH:MM"
+                              className="time-input"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                          <div>
+                            <span>Servings:</span>
+                            <input
+                              type="number"
+                              value={editServings}
+                              onChange={(e) => setEditServings(e.target.value)}
+                              placeholder="0"
+                              className="servings-input"
+                              step="0.5"
+                              min="0.5"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                        </div>
+                        <button
+                          className="save-edit-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSaveEdit();
+                          }}
+                          title="Save changes"
+                        >
+                          ✓
+                        </button>
+                      </div>
+                    ) : (
+                      // Normal display
+                      <>
+                        <strong>{instance.foodItem.item_name}</strong>
+                        <div style={{ fontSize: '0.85rem', opacity: 0.8 }}>
+                          {formatTimeHHMM(instance.time_elapsed_at_consumption)} | {instance.servings} serv.
+                        </div>
+                      </>
+                    )}
                   </div>
 
-                  {isHovered && (
+                  {isHovered && !isEditing && (
                     <div className="food-instance-tooltip">
                       <div className="tooltip-header">
                         <strong>{instance.foodItem.item_name}</strong>

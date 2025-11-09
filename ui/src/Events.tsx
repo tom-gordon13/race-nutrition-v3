@@ -421,6 +421,36 @@ const Events = () => {
     }
   };
 
+  const handleUpdateInstance = async (instanceId: string, time: number, servings: number) => {
+    if (!selectedEvent) return;
+
+    try {
+      const response = await fetch(`${API_URL}/api/food-instances/${instanceId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          time_elapsed_at_consumption: time,
+          servings: servings
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update food instance');
+      }
+
+      // Refresh food instances after update
+      await fetchFoodInstances(selectedEvent.id);
+      setSuccess('Food instance updated successfully!');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      console.error('Error updating food instance:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update food instance');
+      throw err;
+    }
+  };
+
   const handleCreateEvent = async (eventType: string, expectedDuration: number) => {
     setError(null);
     setSuccess(null);
@@ -597,6 +627,7 @@ const Events = () => {
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
               onDeleteInstance={handleDeleteInstance}
+              onUpdateInstance={handleUpdateInstance}
               timelineStyle={timelineStyle}
             />
 

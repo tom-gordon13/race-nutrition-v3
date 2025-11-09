@@ -147,7 +147,7 @@ router.post('/', async (req, res) => {
 router.put('/:instanceId', async (req, res) => {
   try {
     const { instanceId } = req.params;
-    const { time_elapsed_at_consumption } = req.body;
+    const { time_elapsed_at_consumption, servings } = req.body;
 
     // Validate instanceId is provided
     if (!instanceId) {
@@ -156,10 +156,33 @@ router.put('/:instanceId', async (req, res) => {
       });
     }
 
-    // Validate time_elapsed_at_consumption is provided and is a number
-    if (time_elapsed_at_consumption === undefined || typeof time_elapsed_at_consumption !== 'number') {
+    // Build update data object based on what's provided
+    const updateData: any = {};
+
+    // Validate and add time_elapsed_at_consumption if provided
+    if (time_elapsed_at_consumption !== undefined) {
+      if (typeof time_elapsed_at_consumption !== 'number') {
+        return res.status(400).json({
+          error: 'Invalid field: time_elapsed_at_consumption must be a number'
+        });
+      }
+      updateData.time_elapsed_at_consumption = time_elapsed_at_consumption;
+    }
+
+    // Validate and add servings if provided
+    if (servings !== undefined) {
+      if (typeof servings !== 'number' || servings <= 0) {
+        return res.status(400).json({
+          error: 'Invalid field: servings must be a positive number'
+        });
+      }
+      updateData.servings = servings;
+    }
+
+    // Ensure at least one field is being updated
+    if (Object.keys(updateData).length === 0) {
       return res.status(400).json({
-        error: 'Missing or invalid required field: time_elapsed_at_consumption must be a number'
+        error: 'At least one field (time_elapsed_at_consumption or servings) must be provided'
       });
     }
 
@@ -177,9 +200,7 @@ router.put('/:instanceId', async (req, res) => {
     // Update the food instance
     const updatedInstance = await prisma.foodInstance.update({
       where: { id: instanceId },
-      data: {
-        time_elapsed_at_consumption
-      },
+      data: updateData,
       include: {
         foodItem: {
           include: {
@@ -193,7 +214,8 @@ router.put('/:instanceId', async (req, res) => {
       }
     });
 
-    console.log(`Updated food instance ${instanceId} with new time: ${time_elapsed_at_consumption}`);
+    const updateFields = Object.keys(updateData).join(', ');
+    console.log(`Updated food instance ${instanceId} - fields: ${updateFields}`);
 
     return res.status(200).json({
       message: 'Food instance updated successfully',
