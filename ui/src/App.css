@@ -661,6 +661,8 @@ tbody tr.selected {
   position: relative;
   padding: 1.5rem 0;
   min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Y-axis with tick marks */
@@ -670,7 +672,6 @@ tbody tr.selected {
   background-color: rgba(0, 0, 0, 0.3);
   border-right: 2px solid rgba(100, 108, 255, 0.3);
   flex-shrink: 0;
-  height: 100%;
 }
 
 .timeline-tick {
@@ -707,7 +708,6 @@ tbody tr.selected {
   background-color: rgba(0, 0, 0, 0.2);
   overflow: hidden;
   position: relative;
-  height: 100%;
 }
 
 .timeline-divider {
@@ -1089,7 +1089,6 @@ tbody tr.selected {
   background-color: rgba(0, 0, 0, 0.3);
   border-left: 2px solid rgba(100, 108, 255, 0.3);
   flex-shrink: 0;
-  height: 100%;
   display: flex;
   transition: all 0.3s ease;
 }
@@ -1136,6 +1135,30 @@ tbody tr.selected {
   position: relative;
   overflow-y: auto;
   padding-left: 48px;
+}
+
+.nutrition-divider {
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(100, 108, 255, 0.5) 50%,
+    transparent 100%
+  );
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 1;
+}
+
+.nutrition-divider::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .nutrition-window {

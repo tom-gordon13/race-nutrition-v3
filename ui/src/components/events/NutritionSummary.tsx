@@ -42,6 +42,7 @@ interface Event {
 interface NutritionSummaryProps {
   event: Event;
   foodInstances: FoodInstance[];
+  timelineStyle?: React.CSSProperties;
 }
 
 const formatDuration = (seconds: number) => {
@@ -50,12 +51,22 @@ const formatDuration = (seconds: number) => {
   return `${hours}h ${minutes}m`;
 };
 
-export const NutritionSummary = ({ event, foodInstances }: NutritionSummaryProps) => {
+export const NutritionSummary = ({ event, foodInstances, timelineStyle }: NutritionSummaryProps) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const THREE_HOURS = 3 * 3600;
   const ONE_HOUR = 3600;
   const HALF_HOUR = 1800;
   const tickInterval = event.expected_duration > THREE_HOURS ? ONE_HOUR : HALF_HOUR;
+
+  // Generate dividers to match timeline
+  const generateDividers = () => {
+    const dividers = [];
+    for (let time = tickInterval; time < event.expected_duration; time += tickInterval) {
+      const percentage = (time / event.expected_duration) * 100;
+      dividers.push({ time, percentage });
+    }
+    return dividers;
+  };
 
   // Create time windows
   const generateWindows = () => {
@@ -105,7 +116,7 @@ export const NutritionSummary = ({ event, foodInstances }: NutritionSummaryProps
   };
 
   return (
-    <div className={`nutrition-summary-panel ${isExpanded ? 'expanded' : 'collapsed'}`}>
+    <div className={`nutrition-summary-panel ${isExpanded ? 'expanded' : 'collapsed'}`} style={timelineStyle}>
       <button
         className="nutrition-panel-toggle"
         onClick={() => setIsExpanded(!isExpanded)}
@@ -115,7 +126,16 @@ export const NutritionSummary = ({ event, foodInstances }: NutritionSummaryProps
       </button>
 
       {isExpanded && (
-        <div className="nutrition-panel-content">
+        <div className="nutrition-panel-content" style={timelineStyle}>
+          {/* Generate dividers to match timeline */}
+          {generateDividers().map((divider) => (
+            <div
+              key={divider.time}
+              className="nutrition-divider"
+              style={{ top: `${divider.percentage}%`, position: 'absolute', width: '100%' }}
+            ></div>
+          ))}
+
           {generateWindows().map((window, index) => (
             <div
               key={index}

@@ -231,6 +231,84 @@ const Events = () => {
     e.preventDefault();
   };
 
+  // Helper function to detect overlap and calculate horizontal offset
+  const calculateNonOverlappingOffset = (
+    newTime: number,
+    existingInstances: typeof editableFoodInstances,
+    currentInstanceId?: string
+  ) => {
+    const ITEM_HEIGHT_PERCENT = 8; // Approximate height of each box as percentage of timeline
+    const ITEM_WIDTH_PERCENT = 16.67; // Width of each box as percentage (1/6th of width)
+
+    const topPercent = (newTime / selectedEvent!.expected_duration) * 100;
+    const bottomPercent = topPercent + ITEM_HEIGHT_PERCENT;
+
+    // Get other instances (excluding the one being dragged if editing)
+    const otherInstances = existingInstances.filter(
+      instance => instance.id !== currentInstanceId
+    );
+
+    // Sort instances by time
+    const sorted = [...otherInstances].sort((a, b) =>
+      a.time_elapsed_at_consumption - b.time_elapsed_at_consumption
+    );
+
+    // Track which horizontal lanes are occupied
+    const lanes: Array<{ topPercent: number; bottomPercent: number }[]> = [[]];
+
+    // First, assign all existing instances to lanes
+    sorted.forEach((instance) => {
+      const instTopPercent = (instance.time_elapsed_at_consumption / selectedEvent!.expected_duration) * 100;
+      const instBottomPercent = instTopPercent + ITEM_HEIGHT_PERCENT;
+
+      // Find the first available lane for this instance
+      let assignedLane = -1;
+      for (let i = 0; i < lanes.length; i++) {
+        const lane = lanes[i];
+        const hasOverlap = lane.some((item) => {
+          return !(instBottomPercent <= item.topPercent || instTopPercent >= item.bottomPercent);
+        });
+
+        if (!hasOverlap) {
+          assignedLane = i;
+          break;
+        }
+      }
+
+      if (assignedLane === -1) {
+        assignedLane = lanes.length;
+        lanes.push([]);
+      }
+
+      lanes[assignedLane].push({
+        topPercent: instTopPercent,
+        bottomPercent: instBottomPercent,
+      });
+    });
+
+    // Now find the first available lane for the new/moved item
+    let targetLane = -1;
+    for (let i = 0; i < lanes.length; i++) {
+      const lane = lanes[i];
+      const hasOverlap = lane.some((item) => {
+        return !(bottomPercent <= item.topPercent || topPercent >= item.bottomPercent);
+      });
+
+      if (!hasOverlap) {
+        targetLane = i;
+        break;
+      }
+    }
+
+    // If no available lane found, create a new one
+    if (targetLane === -1) {
+      targetLane = lanes.length;
+    }
+
+    // Return the horizontal offset (as percentage from left)
+    return targetLane * ITEM_WIDTH_PERCENT;
+  };
+
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     if (!selectedEvent) return;
@@ -254,11 +332,24 @@ const Events = () => {
 
     // Handle dragging existing instance (edit mode)
     if (draggingInstanceId && editMode) {
-      // Update the editable food instance
+      // Calculate non-overlapping horizontal offset
+      const horizontalOffset = calculateNonOverlappingOffset(
+        newTime,
+        editableFoodInstances,
+        draggingInstanceId
+      );
+
+      // Update the editable food instance with both vertical and horizontal position
+      // Note: We store the horizontal offset as a custom property for rendering
       setEditableFoodInstances(prev =>
         prev.map(instance =>
           instance.id === draggingInstanceId
-            ? { ...instance, time_elapsed_at_consumption: newTime }
+            ? {
+                ...instance,
+                time_elapsed_at_consumption: newTime,
+                // Store horizontal offset for this specific instance
+                horizontalOffset
+              } as any
             : instance
         )
       );
@@ -375,6 +466,29 @@ const Events = () => {
     return <div>Please log in to view events.</div>;
   }
 
+  // Calculate timeline style based on event duration
+  const calculateTimelineStyle = (event: typeof selectedEvent) => {
+    if (!event) return undefined;
+
+    const SIX_HOURS = 6 * 3600;
+    if (event.expected_duration <= SIX_HOURS) {
+      return {
+        minHeight: '100%',
+        height: '100%'
+      };
+    }
+
+    // For longer events, scale the height proportionally
+    const additionalHours = (event.expected_duration - SIX_HOURS) / 3600;
+    const minHeight = 600 + (additionalHours * 100);
+    return {
+      minHeight: `${minHeight}px`,
+      height: 'auto'
+    };
+  };
+
+  const timelineStyle = calculateTimelineStyle(selectedEvent);
+
   return (
     <div className={`events-container ${selectedEvent ? 'split-view' : ''}`}>
       <div className={`events-panel ${selectedEvent ? 'vertical' : ''}`}>
@@ -470,11 +584,13 @@ const Events = () => {
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
               onDeleteInstance={handleDeleteInstance}
+              timelineStyle={timelineStyle}
             />
 
             <NutritionSummary
               event={selectedEvent}
               foodInstances={editMode ? editableFoodInstances : foodInstances}
+              timelineStyle={timelineStyle}
             />
           </div>
         </div>

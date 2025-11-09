@@ -28,6 +28,7 @@ interface FoodInstance {
   food_item_id: string;
   event_id: string;
   foodItem: FoodItem;
+  horizontalOffset?: number; // Custom horizontal offset to avoid overlaps
 }
 
 interface Event {
@@ -49,6 +50,7 @@ interface EventTimelineProps {
   onDragStart: (e: DragEvent, instanceId: string, currentTop: number) => void;
   onDragEnd: () => void;
   onDeleteInstance: (instanceId: string) => void;
+  timelineStyle?: React.CSSProperties;
 }
 
 const formatDuration = (seconds: number) => {
@@ -118,7 +120,8 @@ export const EventTimeline = ({
   onDrop,
   onDragStart,
   onDragEnd,
-  onDeleteInstance
+  onDeleteInstance,
+  timelineStyle
 }: EventTimelineProps) => {
   const [hoveredInstanceId, setHoveredInstanceId] = useState<string | null>(null);
 
@@ -154,7 +157,7 @@ export const EventTimeline = ({
   return (
     <>
       {/* Y-axis with tick marks */}
-      <div className="timeline-y-axis">
+      <div className="timeline-y-axis" style={timelineStyle}>
         {generateTicks().map((tick, index) => (
           <div
             key={index}
@@ -170,6 +173,7 @@ export const EventTimeline = ({
       {/* Timeline content area */}
       <div
         className="event-timeline"
+        style={timelineStyle}
         onDragOver={onDragOver}
         onDrop={onDrop}
       >
@@ -191,7 +195,10 @@ export const EventTimeline = ({
             {foodInstances.map((instance) => {
               const position = (instance.time_elapsed_at_consumption / event.expected_duration) * 100;
               const isHovered = hoveredInstanceId === instance.id;
-              const leftOffset = horizontalOffsets[instance.id] || 0;
+              // Use custom horizontal offset if set, otherwise use calculated offset
+              const leftOffset = instance.horizontalOffset !== undefined
+                ? instance.horizontalOffset
+                : (horizontalOffsets[instance.id] || 0);
 
               return (
                 <div
