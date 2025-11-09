@@ -81,6 +81,9 @@ const Events = () => {
   // State for dragging food items from left panel
   const [draggingFoodItemId, setDraggingFoodItemId] = useState<string | null>(null);
 
+  // State for left panel visibility
+  const [leftPanelOpen, setLeftPanelOpen] = useState<boolean>(true);
+
   const fetchEvents = async () => {
     if (!user || !user.sub) {
       setLoading(false);
@@ -490,8 +493,18 @@ const Events = () => {
   const timelineStyle = calculateTimelineStyle(selectedEvent);
 
   return (
-    <div className={`events-container ${selectedEvent ? 'split-view' : ''}`}>
-      <div className={`events-panel ${selectedEvent ? 'vertical' : ''}`}>
+    <div className={`events-container ${selectedEvent ? 'split-view' : ''} ${leftPanelOpen ? '' : 'left-panel-collapsed'}`}>
+      {selectedEvent && (
+        <button
+          className="left-panel-toggle"
+          onClick={() => setLeftPanelOpen(!leftPanelOpen)}
+          title={leftPanelOpen ? 'Collapse left panel' : 'Expand left panel'}
+        >
+          {leftPanelOpen ? '‹' : '›'}
+        </button>
+      )}
+
+      <div className={`events-panel ${selectedEvent ? 'vertical' : ''} ${leftPanelOpen ? '' : 'collapsed'}`}>
         <h2>My Events</h2>
 
         {error && <div className="error-message">{error}</div>}
