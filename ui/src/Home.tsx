@@ -1,4 +1,3 @@
-import { useAuth0 } from "@auth0/auth0-react";
 import { Routes, Route } from "react-router-dom";
 import Nutrients from "./Nutrients";
 import CreateFoodItem from "./CreateFoodItem";
