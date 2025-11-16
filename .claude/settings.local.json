@@ -8,7 +8,8 @@
       "Bash(docker ps:*)",
       "Bash(docker logs:*)",
       "Bash(mkdir:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(DATABASE_URL=\"postgresql://neondb_owner:npg_xd9XeUSLq7pM@ep-crimson-dew-ad71vvie-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require\" npx prisma migrate dev:*)"
     ],
     "deny": [],
     "ask": []
