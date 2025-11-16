@@ -36,7 +36,8 @@ const App = () => {
           <div className="login-card">
             <h1>Race Nutrition</h1>
             <p>Plan your nutrition strategy for optimal race performance</p>
-            <button onClick={loginWithRedirect} className="login-btn">
+            <button onClick={() =>
+              +  loginWithRedirect()} className="login-btn">
               Login to Get Started
             </button>
           </div>

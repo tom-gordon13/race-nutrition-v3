@@ -6,7 +6,6 @@ import FoodItems from "./FoodItems";
 import Events from "./Events";
 
 function Home() {
-  const { user } = useAuth0();
 
   return (
     <div className="home">
