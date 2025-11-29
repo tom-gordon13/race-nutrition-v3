@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: ./api/Dockerfile
+      args:
+        - DATABASE_URL=${DATABASE_URL}
     ports:
       - "3001:3001"
     volumes:
@@ -14,7 +16,7 @@ services:
       - ./prisma.config.ts:/app/prisma.config.ts
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=file:./dev.db
+      - DATABASE_URL=${DATABASE_URL}
     stdin_open: true
     tty: true
     restart: unless-stopped

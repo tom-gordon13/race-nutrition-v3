@@ -4,21 +4,21 @@ FROM node:20-alpine
 # Set working directory
 WORKDIR /app
 
-# Set DATABASE_URL for build time (Prisma needs this)
-ENV DATABASE_URL="file:./prisma/dev.db"
+# Accept DATABASE_URL as a build argument
+ARG DATABASE_URL
+
+# Set it as an environment variable for the build
+ENV DATABASE_URL=$DATABASE_URL
 
 # Copy root package files for Prisma access
 COPY package.json package-lock.json ./
 
-# Install dependencies first
-RUN npm ci
-
-# Copy Prisma files
+# Copy Prisma files BEFORE npm ci (needed for postinstall hook)
 COPY prisma ./prisma
 COPY prisma.config.ts ./
 
-# Generate Prisma client after dependencies are installed
-RUN npx prisma generate
+# Install dependencies (this will run postinstall -> prisma generate)
+RUN npm ci
 
 # Copy API source files
 COPY api ./api
