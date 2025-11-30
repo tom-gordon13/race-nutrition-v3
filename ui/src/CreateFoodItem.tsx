@@ -151,56 +151,59 @@ const CreateFoodItem = () => {
       {success && <div className="success-message">{success}</div>}
 
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="itemName">Food Item Name *</label>
-          <input
-            type="text"
-            id="itemName"
-            value={itemName}
-            onChange={(e) => setItemName(e.target.value)}
-            required
-            placeholder="e.g., Banana, Energy Gel, Sports Drink"
-          />
-        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '1rem', }}>
+          <div className="form-group" style={{ flex: 1, margin: 1 }}>
+            <label htmlFor="itemName">Food Item Name *</label>
+            <input
+              type="text"
+              id="itemName"
+              value={itemName}
+              onChange={(e) => setItemName(e.target.value)}
+              required
+              placeholder="e.g., Banana, Energy Gel, Sports Drink"
+            />
+          </div>
 
-        <div className="form-group">
-          <label htmlFor="brand">Brand (Optional)</label>
-          <input
-            type="text"
-            id="brand"
-            value={brand}
-            onChange={(e) => setBrand(e.target.value)}
-            placeholder="e.g., GU, Clif, Gatorade"
-          />
-        </div>
+          <div className="form-group" style={{ flex: 1, margin: 0 }}>
+            <label htmlFor="brand">Brand (Optional)</label>
+            <input
+              type="text"
+              id="brand"
+              value={brand}
+              onChange={(e) => setBrand(e.target.value)}
+              placeholder="e.g., GU, Clif, Gatorade"
+            />
+          </div>
 
-        <div className="form-group">
-          <label htmlFor="category">Category (Optional)</label>
-          <select
-            id="category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          >
-            <option value="">Select a category</option>
-            {FOOD_CATEGORIES.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat.replace(/_/g, ' ')}
-              </option>
-            ))}
-          </select>
+          <div className="form-group" style={{ flex: 1, margin: 0 }}>
+            <label htmlFor="category">Category (Optional)</label>
+            <select
+              id="category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            >
+              <option value="">Select a category</option>
+              {FOOD_CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat.replace(/_/g, ' ')}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="nutrients-section">
           <h3>Nutrients</h3>
 
           {foodItemNutrients.map((nutrient, index) => (
-            <div key={index} className="nutrient-row">
-              <div className="form-group">
+            <div key={index} className="nutrient-row" style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '4px', display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
+              <div className="form-group" style={{ flex: 2, margin: 0 }}>
                 <label htmlFor={`nutrient-${index}`}>Nutrient</label>
                 <select
                   id={`nutrient-${index}`}
                   value={nutrient.nutrient_id}
                   onChange={(e) => updateNutrient(index, 'nutrient_id', e.target.value)}
+                  style={{ width: '100%' }}
                 >
                   <option value="">Select a nutrient</option>
                   {nutrients.map((n) => (
@@ -211,7 +214,7 @@ const CreateFoodItem = () => {
                 </select>
               </div>
 
-              <div className="form-group">
+              <div className="form-group" style={{ flex: 1, margin: 0 }}>
                 <label htmlFor={`quantity-${index}`}>Quantity</label>
                 <input
                   type="number"
@@ -223,7 +226,7 @@ const CreateFoodItem = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="form-group" style={{ flex: 1, margin: 0 }}>
                 <label htmlFor={`unit-${index}`}>Unit</label>
                 <input
                   type="text"
@@ -239,6 +242,7 @@ const CreateFoodItem = () => {
                   type="button"
                   onClick={() => removeNutrientRow(index)}
                   className="remove-btn"
+                  style={{ marginBottom: '0' }}
                 >
                   Remove
                 </button>
