@@ -12,7 +12,8 @@
       "Bash(git filter-branch:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []

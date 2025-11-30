@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+import { Tag } from 'primereact/tag';
+import { Card } from 'primereact/card';
+import { ProgressSpinner } from 'primereact/progressspinner';
+import 'primereact/resources/themes/lara-light-blue/theme.css';
+import 'primereact/resources/primereact.min.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -24,7 +31,11 @@ interface FoodItem {
   foodItemNutrients: FoodItemNutrient[];
 }
 
-const FoodItems = () => {
+interface FoodItemsProps {
+  refreshTrigger?: number;
+}
+
+const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
   const { user } = useAuth0();
   const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,60 +66,91 @@ const FoodItems = () => {
     };
 
     fetchFoodItems();
-  }, [user]);
+  }, [user, refreshTrigger]);
+
+  // Template for nutrients column
+  const nutrientsBodyTemplate = (rowData: FoodItem) => {
+    if (rowData.foodItemNutrients.length === 0) {
+      return <Tag severity="secondary" value="No nutrients" />;
+    }
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+        {rowData.foodItemNutrients.map((fin) => (
+          <div key={fin.id} style={{ fontSize: '0.9rem' }}>
+            <strong>{fin.nutrient.nutrient_name}</strong>: {fin.quantity} {fin.unit}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // Template for date column
+  const dateBodyTemplate = (rowData: FoodItem) => {
+    return new Date(rowData.created_at).toLocaleDateString();
+  };
 
   if (loading) {
-    return <div>Loading food items...</div>;
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2rem' }}>
+        <ProgressSpinner style={{ width: '50px', height: '50px' }} />
+      </div>
+    );
   }
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return <div className="error-message">Error: {error}</div>;
   }
 
   if (!user || !user.sub) {
     return <div>Please log in to view your food items.</div>;
   }
 
-  return (
-    <div>
-      <h2>My Food Items</h2>
-      <p>Total: {foodItems.length}</p>
-
-      {foodItems.length === 0 ? (
-        <p>No food items found. Create your first food item above!</p>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Food Item</th>
-              <th>Nutrients</th>
-              <th>Created</th>
-            </tr>
-          </thead>
-          <tbody>
-            {foodItems.map((foodItem) => (
-              <tr key={foodItem.id}>
-                <td>{foodItem.item_name}</td>
-                <td>
-                  {foodItem.foodItemNutrients.length === 0 ? (
-                    <span>No nutrients</span>
-                  ) : (
-                    <ul style={{ margin: 0, paddingLeft: '1.5rem' }}>
-                      {foodItem.foodItemNutrients.map((fin) => (
-                        <li key={fin.id}>
-                          {fin.nutrient.nutrient_name}: {fin.quantity} {fin.unit}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </td>
-                <td>{new Date(foodItem.created_at).toLocaleDateString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+  const headerContent = (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>My Food Items</h3>
+      <Tag value={`Total: ${foodItems.length}`} severity="info" />
     </div>
+  );
+
+  return (
+    <Card
+      header={headerContent}
+      style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f3f0ff' }}
+      pt={{
+        header: { style: { textAlign: 'left', color: '#646cff', padding: '1.25rem', backgroundColor: '#f3f0ff' } },
+        body: { style: { flex: 1, overflow: 'auto', padding: '0 1.25rem 1.25rem 1.25rem', backgroundColor: '#f3f0ff' } },
+        content: { style: { padding: 0 } }
+      }}
+    >
+      {foodItems.length === 0 ? (
+        <p style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.6)', padding: '2rem' }}>
+          No food items found. Create your first food item above!
+        </p>
+      ) : (
+        <DataTable
+          value={foodItems}
+          stripedRows
+          tableStyle={{ minWidth: '50rem' }}
+          emptyMessage="No food items found."
+          scrollable
+          scrollHeight="flex"
+        >
+          <Column field="item_name" header="Food Item" sortable style={{ minWidth: '200px' }} />
+          <Column
+            header="Nutrients"
+            body={nutrientsBodyTemplate}
+            style={{ minWidth: '300px' }}
+          />
+          <Column
+            header="Created"
+            body={dateBodyTemplate}
+            sortable
+            style={{ minWidth: '120px' }}
+          />
+        </DataTable>
+      )}
+    </Card>
   );
 };
 

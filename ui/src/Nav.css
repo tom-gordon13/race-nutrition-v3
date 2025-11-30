@@ -1,0 +1,77 @@
+/* Custom TabMenu styling - force white backgrounds everywhere */
+.custom-tabmenu,
+.custom-tabmenu * {
+  border: none !important;
+  background: transparent !important;
+}
+
+.custom-tabmenu .p-tabmenu-nav {
+  border: none !important;
+  background: transparent !important;
+}
+
+nav .custom-tabmenu .p-tabmenuitem,
+nav .custom-tabmenu .p-menuitem,
+.nav .custom-tabmenu .p-tabmenuitem,
+.nav .custom-tabmenu .p-menuitem {
+  background: white !important;
+  background-color: white !important;
+}
+
+nav .custom-tabmenu .p-tabmenuitem .p-menuitem-link,
+nav .custom-tabmenu .p-menuitem .p-menuitem-link,
+nav .custom-tabmenu .p-menuitem-link,
+.nav .custom-tabmenu .p-tabmenuitem .p-menuitem-link,
+.nav .custom-tabmenu .p-menuitem .p-menuitem-link,
+.nav .custom-tabmenu .p-menuitem-link {
+  border-bottom: 3px solid transparent !important;
+  transition: all 0.2s !important;
+  color: #64748b !important;
+  font-weight: 400 !important;
+  background: white !important;
+  background-color: white !important;
+}
+
+nav .custom-tabmenu .p-tabmenuitem.p-highlight,
+nav .custom-tabmenu .p-menuitem.p-highlight,
+nav .custom-tabmenu li.p-highlight,
+.nav .custom-tabmenu .p-tabmenuitem.p-highlight,
+.nav .custom-tabmenu .p-menuitem.p-highlight,
+.nav .custom-tabmenu li.p-highlight {
+  background: white !important;
+  background-color: white !important;
+}
+
+nav .custom-tabmenu .p-tabmenuitem.p-highlight .p-menuitem-link,
+nav .custom-tabmenu .p-menuitem.p-highlight .p-menuitem-link,
+nav .custom-tabmenu li.p-highlight .p-menuitem-link,
+.nav .custom-tabmenu .p-tabmenuitem.p-highlight .p-menuitem-link,
+.nav .custom-tabmenu .p-menuitem.p-highlight .p-menuitem-link,
+.nav .custom-tabmenu li.p-highlight .p-menuitem-link {
+  border-bottom: 6px solid #646cff !important;
+  color: #646cff !important;
+  font-weight: 600 !important;
+  background: white !important;
+  background-color: white !important;
+}
+
+nav .custom-tabmenu .p-tabmenuitem .p-menuitem-link:hover,
+nav .custom-tabmenu .p-menuitem .p-menuitem-link:hover,
+nav .custom-tabmenu .p-menuitem-link:hover,
+.nav .custom-tabmenu .p-tabmenuitem .p-menuitem-link:hover,
+.nav .custom-tabmenu .p-menuitem .p-menuitem-link:hover,
+.nav .custom-tabmenu .p-menuitem-link:hover {
+  background: white !important;
+  background-color: white !important;
+}
+
+nav .custom-tabmenu .p-tabmenuitem .p-menuitem-link:focus,
+nav .custom-tabmenu .p-menuitem .p-menuitem-link:focus,
+nav .custom-tabmenu .p-menuitem-link:focus,
+.nav .custom-tabmenu .p-tabmenuitem .p-menuitem-link:focus,
+.nav .custom-tabmenu .p-menuitem .p-menuitem-link:focus,
+.nav .custom-tabmenu .p-menuitem-link:focus {
+  box-shadow: none !important;
+  background: white !important;
+  background-color: white !important;
+}

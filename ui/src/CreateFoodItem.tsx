@@ -1,5 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
+import { InputText } from 'primereact/inputtext';
+import { Dropdown } from 'primereact/dropdown';
+import { InputNumber } from 'primereact/inputnumber';
+import { Button } from 'primereact/button';
+import { Card } from 'primereact/card';
+import 'primereact/resources/themes/lara-light-blue/theme.css';
+import 'primereact/resources/primereact.min.css';
+import 'primeicons/primeicons.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -24,7 +32,11 @@ interface FoodItemNutrient {
   unit: string;
 }
 
-const CreateFoodItem = () => {
+interface CreateFoodItemProps {
+  onFoodItemCreated?: () => void;
+}
+
+const CreateFoodItem = ({ onFoodItemCreated }: CreateFoodItemProps) => {
   const { user } = useAuth0();
   const [itemName, setItemName] = useState('');
   const [brand, setBrand] = useState('');
@@ -127,6 +139,11 @@ const CreateFoodItem = () => {
       setCategory('');
       setFoodItemNutrients([{ nutrient_id: '', quantity: '', unit: '' }]);
 
+      // Trigger refetch of food items
+      if (onFoodItemCreated) {
+        onFoodItemCreated();
+      }
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
       console.error('Error creating food item:', err);
@@ -144,51 +161,59 @@ const CreateFoodItem = () => {
   }
 
   return (
-    <div className="create-food-item">
-      <h2>Create New Food Item</h2>
-
+    <Card
+      title="Create New Food Item"
+      style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f3f0ff' }}
+      pt={{
+        title: { style: { textAlign: 'left', color: '#646cff', padding: '1.25rem', margin: 0, fontSize: '1.5rem', fontWeight: 700, backgroundColor: '#f3f0ff' } },
+        body: { style: { flex: 1, overflow: 'auto', padding: '0 1.25rem 1.25rem 1.25rem', backgroundColor: '#f3f0ff' } },
+        content: { style: { padding: 0 } }
+      }}
+    >
       {error && <div className="error-message">{error}</div>}
       {success && <div className="success-message">{success}</div>}
 
       <form onSubmit={handleSubmit}>
-        <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '1rem', }}>
-          <div className="form-group" style={{ flex: 1, margin: 1 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
+          <div className="p-field">
             <label htmlFor="itemName">Food Item Name *</label>
-            <input
-              type="text"
+            <InputText
               id="itemName"
               value={itemName}
               onChange={(e) => setItemName(e.target.value)}
               required
               placeholder="e.g., Banana, Energy Gel, Sports Drink"
+              style={{ width: '100%' }}
             />
           </div>
 
-          <div className="form-group" style={{ flex: 1, margin: 0 }}>
+          <div className="p-field">
             <label htmlFor="brand">Brand (Optional)</label>
-            <input
-              type="text"
+            <InputText
               id="brand"
               value={brand}
               onChange={(e) => setBrand(e.target.value)}
               placeholder="e.g., GU, Clif, Gatorade"
+              style={{ width: '100%' }}
             />
           </div>
 
-          <div className="form-group" style={{ flex: 1, margin: 0 }}>
+          <div className="p-field">
             <label htmlFor="category">Category (Optional)</label>
-            <select
+            <Dropdown
               id="category"
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              <option value="">Select a category</option>
-              {FOOD_CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat.replace(/_/g, ' ')}
-                </option>
-              ))}
-            </select>
+              onChange={(e) => setCategory(e.value)}
+              options={[
+                { label: 'Select a category', value: '' },
+                ...FOOD_CATEGORIES.map((cat) => ({
+                  label: cat.replace(/_/g, ' '),
+                  value: cat
+                }))
+              ]}
+              placeholder="Select a category"
+              style={{ width: '100%' }}
+            />
           </div>
         </div>
 
@@ -197,69 +222,81 @@ const CreateFoodItem = () => {
 
           {foodItemNutrients.map((nutrient, index) => (
             <div key={index} className="nutrient-row" style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '4px', display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
-              <div className="form-group" style={{ flex: 2, margin: 0 }}>
+              <div className="p-field" style={{ flex: 2, margin: 0 }}>
                 <label htmlFor={`nutrient-${index}`}>Nutrient</label>
-                <select
+                <Dropdown
                   id={`nutrient-${index}`}
                   value={nutrient.nutrient_id}
-                  onChange={(e) => updateNutrient(index, 'nutrient_id', e.target.value)}
+                  onChange={(e) => updateNutrient(index, 'nutrient_id', e.value)}
+                  options={[
+                    { label: 'Select a nutrient', value: '' },
+                    ...nutrients.map((n) => ({
+                      label: `${n.nutrient_name} (${n.nutrient_abbreviation})`,
+                      value: n.id
+                    }))
+                  ]}
+                  placeholder="Select a nutrient"
                   style={{ width: '100%' }}
-                >
-                  <option value="">Select a nutrient</option>
-                  {nutrients.map((n) => (
-                    <option key={n.id} value={n.id}>
-                      {n.nutrient_name} ({n.nutrient_abbreviation})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group" style={{ flex: 1, margin: 0 }}>
-                <label htmlFor={`quantity-${index}`}>Quantity</label>
-                <input
-                  type="number"
-                  id={`quantity-${index}`}
-                  value={nutrient.quantity}
-                  onChange={(e) => updateNutrient(index, 'quantity', e.target.value)}
-                  placeholder="e.g., 100"
-                  step="0.01"
                 />
               </div>
 
-              <div className="form-group" style={{ flex: 1, margin: 0 }}>
+              <div className="p-field" style={{ flex: 1, margin: 0 }}>
+                <label htmlFor={`quantity-${index}`}>Quantity</label>
+                <InputNumber
+                  id={`quantity-${index}`}
+                  value={typeof nutrient.quantity === 'string' ? parseFloat(nutrient.quantity) || undefined : nutrient.quantity}
+                  onValueChange={(e) => updateNutrient(index, 'quantity', e.value || '')}
+                  placeholder="e.g., 100"
+                  minFractionDigits={0}
+                  maxFractionDigits={2}
+                  style={{ width: '100%' }}
+                />
+              </div>
+
+              <div className="p-field" style={{ flex: 1, margin: 0 }}>
                 <label htmlFor={`unit-${index}`}>Unit</label>
-                <input
-                  type="text"
+                <InputText
                   id={`unit-${index}`}
                   value={nutrient.unit}
                   onChange={(e) => updateNutrient(index, 'unit', e.target.value)}
                   placeholder="e.g., mg, g, mcg"
+                  style={{ width: '100%' }}
                 />
               </div>
 
               {foodItemNutrients.length > 1 && (
-                <button
+                <Button
                   type="button"
                   onClick={() => removeNutrientRow(index)}
-                  className="remove-btn"
+                  icon="pi pi-trash"
+                  severity="danger"
+                  outlined
                   style={{ marginBottom: '0' }}
-                >
-                  Remove
-                </button>
+                />
               )}
             </div>
           ))}
 
-          <button type="button" onClick={addNutrientRow} className="add-nutrient-btn">
-            + Add Nutrient
-          </button>
+          <Button
+            type="button"
+            onClick={addNutrientRow}
+            icon="pi pi-plus"
+            label="Add Nutrient"
+            outlined
+          />
         </div>
 
-        <button type="submit" disabled={loading || !itemName} className="submit-btn">
-          {loading ? 'Creating...' : 'Create Food Item'}
-        </button>
+        <Button
+          type="submit"
+          disabled={loading || !itemName}
+          label={loading ? 'Creating...' : 'Create Food Item'}
+          icon={loading ? 'pi pi-spin pi-spinner' : 'pi pi-check'}
+          severity="success"
+          raised
+          style={{ width: '100%', marginTop: '1rem', backgroundColor: '#22c55e', borderColor: '#22c55e', color: 'white', fontWeight: 600 }}
+        />
       </form>
-    </div>
+    </Card>
   );
 };
 

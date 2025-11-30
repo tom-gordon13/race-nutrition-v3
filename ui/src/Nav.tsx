@@ -1,5 +1,12 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { TabMenu } from 'primereact/tabmenu';
+import { Button } from 'primereact/button';
+import { Avatar } from 'primereact/avatar';
+import 'primereact/resources/themes/lara-light-blue/theme.css';
+import 'primereact/resources/primereact.min.css';
+import 'primeicons/primeicons.css';
+import './Nav.css';
 
 interface NavProps {
   className?: string;
@@ -14,50 +21,61 @@ const Nav = ({ className = "" }: NavProps) => {
     logout({ logoutParams: { returnTo: window.location.origin } });
   };
 
-  // Determine active tab based on current path
-  const getActiveTab = () => {
-    if (location.pathname.startsWith('/events')) return 'events';
-    if (location.pathname.startsWith('/nutrients')) return 'nutrients';
-    return 'food-items';
+  // Determine active index based on current path
+  const getActiveIndex = () => {
+    if (location.pathname.startsWith('/events')) return 1;
+    if (location.pathname.startsWith('/nutrients')) return 2;
+    return 0;
   };
 
-  const activeTab = getActiveTab();
+  const items = [
+    {
+      label: 'Food Items',
+      icon: 'pi pi-apple',
+      command: () => navigate('/')
+    },
+    {
+      label: 'Events',
+      icon: 'pi pi-calendar',
+      command: () => navigate('/events')
+    },
+    {
+      label: 'Nutrients',
+      icon: 'pi pi-chart-bar',
+      command: () => navigate('/nutrients')
+    }
+  ];
 
   return (
-    <nav className={`nav ${className}`}>
-      <div className="nav-content">
-        <div className="nav-brand">
-          <h2>Race Nutrition</h2>
+    <nav className={`nav ${className}`} style={{ backgroundColor: '#f3f0ff', borderBottom: '1px solid #e5e7eb', padding: '0.75rem 0', width: '100%' }}>
+      <div className="nav-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 2rem', maxWidth: '100%', margin: '0 auto' }}>
+        <div className="nav-brand" style={{ marginRight: '2rem' }}>
+          <h2 style={{ margin: 0, color: '#646cff', fontSize: '1.5rem', fontWeight: 700 }}>Race Nutrition</h2>
         </div>
-        <div className="nav-center">
-          <button
-            className={`nav-tab ${activeTab === 'food-items' ? 'active' : ''}`}
-            onClick={() => navigate('/')}
-          >
-            Food Items
-          </button>
-          <button
-            className={`nav-tab ${activeTab === 'events' ? 'active' : ''}`}
-            onClick={() => navigate('/events')}
-          >
-            Events
-          </button>
-          <button
-            className={`nav-tab ${activeTab === 'nutrients' ? 'active' : ''}`}
-            onClick={() => navigate('/nutrients')}
-          >
-            Nutrients
-          </button>
+        <div className="nav-center" style={{ flex: 1 }}>
+          <TabMenu
+            model={items}
+            activeIndex={getActiveIndex()}
+            className="custom-tabmenu"
+          />
         </div>
-        <div className="nav-right">
-          <div className="nav-user">
-            <span className="user-name">Hello, {user?.name}</span>
-            <button
+        <div className="nav-right" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div className="nav-user" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Avatar
+              label={user?.name?.charAt(0).toUpperCase()}
+              icon="pi pi-user"
+              style={{ backgroundColor: '#646cff', color: 'white' }}
+              shape="circle"
+            />
+            <span style={{ color: '#646cff', fontWeight: 500 }}>Hello, {user?.name}</span>
+            <Button
               onClick={handleSignOut}
-              className="sign-out-btn"
-            >
-              Sign Out
-            </button>
+              label="Sign Out"
+              icon="pi pi-sign-out"
+              severity="secondary"
+              outlined
+              size="small"
+            />
           </div>
         </div>
       </div>
