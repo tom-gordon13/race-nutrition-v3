@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "cd ui && npm run dev",
         "dev:api": "tsx watch api/src/server.ts",
-        "build": "prisma generate && prisma migrate deploy && (cd ui && npm run build) && cp -r ui/dist dist",
+        "build": "prisma generate && prisma migrate deploy && cd ui && npm run build",
         "lint": "cd ui && npm run lint",
         "preview": "cd ui && npm run preview",
         "install:ui": "cd ui && npm install",
