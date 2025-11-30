@@ -15,7 +15,7 @@ race-nutrition/
 │   └── ...
 ├── package.json       # Root project configuration
 ├── docker-compose.yml # Docker Compose configuration
-└── README.md          # This file
+└── README.md          # This file.
 ```
 
 ## Getting Started
