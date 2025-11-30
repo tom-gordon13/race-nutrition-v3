@@ -1,7 +1,7 @@
 {
   "buildCommand": "cd ui && npm run build",
   "outputDirectory": "ui/dist",
-  "installCommand": "npm install && npm run install:ui && prisma generate",
+  "installCommand": "npm install && cd api && npm install && cd .. && npm run install:ui && prisma generate",
   "rewrites": [
     {
       "source": "/api/:path*",
