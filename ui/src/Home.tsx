@@ -15,7 +15,7 @@ function Home() {
   return (
     <div className="home">
       <Routes>
-        <Route path="/" element={
+        <Route path="/food-items" element={
           <div style={{ maxWidth: '90%', margin: '0 auto', padding: '2rem', height: '100%', boxSizing: 'border-box' }}>
             <div style={{ display: 'flex', gap: '2rem', alignItems: 'stretch', height: '100%' }}>
               <div style={{ flex: '0 0 700px', display: 'flex', flexDirection: 'column' }}>

@@ -23,6 +23,7 @@ const Nav = ({ className = "" }: NavProps) => {
 
   // Determine active index based on current path
   const getActiveIndex = () => {
+    if (location.pathname.startsWith('/food-items')) return 0;
     if (location.pathname.startsWith('/events')) return 1;
     if (location.pathname.startsWith('/nutrients')) return 2;
     return 0;
@@ -32,7 +33,7 @@ const Nav = ({ className = "" }: NavProps) => {
     {
       label: 'Food Items',
       icon: 'pi pi-apple',
-      command: () => navigate('/')
+      command: () => navigate('/food-items')
     },
     {
       label: 'Events',

@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useParams } from 'react-router-dom';
+import { Card } from 'primereact/card';
+import 'primereact/resources/themes/lara-light-blue/theme.css';
+import 'primereact/resources/primereact.min.css';
 import {
   EventForm,
   EventsTable,
@@ -535,66 +538,57 @@ const Events = () => {
       )}
 
       <div className={`events-panel ${selectedEvent ? 'vertical' : ''} ${leftPanelOpen ? '' : 'collapsed'}`}>
-        <h2>My Events</h2>
+        <Card
+          title={selectedEvent ? "Food Items" : "My Events"}
+          style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f3f0ff' }}
+          pt={{
+            title: { style: { textAlign: 'left', color: '#646cff', padding: '1.25rem', margin: 0, fontSize: '1.5rem', fontWeight: 700, backgroundColor: '#f3f0ff' } },
+            body: { style: { flex: 1, overflow: 'auto', padding: '0 1.25rem 1.25rem 1.25rem', backgroundColor: '#f3f0ff' } },
+            content: { style: { padding: 0 } }
+          }}
+        >
+          {error && <div className="error-message">{error}</div>}
+          {success && <div className="success-message">{success}</div>}
 
-        {error && <div className="error-message">{error}</div>}
-        {success && <div className="success-message">{success}</div>}
+          {!selectedEvent && (
+            <div style={{ marginBottom: '1rem' }}>
+              <button
+                onClick={() => setShowCreateForm(!showCreateForm)}
+                className="add-nutrient-btn"
+              >
+                {showCreateForm ? 'Cancel' : '+ Create New Event'}
+              </button>
+            </div>
+          )}
 
-        {selectedEvent && (
-          <div className="sub-tabs">
-            <button
-              className={`sub-tab ${leftPanelTab === 'food-items' ? 'active' : ''}`}
-              onClick={() => setLeftPanelTab('food-items')}
-            >
-              Food Items
-            </button>
-            <button
-              className={`sub-tab ${leftPanelTab === 'events' ? 'active' : ''}`}
-              onClick={() => setLeftPanelTab('events')}
-            >
-              Events
-            </button>
-          </div>
-        )}
+          {showCreateForm && (
+            <EventForm
+              onSubmit={handleCreateEvent}
+              onCancel={() => setShowCreateForm(false)}
+            />
+          )}
 
-        {!selectedEvent && (
-          <div style={{ marginBottom: '1rem' }}>
-            <button
-              onClick={() => setShowCreateForm(!showCreateForm)}
-              className="add-nutrient-btn"
-            >
-              {showCreateForm ? 'Cancel' : '+ Create New Event'}
-            </button>
-          </div>
-        )}
+          {!selectedEvent && (
+            <EventsTable
+              events={events}
+              selectedEvent={selectedEvent}
+              onEventSelect={setSelectedEvent}
+            />
+          )}
 
-        {showCreateForm && (
-          <EventForm
-            onSubmit={handleCreateEvent}
-            onCancel={() => setShowCreateForm(false)}
-          />
-        )}
-
-        {(!selectedEvent || leftPanelTab === 'events') && (
-          <EventsTable
-            events={events}
-            selectedEvent={selectedEvent}
-            onEventSelect={setSelectedEvent}
-          />
-        )}
-
-        {selectedEvent && leftPanelTab === 'food-items' && (
-          <FoodItemsList
-            foodItems={foodItems}
-            categoryFilter={categoryFilter}
-            myItemsOnly={myItemsOnly}
-            loadingFoodItems={loadingFoodItems}
-            onCategoryFilterChange={setCategoryFilter}
-            onMyItemsOnlyChange={setMyItemsOnly}
-            onFoodItemDragStart={handleFoodItemDragStart}
-            onFoodItemDragEnd={handleDragEnd}
-          />
-        )}
+          {selectedEvent && (
+            <FoodItemsList
+              foodItems={foodItems}
+              categoryFilter={categoryFilter}
+              myItemsOnly={myItemsOnly}
+              loadingFoodItems={loadingFoodItems}
+              onCategoryFilterChange={setCategoryFilter}
+              onMyItemsOnlyChange={setMyItemsOnly}
+              onFoodItemDragStart={handleFoodItemDragStart}
+              onFoodItemDragEnd={handleDragEnd}
+            />
+          )}
+        </Card>
       </div>
 
       {selectedEvent && (

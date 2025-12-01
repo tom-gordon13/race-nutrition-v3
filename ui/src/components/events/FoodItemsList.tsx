@@ -69,7 +69,7 @@ export const FoodItemsList = ({
               checked={myItemsOnly}
               onChange={(e) => onMyItemsOnlyChange(e.target.checked)}
             />
-            <span className="checkbox-text">My items</span>
+            <span className="checkbox-text">My items only</span>
           </label>
         </div>
 

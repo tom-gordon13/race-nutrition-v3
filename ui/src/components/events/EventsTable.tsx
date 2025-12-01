@@ -1,3 +1,9 @@
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+import { Tag } from 'primereact/tag';
+import 'primereact/resources/themes/lara-light-blue/theme.css';
+import 'primereact/resources/primereact.min.css';
+
 interface Event {
   id: string;
   event_user_id: string;
@@ -20,38 +26,48 @@ const formatDuration = (seconds: number) => {
 };
 
 export const EventsTable = ({ events, selectedEvent, onEventSelect }: EventsTableProps) => {
+  // Template for duration column
+  const durationBodyTemplate = (rowData: Event) => {
+    return formatDuration(rowData.expected_duration);
+  };
+
+  // Template for date column
+  const dateBodyTemplate = (rowData: Event) => {
+    return new Date(rowData.created_at).toLocaleDateString();
+  };
+
   if (events.length === 0) {
-    return <p>No events found. Create your first event above!</p>;
+    return <p style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.6)', padding: '1rem' }}>No events found. Create your first event above!</p>;
   }
 
   return (
     <>
-      <p>Total Events: {events.length}</p>
-      <div className="events-table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Event Type</th>
-              <th>Expected Duration</th>
-              <th>Created</th>
-            </tr>
-          </thead>
-          <tbody>
-            {events.map((event) => (
-              <tr
-                key={event.id}
-                onClick={() => onEventSelect(event)}
-                className={selectedEvent?.id === event.id ? 'selected' : ''}
-                style={{ cursor: 'pointer' }}
-              >
-                <td>{event.type}</td>
-                <td>{formatDuration(event.expected_duration)}</td>
-                <td>{new Date(event.created_at).toLocaleDateString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div style={{ marginBottom: '1rem' }}>
+        <Tag value={`Total Events: ${events.length}`} severity="info" />
       </div>
+      <DataTable
+        value={events}
+        selectionMode="single"
+        selection={selectedEvent}
+        onSelectionChange={(e) => onEventSelect(e.value)}
+        dataKey="id"
+        stripedRows
+        emptyMessage="No events found."
+      >
+        <Column field="type" header="Event Type" sortable />
+        <Column
+          header="Expected Duration"
+          body={durationBodyTemplate}
+          sortable
+          sortField="expected_duration"
+        />
+        <Column
+          header="Created"
+          body={dateBodyTemplate}
+          sortable
+          sortField="created_at"
+        />
+      </DataTable>
     </>
   );
 };
