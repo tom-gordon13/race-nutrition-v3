@@ -119,8 +119,9 @@ export const FoodItemsList = ({
               >
                 <div className="food-item-content">
                   <div className="drag-handle">⋮⋮</div>
-                  <div className="food-item-name">{item.item_name}</div>
-                  {item.brand && <div className="food-item-brand">{item.brand}</div>}
+                  <div className="food-item-name">
+                    {item.item_name}{item.brand && ` - ${item.brand}`}
+                  </div>
 
                   <div className="food-item-nutrients">
                     {carbs && (

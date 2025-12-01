@@ -69,7 +69,7 @@ const formatTimeHHMM = (seconds: number) => {
 // Calculate horizontal offsets for overlapping instances
 const calculateHorizontalOffsets = (instances: FoodInstance[], event: Event) => {
   const ITEM_HEIGHT_PERCENT = 8; // Approximate height of each box as percentage of timeline
-  const ITEM_WIDTH_PERCENT = 16.67; // Width of each box as percentage
+  const ITEM_WIDTH_PX = 150; // Fixed width in pixels
 
   // Sort instances by time
   const sorted = [...instances].sort((a, b) =>
@@ -111,8 +111,8 @@ const calculateHorizontalOffsets = (instances: FoodInstance[], event: Event) => 
       bottomPercent,
     });
 
-    // Calculate the horizontal offset
-    offsets[instance.id] = assignedLane * ITEM_WIDTH_PERCENT;
+    // Calculate the horizontal offset in pixels
+    offsets[instance.id] = assignedLane * ITEM_WIDTH_PX;
   });
 
   return offsets;
@@ -260,8 +260,8 @@ export const EventTimeline = ({
                   style={{
                     position: 'absolute',
                     top: `${position}%`,
-                    left: `${leftOffset}%`,
-                    width: '16.67%',
+                    left: `${leftOffset}px`,
+                    width: '150px',
                     cursor: isEditing ? 'default' : (editMode ? 'grab' : 'pointer'),
                   }}
                 >
