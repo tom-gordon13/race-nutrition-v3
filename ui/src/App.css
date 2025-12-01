@@ -650,7 +650,6 @@ tbody tr.selected {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -717,7 +716,7 @@ tbody tr.selected {
   display: flex;
   gap: 0;
   position: relative;
-  padding: 1.5rem 0;
+  padding: 0;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;

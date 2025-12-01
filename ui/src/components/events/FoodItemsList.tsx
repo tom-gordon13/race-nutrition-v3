@@ -1,4 +1,10 @@
 import { useState, type DragEvent } from 'react';
+import { Checkbox } from 'primereact/checkbox';
+import { Dropdown } from 'primereact/dropdown';
+import { Tag } from 'primereact/tag';
+import { ProgressSpinner } from 'primereact/progressspinner';
+import 'primereact/resources/themes/lara-light-blue/theme.css';
+import 'primereact/resources/primereact.min.css';
 
 interface FoodItemNutrient {
   id: string;
@@ -58,44 +64,47 @@ export const FoodItemsList = ({
     ? foodItems
     : foodItems.filter(item => item.category === categoryFilter);
 
+  const categoryOptions = FOOD_CATEGORIES.map((category) => ({
+    label: category === 'ALL' ? 'All Categories' : category.toLowerCase().replace(/_/g, ' '),
+    value: category
+  }));
+
   return (
     <>
-      <div className="food-filters-container">
-        <div className="my-items-filter">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              className="checkbox-input"
-              checked={myItemsOnly}
-              onChange={(e) => onMyItemsOnlyChange(e.target.checked)}
-            />
-            <span className="checkbox-text">My items only</span>
+      <div className="food-filters-container" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1rem' }}>
+        <div className="my-items-filter" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Checkbox
+            inputId="my-items-checkbox"
+            checked={myItemsOnly}
+            onChange={(e) => onMyItemsOnlyChange(e.checked || false)}
+          />
+          <label htmlFor="my-items-checkbox" style={{ cursor: 'pointer', color: '#646cff', fontWeight: 500 }}>
+            My items only
           </label>
         </div>
 
-        <div className="category-filter-container">
-          <label htmlFor="category-filter" className="category-filter-label">Category:</label>
-          <select
+        <div className="category-filter-container" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <label htmlFor="category-filter" style={{ color: '#646cff', fontWeight: 500 }}>Category:</label>
+          <Dropdown
             id="category-filter"
-            className="category-filter-select"
             value={categoryFilter}
-            onChange={(e) => onCategoryFilterChange(e.target.value)}
-          >
-            {FOOD_CATEGORIES.map((category) => (
-              <option key={category} value={category}>
-                {category === 'ALL' ? 'All Categories' : category.toLowerCase().replace(/_/g, ' ')}
-              </option>
-            ))}
-          </select>
+            onChange={(e) => onCategoryFilterChange(e.value)}
+            options={categoryOptions}
+            style={{ width: '100%' }}
+          />
         </div>
       </div>
 
-      <p>Total Food Items: {filteredItems.length}</p>
+      <div style={{ marginBottom: '1rem' }}>
+        <Tag value={`Total Food Items: ${filteredItems.length}`} severity="info" />
+      </div>
 
       {loadingFoodItems ? (
-        <p>Loading food items...</p>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2rem' }}>
+          <ProgressSpinner style={{ width: '50px', height: '50px' }} />
+        </div>
       ) : filteredItems.length === 0 ? (
-        <p>No food items found.</p>
+        <p style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.6)', padding: '1rem' }}>No food items found.</p>
       ) : (
         <div className="food-items-grid">
           {filteredItems.map((item) => {
