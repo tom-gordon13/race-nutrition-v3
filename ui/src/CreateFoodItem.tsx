@@ -228,13 +228,10 @@ const CreateFoodItem = ({ onFoodItemCreated }: CreateFoodItemProps) => {
                   id={`nutrient-${index}`}
                   value={nutrient.nutrient_id}
                   onChange={(e) => updateNutrient(index, 'nutrient_id', e.value)}
-                  options={[
-                    { label: 'Select a nutrient', value: '' },
-                    ...nutrients.map((n) => ({
-                      label: `${n.nutrient_name} (${n.nutrient_abbreviation})`,
-                      value: n.id
-                    }))
-                  ]}
+                  options={nutrients.map((n) => ({
+                    label: `${n.nutrient_name} (${n.nutrient_abbreviation})`,
+                    value: n.id
+                  }))}
                   placeholder="Select a nutrient"
                   style={{ width: '100%' }}
                 />
@@ -255,11 +252,15 @@ const CreateFoodItem = ({ onFoodItemCreated }: CreateFoodItemProps) => {
 
               <div className="p-field" style={{ flex: 1, margin: 0 }}>
                 <label htmlFor={`unit-${index}`}>Unit</label>
-                <InputText
+                <Dropdown
                   id={`unit-${index}`}
                   value={nutrient.unit}
-                  onChange={(e) => updateNutrient(index, 'unit', e.target.value)}
-                  placeholder="e.g., mg, g, mcg"
+                  onChange={(e) => updateNutrient(index, 'unit', e.value)}
+                  options={[
+                    { label: 'g (grams)', value: 'g' },
+                    { label: 'mg (milligrams)', value: 'mg' }
+                  ]}
+                  placeholder="Select unit"
                   style={{ width: '100%' }}
                 />
               </div>
