@@ -548,6 +548,8 @@ tbody tr:last-child td {
   gap: 2rem;
   transition: all 0.4s ease;
   align-items: stretch;
+  margin-left: -2rem;
+  padding-left: 2rem;
 }
 
 .events-panel {
@@ -557,9 +559,11 @@ tbody tr:last-child td {
 }
 
 .events-container.split-view .events-panel {
-  width: 25%;
-  max-width: 25%;
+  width: calc(25% + 2rem);
+  max-width: calc(25% + 2rem);
   flex-shrink: 0;
+  margin-left: -2rem;
+  padding-left: 2rem;
 }
 
 /* Collapsed left panel */
@@ -580,13 +584,12 @@ tbody tr:last-child td {
 /* Left panel toggle button */
 .left-panel-toggle {
   position: fixed;
-  left: 0;
+  left: 0.5rem;
   top: 50%;
   transform: translateY(-50%);
   background-color: rgba(100, 108, 255, 0.2);
   border: 1px solid #646cff;
-  border-left: none;
-  border-radius: 0 6px 6px 0;
+  border-radius: 6px;
   color: #646cff;
   font-size: 1.5rem;
   font-weight: bold;
@@ -603,7 +606,7 @@ tbody tr:last-child td {
 .left-panel-toggle:hover {
   background-color: rgba(100, 108, 255, 0.3);
   border-color: #535bf2;
-  transform: translateY(-50%) translateX(2px);
+  transform: translateY(-50%) scale(1.05);
 }
 
 /* Events table container with scrolling */
