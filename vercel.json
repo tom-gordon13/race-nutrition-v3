@@ -1,7 +1,7 @@
 {
   "buildCommand": "prisma generate && npm run build",
   "outputDirectory": "dist",
-  "installCommand": "npm install && npm run install:ui",
+  "installCommand": "npm install && npm run install:ui && cd api && npm install",
   "rewrites": [
     {
       "source": "/api/:path*",
@@ -10,8 +10,7 @@
   ],
   "functions": {
     "api/index.ts": {
-      "maxDuration": 10,
-      "includeFiles": "node_modules/.prisma/client/**"
+      "maxDuration": 10
     }
   }
 }
