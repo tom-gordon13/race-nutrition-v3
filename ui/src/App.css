@@ -554,7 +554,6 @@ tbody tr:last-child td {
   width: 100%;
   transition: all 0.4s ease;
   overflow: visible;
-  position: relative;
 }
 
 .events-container.split-view .events-panel {
@@ -580,8 +579,8 @@ tbody tr:last-child td {
 
 /* Left panel toggle button */
 .left-panel-toggle {
-  position: absolute;
-  right: -32px;
+  position: fixed;
+  left: 0;
   top: 50%;
   transform: translateY(-50%);
   background-color: rgba(100, 108, 255, 0.2);
