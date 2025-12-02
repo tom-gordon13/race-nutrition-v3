@@ -2,11 +2,15 @@
   "name": "race-nutrition-api",
   "version": "1.0.0",
   "type": "module",
+  "scripts": {
+    "postinstall": "prisma generate --schema=../prisma/schema.prisma"
+  },
   "dependencies": {
     "@prisma/client": "^6.18.0",
     "express": "^5.1.0",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.3"
+    "dotenv": "^17.2.3",
+    "prisma": "^6.18.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
