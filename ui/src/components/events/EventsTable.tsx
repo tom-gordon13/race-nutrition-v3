@@ -49,7 +49,7 @@ export const EventsTable = ({ events, selectedEvent, onEventSelect }: EventsTabl
         value={events}
         selectionMode="single"
         selection={selectedEvent}
-        onSelectionChange={(e) => onEventSelect(e.value)}
+        onSelectionChange={(e) => onEventSelect(e.value as Event)}
         dataKey="id"
         stripedRows
         emptyMessage="No events found."

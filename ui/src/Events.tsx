@@ -67,7 +67,6 @@ const Events = () => {
   const [loadingInstances, setLoadingInstances] = useState(false);
 
   // Sub-tab state (for left panel when event is selected)
-  const [leftPanelTab, setLeftPanelTab] = useState<'food-items' | 'events'>('food-items');
   const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
   const [loadingFoodItems, setLoadingFoodItems] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
