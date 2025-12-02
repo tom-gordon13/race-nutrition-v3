@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { useState } from "react";
 import Nutrients from "./Nutrients";
 import CreateFoodItem from "./CreateFoodItem";
@@ -15,6 +15,7 @@ function Home() {
   return (
     <div className="home">
       <Routes>
+        <Route path="/" element={<Navigate to="/food-items" replace />} />
         <Route path="/food-items" element={
           <div style={{ maxWidth: '90%', margin: '0 auto', padding: '2rem', height: '100%', boxSizing: 'border-box' }}>
             <div style={{ display: 'flex', gap: '2rem', alignItems: 'stretch', height: '100%' }}>
