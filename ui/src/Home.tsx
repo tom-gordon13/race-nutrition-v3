@@ -28,8 +28,8 @@ function Home() {
             </div>
           </div>
         } />
-        <Route path="/events" element={<div style={{ maxWidth: '90%', margin: '0 auto', padding: '2rem' }}><Events /></div>} />
-        <Route path="/events/:eventId" element={<div style={{ maxWidth: '90%', margin: '0 auto', padding: '2rem' }}><Events /></div>} />
+        <Route path="/events" element={<div style={{ maxWidth: '98%', margin: '0 auto', padding: '2rem' }}><Events /></div>} />
+        <Route path="/events/:eventId" element={<div style={{ maxWidth: '98%', margin: '0 auto', padding: '2rem' }}><Events /></div>} />
         <Route path="/nutrients" element={<div style={{ maxWidth: '90%', margin: '0 auto', padding: '2rem' }}><Nutrients /></div>} />
       </Routes>
     </div>

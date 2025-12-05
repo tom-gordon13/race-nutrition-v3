@@ -9,7 +9,8 @@ import {
   EventsTable,
   FoodItemsList,
   EventTimeline,
-  NutritionSummary
+  NutritionSummary,
+  FoodItemSelectionModal
 } from './components/events';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
@@ -85,6 +86,10 @@ const Events = () => {
 
   // State for left panel visibility
   const [leftPanelOpen, setLeftPanelOpen] = useState<boolean>(true);
+
+  // State for food item selection modal
+  const [showFoodItemModal, setShowFoodItemModal] = useState(false);
+  const [modalTimeInSeconds, setModalTimeInSeconds] = useState(0);
 
   const fetchEvents = async () => {
     if (!user || !user.sub) {
@@ -453,6 +458,45 @@ const Events = () => {
     }
   };
 
+  // Handler for click-and-hold create
+  const handleClickHoldCreate = (timeInSeconds: number) => {
+    setModalTimeInSeconds(timeInSeconds);
+    setShowFoodItemModal(true);
+  };
+
+  // Handler for food item selection from modal
+  const handleFoodItemSelect = async (foodItemId: string, servings: number) => {
+    if (!selectedEvent) return;
+
+    try {
+      const response = await fetch(`${API_URL}/api/food-instances`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          food_item_id: foodItemId,
+          event_id: selectedEvent.id,
+          time_elapsed_at_consumption: modalTimeInSeconds,
+          servings: servings
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create food instance');
+      }
+
+      // Refresh food instances to show the new one
+      await fetchFoodInstances(selectedEvent.id);
+      setSuccess('Food instance added successfully!');
+      setTimeout(() => setSuccess(null), 3000);
+      setShowFoodItemModal(false);
+    } catch (err) {
+      console.error('Error creating food instance:', err);
+      setError(err instanceof Error ? err.message : 'Failed to create food instance');
+    }
+  };
+
   const handleCreateEvent = async (eventType: string, expectedDuration: number) => {
     setError(null);
     setSuccess(null);
@@ -621,6 +665,7 @@ const Events = () => {
               onDragEnd={handleDragEnd}
               onDeleteInstance={handleDeleteInstance}
               onUpdateInstance={handleUpdateInstance}
+              onClickHoldCreate={handleClickHoldCreate}
               timelineStyle={timelineStyle}
             />
 
@@ -632,6 +677,19 @@ const Events = () => {
           </div>
         </div>
       )}
+
+      {/* Food Item Selection Modal */}
+      <FoodItemSelectionModal
+        isOpen={showFoodItemModal}
+        foodItems={foodItems}
+        timeInSeconds={modalTimeInSeconds}
+        categoryFilter={categoryFilter}
+        myItemsOnly={myItemsOnly}
+        onClose={() => setShowFoodItemModal(false)}
+        onSelect={handleFoodItemSelect}
+        onCategoryFilterChange={setCategoryFilter}
+        onMyItemsOnlyChange={setMyItemsOnly}
+      />
     </div>
   );
 };
