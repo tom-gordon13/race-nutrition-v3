@@ -297,7 +297,7 @@ export const EventTimeline = ({
                             />
                           </div>
                           <div>
-                            <span>Servings:</span>
+                            <span>Serv.:</span>
                             <input
                               type="number"
                               value={editServings}

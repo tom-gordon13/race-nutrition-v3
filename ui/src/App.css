@@ -902,11 +902,11 @@ tbody tr.selected {
 }
 
 .time-input {
-  width: 60px;
+  width: 50%;
 }
 
 .servings-input {
-  width: 25%;
+  width: 50%;
 }
 
 .time-input:focus,
