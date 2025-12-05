@@ -41,6 +41,7 @@ const CreateFoodItem = ({ onFoodItemCreated }: CreateFoodItemProps) => {
   const [itemName, setItemName] = useState('');
   const [brand, setBrand] = useState('');
   const [category, setCategory] = useState('');
+  const [cost, setCost] = useState<number | null>(null);
   const [nutrients, setNutrients] = useState<Nutrient[]>([]);
   const [foodItemNutrients, setFoodItemNutrients] = useState<FoodItemNutrient[]>([
     { nutrient_id: '', quantity: '', unit: '' }
@@ -111,6 +112,7 @@ const CreateFoodItem = ({ onFoodItemCreated }: CreateFoodItemProps) => {
         item_name: itemName,
         brand: brand || undefined,
         category: category || undefined,
+        cost: cost !== null ? cost : undefined,
         auth0_sub: user.sub,
         nutrients: validNutrients
       };
@@ -137,6 +139,7 @@ const CreateFoodItem = ({ onFoodItemCreated }: CreateFoodItemProps) => {
       setItemName('');
       setBrand('');
       setCategory('');
+      setCost(null);
       setFoodItemNutrients([{ nutrient_id: '', quantity: '', unit: '' }]);
 
       // Trigger refetch of food items
@@ -212,6 +215,24 @@ const CreateFoodItem = ({ onFoodItemCreated }: CreateFoodItemProps) => {
                 }))
               ]}
               placeholder="Select a category"
+              style={{ width: '100%' }}
+            />
+          </div>
+
+          <div className="p-field">
+            <label htmlFor="cost">Cost (Optional)</label>
+            <InputNumber
+              id="cost"
+              value={cost}
+              onValueChange={(e) => setCost(e.value ?? null)}
+              mode="currency"
+              currency="USD"
+              locale="en-US"
+              placeholder="e.g., 3.99"
+              minFractionDigits={2}
+              maxFractionDigits={2}
+              min={0}
+              max={99999999.99}
               style={{ width: '100%' }}
             />
           </div>

@@ -65,9 +65,9 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     console.log('Received request body:', req.body);
-    const { item_name, brand, category, auth0_sub, nutrients } = req.body;
+    const { item_name, brand, category, cost, auth0_sub, nutrients } = req.body;
 
-    console.log('Extracted values:', { item_name, brand, category, auth0_sub, nutrientsCount: nutrients?.length });
+    console.log('Extracted values:', { item_name, brand, category, cost, auth0_sub, nutrientsCount: nutrients?.length });
 
     // Validate required fields
     if (!item_name || !auth0_sub) {
@@ -114,6 +114,7 @@ router.post('/', async (req, res) => {
           item_name,
           brand: brand || null,
           category: category || null,
+          cost: cost !== undefined ? cost : null,
           created_by: user.id
         }
       });
