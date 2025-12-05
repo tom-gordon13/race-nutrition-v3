@@ -48,9 +48,15 @@ router.get('/', async (req, res) => {
 
     console.log(`Fetched ${foodItems.length} food items${shouldFilterByUser ? ` for user ${user.id}` : ' (all users)'}`);
 
+    // Convert Decimal cost to number for JSON serialization
+    const foodItemsWithCost = foodItems.map(item => ({
+      ...item,
+      cost: item.cost ? Number(item.cost) : null
+    }));
+
     return res.status(200).json({
-      foodItems,
-      count: foodItems.length
+      foodItems: foodItemsWithCost,
+      count: foodItemsWithCost.length
     });
 
   } catch (error) {
@@ -141,9 +147,15 @@ router.post('/', async (req, res) => {
 
     console.log('Food item created:', result.foodItem.item_name, 'with', result.foodItemNutrients.length, 'nutrients');
 
+    // Convert Decimal cost to number for JSON serialization
+    const foodItemWithCost = {
+      ...result.foodItem,
+      cost: result.foodItem.cost ? Number(result.foodItem.cost) : null
+    };
+
     return res.status(201).json({
       message: 'Food item created successfully',
-      foodItem: result.foodItem,
+      foodItem: foodItemWithCost,
       nutrients: result.foodItemNutrients
     });
 
