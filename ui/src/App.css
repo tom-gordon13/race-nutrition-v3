@@ -545,11 +545,12 @@ tbody tr:last-child td {
   width: 100%;
   height: calc(99vh - 4rem);
   display: flex;
-  gap: 2rem;
+  gap: 1rem;
   transition: all 0.4s ease;
   align-items: stretch;
   margin-left: -2rem;
   padding-left: 2rem;
+  padding-right: 1rem;
 }
 
 .events-panel {
@@ -559,8 +560,8 @@ tbody tr:last-child td {
 }
 
 .events-container.split-view .events-panel {
-  width: calc(25% + 2rem);
-  max-width: calc(25% + 2rem);
+  width: calc(22% + 2rem);
+  max-width: calc(22% + 2rem);
   flex-shrink: 0;
   margin-left: -2rem;
   padding-left: 2rem;
@@ -624,7 +625,6 @@ tbody tr.selected {
 
 /* Event detail panel */
 .event-detail-panel {
-  width: 75%;
   flex: 1;
   max-height: 100%;
   background-color: rgba(255, 255, 255, 0.05);
@@ -1411,5 +1411,220 @@ tbody tr.selected {
   .left-panel-toggle {
     display: none;
     /* Hide toggle button on mobile */
+  }
+}
+
+/* Food Item Selection Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s ease-in;
+}
+
+.modal-content {
+  background-color: rgba(30, 30, 30, 0.98);
+  border: 2px solid #646cff;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(100, 108, 255, 0.4);
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #646cff;
+  font-size: 1.25rem;
+}
+
+.modal-close-btn {
+  background-color: rgba(255, 50, 50, 0.3);
+  border: 1px solid #ff6b6b;
+  color: #ff6b6b;
+  font-size: 1.5rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s;
+}
+
+.modal-close-btn:hover {
+  background-color: rgba(255, 50, 50, 0.5);
+  transform: scale(1.05);
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-search-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.modal-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.modal-search-input {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.87);
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.modal-search-input:focus {
+  outline: none;
+  border-color: #646cff;
+  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);
+}
+
+.modal-servings-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.modal-servings-input-wrapper label {
+  color: rgba(255, 255, 255, 0.87);
+  font-weight: 500;
+}
+
+.modal-servings-input {
+  padding: 0.5rem;
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.87);
+  font-size: 1rem;
+  width: 100px;
+}
+
+.modal-servings-input:focus {
+  outline: none;
+  border-color: #646cff;
+  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);
+}
+
+.modal-food-items-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.modal-no-results {
+  padding: 2rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+  grid-column: 1 / -1;
+}
+
+.modal-food-item {
+  background-color: rgba(100, 108, 255, 0.2);
+  border: 2px solid #646cff;
+  border-radius: 8px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.modal-food-item:hover {
+  background-color: rgba(100, 108, 255, 0.3);
+  border-color: #535bf2;
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(100, 108, 255, 0.4);
+}
+
+.modal-food-item-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.modal-food-item-header strong {
+  color: #646cff;
+  font-size: 1rem;
+}
+
+.modal-food-item-brand {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.modal-food-item-category {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.75rem;
+  text-transform: capitalize;
+  margin-bottom: 0.5rem;
+}
+
+.modal-food-item-nutrients {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.modal-nutrient-badge {
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.87);
+}
+
+/* Responsive: Single column on small screens */
+@media (max-width: 768px) {
+  .modal-food-items-list {
+    grid-template-columns: 1fr;
   }
 }

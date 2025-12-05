@@ -51,6 +51,7 @@ interface EventTimelineProps {
   onDragEnd: () => void;
   onDeleteInstance: (instanceId: string) => void;
   onUpdateInstance: (instanceId: string, time: number, servings: number) => Promise<void>;
+  onClickHoldCreate?: (timeInSeconds: number) => void;
   timelineStyle?: React.CSSProperties;
 }
 
@@ -129,6 +130,7 @@ export const EventTimeline = ({
   onDragEnd,
   onDeleteInstance,
   onUpdateInstance,
+  onClickHoldCreate,
   timelineStyle
 }: EventTimelineProps) => {
   const [hoveredInstanceId, setHoveredInstanceId] = useState<string | null>(null);
@@ -164,6 +166,26 @@ export const EventTimeline = ({
   };
 
   const horizontalOffsets = calculateHorizontalOffsets(foodInstances, event);
+
+  // Handler for click on timeline (to create new food instance)
+  const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Only trigger if clicking on the timeline background (not on food instances)
+    if ((e.target as HTMLElement).classList.contains('event-timeline') ||
+        (e.target as HTMLElement).classList.contains('timeline-divider')) {
+
+      if (onClickHoldCreate) {
+        // Calculate time based on click position
+        const timeline = e.currentTarget;
+        const rect = timeline.getBoundingClientRect();
+        const clickY = e.clientY - rect.top;
+        const percentage = clickY / rect.height;
+        const timeInSeconds = Math.round(percentage * event.expected_duration);
+
+        // Trigger callback with calculated time
+        onClickHoldCreate(timeInSeconds);
+      }
+    }
+  };
 
   // Handler to enter edit mode for an instance
   const handleDoubleClick = (instance: FoodInstance) => {
@@ -222,6 +244,7 @@ export const EventTimeline = ({
         style={timelineStyle}
         onDragOver={onDragOver}
         onDrop={onDrop}
+        onClick={handleTimelineClick}
       >
         {loadingInstances ? (
           <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255, 255, 255, 0.6)' }}>

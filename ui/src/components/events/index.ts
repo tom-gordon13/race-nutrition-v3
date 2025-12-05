@@ -3,3 +3,4 @@ export { EventsTable } from './EventsTable';
 export { FoodItemsList } from './FoodItemsList';
 export { EventTimeline } from './EventTimeline';
 export { NutritionSummary } from './NutritionSummary';
+export { FoodItemSelectionModal } from './FoodItemSelectionModal';
