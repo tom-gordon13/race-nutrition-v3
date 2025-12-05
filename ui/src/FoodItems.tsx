@@ -26,6 +26,7 @@ interface FoodItemNutrient {
 interface FoodItem {
   id: string;
   item_name: string;
+  cost?: number | null;
   created_at: string;
   updated_at: string;
   foodItemNutrients: FoodItemNutrient[];
@@ -90,6 +91,17 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
     return new Date(rowData.created_at).toLocaleDateString();
   };
 
+  // Template for cost column
+  const costBodyTemplate = (rowData: FoodItem) => {
+    if (rowData.cost === null || rowData.cost === undefined) {
+      return <Tag severity="secondary" value="N/A" />;
+    }
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(rowData.cost);
+  };
+
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2rem' }}>
@@ -137,6 +149,13 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
           scrollHeight="flex"
         >
           <Column field="item_name" header="Food Item" sortable style={{ minWidth: '200px' }} />
+          <Column
+            header="Cost"
+            body={costBodyTemplate}
+            sortable
+            sortField="cost"
+            style={{ minWidth: '100px' }}
+          />
           <Column
             header="Nutrients"
             body={nutrientsBodyTemplate}
