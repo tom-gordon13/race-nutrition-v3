@@ -1,4 +1,10 @@
 import { useState, type FormEvent } from 'react';
+import { InputText } from 'primereact/inputtext';
+import { InputNumber } from 'primereact/inputnumber';
+import { Button } from 'primereact/button';
+import { Card } from 'primereact/card';
+import 'primereact/resources/themes/lara-light-blue/theme.css';
+import 'primereact/resources/primereact.min.css';
 
 interface EventFormProps {
   onSubmit: (eventType: string, expectedDuration: number) => Promise<void>;
@@ -26,12 +32,16 @@ const formatDuration = (seconds: number) => {
 
 export const EventForm = ({ onSubmit }: EventFormProps) => {
   const [eventType, setEventType] = useState('');
-  const [hoursInput, setHoursInput] = useState('');
-  const [minutesInput, setMinutesInput] = useState('');
-  const [secondsInput, setSecondsInput] = useState('');
+  const [hoursInput, setHoursInput] = useState<number | null>(null);
+  const [minutesInput, setMinutesInput] = useState<number | null>(null);
+  const [secondsInput, setSecondsInput] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const previewSeconds = computeSecondsFromInputs(hoursInput, minutesInput, secondsInput);
+  const previewSeconds = computeSecondsFromInputs(
+    String(hoursInput ?? ''),
+    String(minutesInput ?? ''),
+    String(secondsInput ?? '')
+  );
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -45,80 +55,91 @@ export const EventForm = ({ onSubmit }: EventFormProps) => {
       await onSubmit(eventType, previewSeconds);
       // Reset form
       setEventType('');
-      setHoursInput('');
-      setMinutesInput('');
-      setSecondsInput('');
+      setHoursInput(null);
+      setMinutesInput(null);
+      setSecondsInput(null);
     } finally {
       setSubmitting(false);
     }
   };
 
+  const headerContent = (
+    <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, color: '#646cff' }}>
+      Create New Event
+    </h3>
+  );
+
   return (
-    <div className="create-food-item" style={{ marginBottom: '2rem' }}>
-      <h3>Create New Event</h3>
+    <Card
+      header={headerContent}
+      style={{ marginBottom: '2rem', backgroundColor: '#f3f0ff' }}
+      pt={{
+        header: { style: { textAlign: 'left', padding: '1.25rem', backgroundColor: '#f3f0ff' } },
+        body: { style: { padding: '1.25rem', backgroundColor: '#f3f0ff' } },
+        content: { style: { padding: 0 } }
+      }}
+    >
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="eventType">Event Type *</label>
-          <input
-            type="text"
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label htmlFor="eventType" style={{ display: 'block', marginBottom: '0.5rem', color: '#646cff', fontWeight: 500 }}>
+            Event Type *
+          </label>
+          <InputText
             id="eventType"
             value={eventType}
             onChange={(e) => setEventType(e.target.value)}
-            required
             placeholder="e.g., Marathon, Half Marathon, 10K"
+            style={{ width: '100%' }}
+            required
           />
         </div>
 
-        <div className="form-group">
-          <label>Expected Duration</label>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <div>
-              <input
-                type="number"
-                id="hoursInput"
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', color: '#646cff', fontWeight: 500 }}>
+            Expected Duration
+          </label>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+            <div style={{ flex: 1 }}>
+              <InputNumber
+                inputId="hoursInput"
                 value={hoursInput}
-                onChange={(e) => setHoursInput(e.target.value)}
+                onValueChange={(e) => setHoursInput(e.value ?? null)}
                 min={0}
-                step={1}
                 placeholder="Hours"
-                inputMode="numeric"
-                style={{ width: '6rem' }}
+                inputStyle={{ width: '100%' }}
+                showButtons={false}
               />
-              <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>hours</div>
+              <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: '#646cff', opacity: 0.7 }}>hours</div>
             </div>
-            <div>
-              <input
-                type="number"
-                id="minutesInput"
+            <div style={{ flex: 1 }}>
+              <InputNumber
+                inputId="minutesInput"
                 value={minutesInput}
-                onChange={(e) => setMinutesInput(e.target.value)}
+                onValueChange={(e) => setMinutesInput(e.value ?? null)}
                 min={0}
                 max={59}
-                step={1}
                 placeholder="Minutes"
-                inputMode="numeric"
-                style={{ width: '6rem' }}
+                inputStyle={{ width: '100%' }}
+                showButtons={false}
               />
-              <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>minutes</div>
+              <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: '#646cff', opacity: 0.7 }}>minutes</div>
             </div>
-            <div>
-              <input
-                type="number"
-                id="secondsInput"
+            <div style={{ flex: 1 }}>
+              <InputNumber
+                inputId="secondsInput"
                 value={secondsInput}
-                onChange={(e) => setSecondsInput(e.target.value)}
+                onValueChange={(e) => setSecondsInput(e.value ?? null)}
                 min={0}
                 max={59}
-                step={1}
                 placeholder="Seconds"
-                inputMode="numeric"
-                style={{ width: '6rem' }}
+                inputStyle={{ width: '100%' }}
+                showButtons={false}
               />
-              <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>seconds</div>
+              <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: '#646cff', opacity: 0.7 }}>seconds</div>
             </div>
           </div>
-          {(hoursInput !== '' || minutesInput !== '' || secondsInput !== '') && (
-            <small style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+          {(hoursInput !== null || minutesInput !== null || secondsInput !== null) && (
+            <small style={{ display: 'block', marginTop: '0.5rem', color: '#646cff' }}>
               {previewSeconds !== null
                 ? `→ ${previewSeconds}s (${formatDuration(previewSeconds)})`
                 : 'Enter valid time (mm and ss 0–59)'}
@@ -126,10 +147,14 @@ export const EventForm = ({ onSubmit }: EventFormProps) => {
           )}
         </div>
 
-        <button type="submit" disabled={submitting || !eventType || previewSeconds === null} className="submit-btn">
-          {submitting ? 'Creating...' : 'Create Event'}
-        </button>
+        <Button
+          type="submit"
+          label={submitting ? 'Creating...' : 'Create Event'}
+          disabled={submitting || !eventType || previewSeconds === null}
+          loading={submitting}
+          style={{ width: '100%' }}
+        />
       </form>
-    </div>
+    </Card>
   );
 };

@@ -172,4 +172,58 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { item_name, brand, category, cost } = req.body;
+
+    console.log('Update request for food item:', id, req.body);
+
+    // Validate required fields
+    if (!item_name) {
+      return res.status(400).json({
+        error: 'Missing required field: item_name'
+      });
+    }
+
+    // Update the food item
+    const updatedFoodItem = await prisma.foodItem.update({
+      where: { id },
+      data: {
+        item_name,
+        brand: brand || null,
+        category: category || null,
+        cost: cost !== undefined && cost !== null ? cost : null
+      },
+      include: {
+        foodItemNutrients: {
+          include: {
+            nutrient: true
+          }
+        }
+      }
+    });
+
+    console.log('Food item updated:', updatedFoodItem.item_name);
+
+    // Convert Decimal cost to number for JSON serialization
+    const foodItemWithCost = {
+      ...updatedFoodItem,
+      cost: updatedFoodItem.cost ? Number(updatedFoodItem.cost) : null
+    };
+
+    return res.status(200).json({
+      message: 'Food item updated successfully',
+      foodItem: foodItemWithCost
+    });
+
+  } catch (error) {
+    console.error('Error updating food item:', error);
+    return res.status(500).json({
+      error: 'Failed to update food item',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 export default router;

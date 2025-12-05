@@ -1,10 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Tag } from 'primereact/tag';
 import { Card } from 'primereact/card';
 import { ProgressSpinner } from 'primereact/progressspinner';
+import { Dialog } from 'primereact/dialog';
+import { InputText } from 'primereact/inputtext';
+import { InputNumber } from 'primereact/inputnumber';
+import { Button } from 'primereact/button';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 
@@ -45,9 +49,11 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [myItemsOnly, setMyItemsOnly] = useState(true);
-  const [editingRowId, setEditingRowId] = useState<string | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingItem, setEditingItem] = useState<FoodItem | null>(null);
   const [editedData, setEditedData] = useState<Partial<FoodItem>>({});
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   // Fetch current user's UUID
   useEffect(() => {
@@ -58,7 +64,10 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
         const response = await fetch(`${API_URL}/api/users?auth0_sub=${encodeURIComponent(user.sub)}`);
         if (response.ok) {
           const data = await response.json();
+          console.log('Fetched current user:', data.user);
           setCurrentUserId(data.user?.id || null);
+        } else {
+          console.error('Failed to fetch current user:', response.status, response.statusText);
         }
       } catch (err) {
         console.error('Error fetching current user:', err);
@@ -116,26 +125,31 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
 
   // Check if user owns this food item
   const isOwnedByUser = (rowData: FoodItem) => {
-    const isOwned = currentUserId === rowData.created_by;
-    console.log(`Item: ${rowData.item_name}, currentUserId: ${currentUserId}, created_by: ${rowData.created_by}, isOwned: ${isOwned}`);
+    if (!currentUserId) return false;
+    const isOwned = String(currentUserId) === String(rowData.created_by);
     return isOwned;
   };
 
   // Handle edit start
-  const handleEditStart = (rowData: FoodItem) => {
-    setEditingRowId(rowData.id);
+  const handleEditStart = useCallback((rowData: FoodItem) => {
+    console.log('Opening edit dialog for:', rowData.item_name);
+    setEditingItem(rowData);
     setEditedData({
       item_name: rowData.item_name,
       brand: rowData.brand || '',
       category: rowData.category || '',
       cost: rowData.cost || 0
     });
-  };
+    setShowEditDialog(true);
+  }, []);
 
   // Handle edit save
-  const handleEditSave = async (rowData: FoodItem) => {
+  const handleEditSave = async () => {
+    if (!editingItem) return;
+
+    setSaving(true);
     try {
-      const response = await fetch(`${API_URL}/api/food-items/${rowData.id}`, {
+      const response = await fetch(`${API_URL}/api/food-items/${editingItem.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -147,8 +161,9 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
         throw new Error('Failed to update food item');
       }
 
-      // Refresh the list
-      setEditingRowId(null);
+      // Close dialog and reset state
+      setShowEditDialog(false);
+      setEditingItem(null);
       setEditedData({});
 
       // Trigger a re-fetch
@@ -160,74 +175,30 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update food item');
       console.error('Error updating food item:', err);
+    } finally {
+      setSaving(false);
     }
   };
 
   // Handle edit cancel
-  const handleEditCancel = () => {
-    setEditingRowId(null);
+  const handleEditCancel = useCallback(() => {
+    setShowEditDialog(false);
+    setEditingItem(null);
     setEditedData({});
-  };
+  }, []);
 
-  // Template for item name column (editable for owned items)
-  const itemNameBodyTemplate = (rowData: FoodItem) => {
-    if (editingRowId === rowData.id) {
-      return (
-        <input
-          type="text"
-          value={editedData.item_name || ''}
-          onChange={(e) => setEditedData({ ...editedData, item_name: e.target.value })}
-          style={{ width: '100%', padding: '0.5rem' }}
-        />
-      );
-    }
-    return rowData.item_name;
-  };
-
-  // Template for brand column (editable for owned items)
+  // Template for brand column
   const brandBodyTemplate = (rowData: FoodItem) => {
-    if (editingRowId === rowData.id) {
-      return (
-        <input
-          type="text"
-          value={editedData.brand || ''}
-          onChange={(e) => setEditedData({ ...editedData, brand: e.target.value })}
-          style={{ width: '100%', padding: '0.5rem' }}
-        />
-      );
-    }
     return rowData.brand || <Tag severity="secondary" value="N/A" />;
   };
 
-  // Template for category column (editable for owned items)
+  // Template for category column
   const categoryBodyTemplate = (rowData: FoodItem) => {
-    if (editingRowId === rowData.id) {
-      return (
-        <input
-          type="text"
-          value={editedData.category || ''}
-          onChange={(e) => setEditedData({ ...editedData, category: e.target.value })}
-          style={{ width: '100%', padding: '0.5rem' }}
-        />
-      );
-    }
     return rowData.category || <Tag severity="secondary" value="N/A" />;
   };
 
-  // Template for cost column (editable for owned items)
+  // Template for cost column
   const costBodyTemplate = (rowData: FoodItem) => {
-    if (editingRowId === rowData.id) {
-      return (
-        <input
-          type="number"
-          value={editedData.cost || 0}
-          onChange={(e) => setEditedData({ ...editedData, cost: parseFloat(e.target.value) })}
-          style={{ width: '100px', padding: '0.5rem' }}
-          step="0.01"
-          min="0"
-        />
-      );
-    }
     if (rowData.cost === null || rowData.cost === undefined) {
       return <Tag severity="secondary" value="N/A" />;
     }
@@ -243,53 +214,14 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
       return null;
     }
 
-    if (editingRowId === rowData.id) {
-      return (
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button
-            onClick={() => handleEditSave(rowData)}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#22c55e',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            Save
-          </button>
-          <button
-            onClick={handleEditCancel}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#ef4444',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            Cancel
-          </button>
-        </div>
-      );
-    }
-
     return (
-      <button
+      <Button
+        label="Edit"
+        icon="pi pi-pencil"
         onClick={() => handleEditStart(rowData)}
-        style={{
-          padding: '0.5rem 1rem',
-          backgroundColor: '#646cff',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer'
-        }}
-      >
-        Edit
-      </button>
+        size="small"
+        style={{ backgroundColor: '#646cff', borderColor: '#646cff' }}
+      />
     );
   };
 
@@ -375,7 +307,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
         >
           <Column
             header="Food Item"
-            body={itemNameBodyTemplate}
+            field="item_name"
             sortable
             sortField="item_name"
             style={{ minWidth: '200px' }}
@@ -413,6 +345,86 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
           />
         </DataTable>
       )}
+
+      {/* Edit Dialog */}
+      <Dialog
+        header="Edit Food Item"
+        visible={showEditDialog}
+        style={{ width: '500px' }}
+        onHide={handleEditCancel}
+        footer={
+          <div>
+            <Button
+              label="Cancel"
+              icon="pi pi-times"
+              onClick={handleEditCancel}
+              severity="secondary"
+              outlined
+            />
+            <Button
+              label="Save"
+              icon="pi pi-check"
+              onClick={handleEditSave}
+              loading={saving}
+              disabled={!editedData.item_name}
+              style={{ backgroundColor: '#646cff', borderColor: '#646cff' }}
+            />
+          </div>
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div>
+            <label htmlFor="edit-item-name" style={{ display: 'block', marginBottom: '0.5rem', color: '#646cff', fontWeight: 500 }}>
+              Food Item Name *
+            </label>
+            <InputText
+              id="edit-item-name"
+              value={editedData.item_name || ''}
+              onChange={(e) => setEditedData({ ...editedData, item_name: e.target.value })}
+              style={{ width: '100%' }}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="edit-brand" style={{ display: 'block', marginBottom: '0.5rem', color: '#646cff', fontWeight: 500 }}>
+              Brand
+            </label>
+            <InputText
+              id="edit-brand"
+              value={editedData.brand || ''}
+              onChange={(e) => setEditedData({ ...editedData, brand: e.target.value })}
+              style={{ width: '100%' }}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="edit-category" style={{ display: 'block', marginBottom: '0.5rem', color: '#646cff', fontWeight: 500 }}>
+              Category
+            </label>
+            <InputText
+              id="edit-category"
+              value={editedData.category || ''}
+              onChange={(e) => setEditedData({ ...editedData, category: e.target.value })}
+              style={{ width: '100%' }}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="edit-cost" style={{ display: 'block', marginBottom: '0.5rem', color: '#646cff', fontWeight: 500 }}>
+              Cost
+            </label>
+            <InputNumber
+              id="edit-cost"
+              value={editedData.cost || 0}
+              onValueChange={(e) => setEditedData({ ...editedData, cost: e.value || 0 })}
+              mode="currency"
+              currency="USD"
+              locale="en-US"
+              inputStyle={{ width: '100%' }}
+            />
+          </div>
+        </div>
+      </Dialog>
     </Card>
   );
 };

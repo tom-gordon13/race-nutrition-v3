@@ -13,6 +13,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
+app.use('/api', authRoutes); // For /api/users endpoint
 app.use('/api/nutrients', nutrientsRoutes);
 app.use('/api/food-items', foodItemsRoutes);
 app.use('/api/events', eventsRoutes);
