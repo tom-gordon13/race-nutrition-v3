@@ -86,11 +86,6 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
     );
   };
 
-  // Template for date column
-  const dateBodyTemplate = (rowData: FoodItem) => {
-    return new Date(rowData.created_at).toLocaleDateString();
-  };
-
   // Template for cost column
   const costBodyTemplate = (rowData: FoodItem) => {
     if (rowData.cost === null || rowData.cost === undefined) {
@@ -160,12 +155,6 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
             header="Nutrients"
             body={nutrientsBodyTemplate}
             style={{ minWidth: '300px' }}
-          />
-          <Column
-            header="Created"
-            body={dateBodyTemplate}
-            sortable
-            style={{ minWidth: '120px' }}
           />
         </DataTable>
       )}
