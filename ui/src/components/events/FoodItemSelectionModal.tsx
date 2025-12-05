@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface FoodItemNutrient {
   id: string;
@@ -28,7 +28,7 @@ interface FoodItemSelectionModalProps {
   categoryFilter: string;
   myItemsOnly: boolean;
   onClose: () => void;
-  onSelect: (foodItemId: string, servings: number) => void;
+  onSelect: (foodItemId: string, servings: number, timeInSeconds: number) => void;
   onCategoryFilterChange: (category: string) => void;
   onMyItemsOnlyChange: (myItemsOnly: boolean) => void;
 }
@@ -37,6 +37,14 @@ const formatTimeHHMM = (seconds: number) => {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   return `${hours}:${minutes.toString().padStart(2, '0')}`;
+};
+
+const parseTimeHHMM = (timeStr: string): number => {
+  const parts = timeStr.split(':');
+  if (parts.length !== 2) return 0;
+  const hours = parseInt(parts[0], 10) || 0;
+  const minutes = parseInt(parts[1], 10) || 0;
+  return (hours * 3600) + (minutes * 60);
 };
 
 export const FoodItemSelectionModal = ({
@@ -52,6 +60,23 @@ export const FoodItemSelectionModal = ({
 }: FoodItemSelectionModalProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [servings, setServings] = useState('1');
+  const [editedTime, setEditedTime] = useState('');
+
+  // Initialize editedTime when modal opens or timeInSeconds changes
+  useEffect(() => {
+    if (isOpen) {
+      setEditedTime(formatTimeHHMM(timeInSeconds));
+    }
+  }, [isOpen, timeInSeconds]);
+
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setSearchTerm('');
+      setServings('1');
+      setEditedTime('');
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -75,21 +100,38 @@ export const FoodItemSelectionModal = ({
       alert('Please enter valid servings');
       return;
     }
-    onSelect(foodItemId, servingsNum);
-    setSearchTerm('');
-    setServings('1');
+
+    const timeSeconds = parseTimeHHMM(editedTime);
+    if (isNaN(timeSeconds)) {
+      alert('Please enter valid time in HH:MM format');
+      return;
+    }
+
+    onSelect(foodItemId, servingsNum, timeSeconds);
   };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h3>Add Food Item at {formatTimeHHMM(timeInSeconds)}</h3>
+          <h3>Add Food Item</h3>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
 
         <div className="modal-body">
           <div className="modal-search-section">
+            {/* Time input at the top */}
+            <div className="modal-time-input-wrapper">
+              <label>Time (HH:MM):</label>
+              <input
+                type="text"
+                className="modal-time-input"
+                value={editedTime}
+                onChange={(e) => setEditedTime(e.target.value)}
+                placeholder="HH:MM"
+              />
+            </div>
+
             <input
               type="text"
               className="modal-search-input"

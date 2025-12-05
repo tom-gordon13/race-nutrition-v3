@@ -42,6 +42,7 @@ interface FoodItem {
   item_name: string;
   brand?: string;
   category?: string;
+  cost?: number;
   foodItemNutrients: FoodItemNutrient[];
 }
 
@@ -458,14 +459,14 @@ const Events = () => {
     }
   };
 
-  // Handler for click-and-hold create
+  // Handler for click on timeline to create new food instance
   const handleClickHoldCreate = (timeInSeconds: number) => {
     setModalTimeInSeconds(timeInSeconds);
     setShowFoodItemModal(true);
   };
 
   // Handler for food item selection from modal
-  const handleFoodItemSelect = async (foodItemId: string, servings: number) => {
+  const handleFoodItemSelect = async (foodItemId: string, servings: number, timeInSeconds: number) => {
     if (!selectedEvent) return;
 
     try {
@@ -477,7 +478,7 @@ const Events = () => {
         body: JSON.stringify({
           food_item_id: foodItemId,
           event_id: selectedEvent.id,
-          time_elapsed_at_consumption: modalTimeInSeconds,
+          time_elapsed_at_consumption: timeInSeconds,
           servings: servings
         }),
       });
@@ -568,6 +569,16 @@ const Events = () => {
 
   const timelineStyle = calculateTimelineStyle(selectedEvent);
 
+  // Calculate total cost of food instances
+  const calculateTotalCost = () => {
+    return foodInstances.reduce((total, instance) => {
+      const itemCost = instance.foodItem.cost || 0;
+      return total + (itemCost * instance.servings);
+    }, 0);
+  };
+
+  const totalCost = selectedEvent ? calculateTotalCost() : 0;
+
   return (
     <div className={`events-container ${selectedEvent ? 'split-view' : ''} ${leftPanelOpen ? '' : 'left-panel-collapsed'}`}>
       {selectedEvent && (
@@ -637,7 +648,12 @@ const Events = () => {
       {selectedEvent && (
         <div className="event-detail-panel">
           <div className="event-detail-header">
-            <h3>{selectedEvent.type}</h3>
+            <div className="event-title-section">
+              <h3>{selectedEvent.type}</h3>
+              <span className="event-total-cost">
+                ${totalCost.toFixed(2)}
+              </span>
+            </div>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button
                 onClick={toggleEditMode}

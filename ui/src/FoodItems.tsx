@@ -26,7 +26,10 @@ interface FoodItemNutrient {
 interface FoodItem {
   id: string;
   item_name: string;
+  brand?: string | null;
+  category?: string | null;
   cost?: number | null;
+  created_by: string;
   created_at: string;
   updated_at: string;
   foodItemNutrients: FoodItemNutrient[];
@@ -41,6 +44,29 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
   const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [myItemsOnly, setMyItemsOnly] = useState(true);
+  const [editingRowId, setEditingRowId] = useState<string | null>(null);
+  const [editedData, setEditedData] = useState<Partial<FoodItem>>({});
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // Fetch current user's UUID
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      if (!user || !user.sub) return;
+
+      try {
+        const response = await fetch(`${API_URL}/api/users?auth0_sub=${encodeURIComponent(user.sub)}`);
+        if (response.ok) {
+          const data = await response.json();
+          setCurrentUserId(data.user?.id || null);
+        }
+      } catch (err) {
+        console.error('Error fetching current user:', err);
+      }
+    };
+
+    fetchCurrentUser();
+  }, [user]);
 
   useEffect(() => {
     const fetchFoodItems = async () => {
@@ -50,7 +76,9 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
       }
 
       try {
-        const response = await fetch(`${API_URL}/api/food-items?auth0_sub=${encodeURIComponent(user.sub)}`);
+        const response = await fetch(
+          `${API_URL}/api/food-items?auth0_sub=${encodeURIComponent(user.sub)}&my_items_only=${myItemsOnly}`
+        );
 
         if (!response.ok) {
           throw new Error('Failed to fetch food items');
@@ -67,7 +95,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
     };
 
     fetchFoodItems();
-  }, [user, refreshTrigger]);
+  }, [user, refreshTrigger, myItemsOnly]);
 
   // Template for nutrients column
   const nutrientsBodyTemplate = (rowData: FoodItem) => {
@@ -86,8 +114,120 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
     );
   };
 
-  // Template for cost column
+  // Check if user owns this food item
+  const isOwnedByUser = (rowData: FoodItem) => {
+    const isOwned = currentUserId === rowData.created_by;
+    console.log(`Item: ${rowData.item_name}, currentUserId: ${currentUserId}, created_by: ${rowData.created_by}, isOwned: ${isOwned}`);
+    return isOwned;
+  };
+
+  // Handle edit start
+  const handleEditStart = (rowData: FoodItem) => {
+    setEditingRowId(rowData.id);
+    setEditedData({
+      item_name: rowData.item_name,
+      brand: rowData.brand || '',
+      category: rowData.category || '',
+      cost: rowData.cost || 0
+    });
+  };
+
+  // Handle edit save
+  const handleEditSave = async (rowData: FoodItem) => {
+    try {
+      const response = await fetch(`${API_URL}/api/food-items/${rowData.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editedData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update food item');
+      }
+
+      // Refresh the list
+      setEditingRowId(null);
+      setEditedData({});
+
+      // Trigger a re-fetch
+      const fetchResponse = await fetch(
+        `${API_URL}/api/food-items?auth0_sub=${encodeURIComponent(user!.sub!)}&my_items_only=${myItemsOnly}`
+      );
+      const data = await fetchResponse.json();
+      setFoodItems(data.foodItems);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update food item');
+      console.error('Error updating food item:', err);
+    }
+  };
+
+  // Handle edit cancel
+  const handleEditCancel = () => {
+    setEditingRowId(null);
+    setEditedData({});
+  };
+
+  // Template for item name column (editable for owned items)
+  const itemNameBodyTemplate = (rowData: FoodItem) => {
+    if (editingRowId === rowData.id) {
+      return (
+        <input
+          type="text"
+          value={editedData.item_name || ''}
+          onChange={(e) => setEditedData({ ...editedData, item_name: e.target.value })}
+          style={{ width: '100%', padding: '0.5rem' }}
+        />
+      );
+    }
+    return rowData.item_name;
+  };
+
+  // Template for brand column (editable for owned items)
+  const brandBodyTemplate = (rowData: FoodItem) => {
+    if (editingRowId === rowData.id) {
+      return (
+        <input
+          type="text"
+          value={editedData.brand || ''}
+          onChange={(e) => setEditedData({ ...editedData, brand: e.target.value })}
+          style={{ width: '100%', padding: '0.5rem' }}
+        />
+      );
+    }
+    return rowData.brand || <Tag severity="secondary" value="N/A" />;
+  };
+
+  // Template for category column (editable for owned items)
+  const categoryBodyTemplate = (rowData: FoodItem) => {
+    if (editingRowId === rowData.id) {
+      return (
+        <input
+          type="text"
+          value={editedData.category || ''}
+          onChange={(e) => setEditedData({ ...editedData, category: e.target.value })}
+          style={{ width: '100%', padding: '0.5rem' }}
+        />
+      );
+    }
+    return rowData.category || <Tag severity="secondary" value="N/A" />;
+  };
+
+  // Template for cost column (editable for owned items)
   const costBodyTemplate = (rowData: FoodItem) => {
+    if (editingRowId === rowData.id) {
+      return (
+        <input
+          type="number"
+          value={editedData.cost || 0}
+          onChange={(e) => setEditedData({ ...editedData, cost: parseFloat(e.target.value) })}
+          style={{ width: '100px', padding: '0.5rem' }}
+          step="0.01"
+          min="0"
+        />
+      );
+    }
     if (rowData.cost === null || rowData.cost === undefined) {
       return <Tag severity="secondary" value="N/A" />;
     }
@@ -95,6 +235,62 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
       style: 'currency',
       currency: 'USD',
     }).format(rowData.cost);
+  };
+
+  // Template for actions column
+  const actionsBodyTemplate = (rowData: FoodItem) => {
+    if (!isOwnedByUser(rowData)) {
+      return null;
+    }
+
+    if (editingRowId === rowData.id) {
+      return (
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            onClick={() => handleEditSave(rowData)}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: '#22c55e',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Save
+          </button>
+          <button
+            onClick={handleEditCancel}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: '#ef4444',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <button
+        onClick={() => handleEditStart(rowData)}
+        style={{
+          padding: '0.5rem 1rem',
+          backgroundColor: '#646cff',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer'
+        }}
+      >
+        Edit
+      </button>
+    );
   };
 
   if (loading) {
@@ -115,7 +311,41 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
 
   const headerContent = (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>My Food Items</h3>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>
+          {myItemsOnly ? 'My Food Items' : 'All Food Items'}
+        </h3>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            onClick={() => setMyItemsOnly(true)}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: myItemsOnly ? '#646cff' : 'rgba(0, 0, 0, 0.1)',
+              color: myItemsOnly ? 'white' : '#646cff',
+              border: `1px solid #646cff`,
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: myItemsOnly ? 600 : 400
+            }}
+          >
+            My Items
+          </button>
+          <button
+            onClick={() => setMyItemsOnly(false)}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: !myItemsOnly ? '#646cff' : 'rgba(0, 0, 0, 0.1)',
+              color: !myItemsOnly ? 'white' : '#646cff',
+              border: `1px solid #646cff`,
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: !myItemsOnly ? 600 : 400
+            }}
+          >
+            All Items
+          </button>
+        </div>
+      </div>
       <Tag value={`Total: ${foodItems.length}`} severity="info" />
     </div>
   );
@@ -143,7 +373,27 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
           scrollable
           scrollHeight="flex"
         >
-          <Column field="item_name" header="Food Item" sortable style={{ minWidth: '200px' }} />
+          <Column
+            header="Food Item"
+            body={itemNameBodyTemplate}
+            sortable
+            sortField="item_name"
+            style={{ minWidth: '200px' }}
+          />
+          <Column
+            header="Brand"
+            body={brandBodyTemplate}
+            sortable
+            sortField="brand"
+            style={{ minWidth: '150px' }}
+          />
+          <Column
+            header="Category"
+            body={categoryBodyTemplate}
+            sortable
+            sortField="category"
+            style={{ minWidth: '150px' }}
+          />
           <Column
             header="Cost"
             body={costBodyTemplate}
@@ -155,6 +405,11 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
             header="Nutrients"
             body={nutrientsBodyTemplate}
             style={{ minWidth: '300px' }}
+          />
+          <Column
+            header="Actions"
+            body={actionsBodyTemplate}
+            style={{ minWidth: '150px' }}
           />
         </DataTable>
       )}

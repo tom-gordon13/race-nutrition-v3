@@ -14,7 +14,8 @@
       "Bash(git commit:*)",
       "Bash(git reset:*)",
       "Bash(npm install:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []
