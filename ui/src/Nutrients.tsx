@@ -1,4 +1,10 @@
 import { useEffect, useState } from 'react';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+import { Card } from 'primereact/card';
+import { Tag } from 'primereact/tag';
+import 'primereact/resources/themes/lara-light-blue/theme.css';
+import 'primereact/resources/primereact.min.css';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
 
@@ -37,42 +43,55 @@ const Nutrients = () => {
     fetchNutrients();
   }, []);
 
-  if (loading) {
-    return <div>Loading nutrients...</div>;
-  }
+  // Template for date column
+  const dateBodyTemplate = (rowData: Nutrient) => {
+    return new Date(rowData.created_at).toLocaleDateString();
+  };
 
-  if (error) {
-    return <div>Error: {error}</div>;
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner">Loading nutrients...</div>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <h2>Nutrients</h2>
-      <p>Total: {nutrients.length}</p>
+    <Card
+      title="Nutrients"
+      style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f3f0ff' }}
+      pt={{
+        title: { style: { textAlign: 'left', color: '#646cff', padding: '1.25rem', margin: 0, fontSize: '1.5rem', fontWeight: 700, backgroundColor: '#f3f0ff' } },
+        body: { style: { flex: 1, overflow: 'auto', padding: '0 1.25rem 1.25rem 1.25rem', backgroundColor: '#f3f0ff' } },
+        content: { style: { padding: 0 } }
+      }}
+    >
+      {error && <div className="error-message">{error}</div>}
 
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Abbreviation</th>
-            <th>Created</th>
-          </tr>
-        </thead>
-        <tbody>
-          {nutrients.map((nutrient) => (
-            <tr key={nutrient.id}>
-              <td>{nutrient.nutrient_name}</td>
-              <td>{nutrient.nutrient_abbreviation}</td>
-              <td>{new Date(nutrient.created_at).toLocaleDateString()}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div style={{ marginBottom: '1rem' }}>
+        <Tag value={`Total Nutrients: ${nutrients.length}`} severity="info" />
+      </div>
 
-      {nutrients.length === 0 && (
-        <p>No nutrients found in the database.</p>
-      )}
-    </div>
+      <DataTable
+        value={nutrients}
+        dataKey="id"
+        stripedRows
+        paginator
+        rows={25}
+        rowsPerPageOptions={[10, 25, 50, 100]}
+        emptyMessage="No nutrients found in the database."
+        loading={loading}
+      >
+        <Column field="nutrient_name" header="Name" sortable />
+        <Column field="nutrient_abbreviation" header="Abbreviation" sortable />
+        <Column
+          header="Created"
+          body={dateBodyTemplate}
+          sortable
+          sortField="created_at"
+        />
+      </DataTable>
+    </Card>
   );
 };
 

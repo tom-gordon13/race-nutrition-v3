@@ -1,4 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
+
+interface Nutrient {
+  id: string;
+  nutrient_name: string;
+  nutrient_abbreviation: string;
+}
 
 interface FoodItemNutrient {
   id: string;
@@ -53,10 +61,27 @@ const formatDuration = (seconds: number) => {
 
 export const NutritionSummary = ({ event, foodInstances, timelineStyle }: NutritionSummaryProps) => {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [allNutrients, setAllNutrients] = useState<Nutrient[]>([]);
   const THREE_HOURS = 3 * 3600;
   const ONE_HOUR = 3600;
   const HALF_HOUR = 1800;
   const tickInterval = event.expected_duration > THREE_HOURS ? ONE_HOUR : HALF_HOUR;
+
+  // Fetch all available nutrients
+  useEffect(() => {
+    const fetchNutrients = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/nutrients`);
+        if (!response.ok) throw new Error('Failed to fetch nutrients');
+        const data = await response.json();
+        setAllNutrients(data.nutrients);
+      } catch (err) {
+        console.error('Error fetching nutrients:', err);
+      }
+    };
+
+    fetchNutrients();
+  }, []);
 
   // Generate dividers to match timeline
   const generateDividers = () => {
@@ -84,22 +109,27 @@ export const NutritionSummary = ({ event, foodInstances, timelineStyle }: Nutrit
         instance.time_elapsed_at_consumption < endTime
       );
 
-      // Calculate total nutrients for this window
+      // Initialize all nutrients with zero totals
       const nutrientTotals: { [key: string]: { name: string; total: number; unit: string } } = {};
 
+      allNutrients.forEach(nutrient => {
+        nutrientTotals[nutrient.id] = {
+          name: nutrient.nutrient_name,
+          total: 0,
+          unit: 'g' // Default unit, will be overwritten if there's actual data
+        };
+      });
+
+      // Calculate total nutrients for this window
       instancesInWindow.forEach(instance => {
         instance.foodItem.foodItemNutrients.forEach(fin => {
           const nutrientKey = fin.nutrient.id;
           const amount = fin.quantity * instance.servings;
 
-          if (!nutrientTotals[nutrientKey]) {
-            nutrientTotals[nutrientKey] = {
-              name: fin.nutrient.nutrient_name,
-              total: 0,
-              unit: fin.unit
-            };
+          if (nutrientTotals[nutrientKey]) {
+            nutrientTotals[nutrientKey].total += amount;
+            nutrientTotals[nutrientKey].unit = fin.unit; // Use the actual unit from the data
           }
-          nutrientTotals[nutrientKey].total += amount;
         });
       });
 
@@ -149,18 +179,14 @@ export const NutritionSummary = ({ event, foodInstances, timelineStyle }: Nutrit
                 {formatDuration(window.startTime)} - {formatDuration(window.endTime)}
               </div>
               <div className="nutrition-window-content">
-                {window.nutrientTotals.length === 0 ? (
-                  <div className="no-nutrition">No items</div>
-                ) : (
-                  window.nutrientTotals.map((nutrient, nIndex) => (
-                    <div key={nIndex} className="nutrient-summary-row">
-                      <span className="nutrient-summary-name">{nutrient.name}:</span>
-                      <span className="nutrient-summary-amount">
-                        {Math.round(nutrient.total * 10) / 10} {nutrient.unit}
-                      </span>
-                    </div>
-                  ))
-                )}
+                {window.nutrientTotals.map((nutrient, nIndex) => (
+                  <div key={nIndex} className="nutrient-summary-row">
+                    <span className="nutrient-summary-name">{nutrient.name}:</span>
+                    <span className="nutrient-summary-amount">
+                      {Math.round(nutrient.total * 10) / 10} {nutrient.unit}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           ))}

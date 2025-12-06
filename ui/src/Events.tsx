@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Card } from 'primereact/card';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
@@ -58,6 +58,7 @@ interface FoodInstance {
 const Events = () => {
   const { user } = useAuth0();
   const { eventId } = useParams<{ eventId: string }>();
+  const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -145,15 +146,28 @@ const Events = () => {
     }
   }, [selectedEvent, myItemsOnly]);
 
-  // Auto-select event if eventId is in URL
+  // Handler for selecting an event (updates state and URL)
+  const handleSelectEvent = (event: Event | null) => {
+    setSelectedEvent(event);
+    if (event) {
+      navigate(`/events/${event.id}`);
+    } else {
+      navigate('/events');
+    }
+  };
+
+  // Auto-select event if eventId is in URL, or clear selection if no eventId
   useEffect(() => {
-    if (eventId && events.length > 0 && !selectedEvent) {
+    if (eventId && events.length > 0) {
       const eventToSelect = events.find(e => e.id === eventId);
-      if (eventToSelect) {
+      if (eventToSelect && selectedEvent?.id !== eventId) {
         setSelectedEvent(eventToSelect);
       }
+    } else if (!eventId && selectedEvent) {
+      // Clear selection when navigating back to /events
+      setSelectedEvent(null);
     }
-  }, [eventId, events, selectedEvent]);
+  }, [eventId, events]);
 
   const fetchFoodInstances = async (eventId: string) => {
     setLoadingInstances(true);
@@ -626,7 +640,7 @@ const Events = () => {
             <EventsTable
               events={events}
               selectedEvent={selectedEvent}
-              onEventSelect={setSelectedEvent}
+              onEventSelect={handleSelectEvent}
             />
           )}
 
@@ -651,7 +665,7 @@ const Events = () => {
             <div className="event-title-section">
               <h3>{selectedEvent.type}</h3>
               <span className="event-total-cost">
-                ${totalCost.toFixed(2)}
+                {loadingInstances ? '--' : `$${totalCost.toFixed(2)}`}
               </span>
             </div>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -662,7 +676,7 @@ const Events = () => {
                 {editMode ? 'Save & Exit Edit Mode' : 'Edit Mode'}
               </button>
               <button
-                onClick={() => setSelectedEvent(null)}
+                onClick={() => handleSelectEvent(null)}
                 className="close-btn"
               >
                 ✕

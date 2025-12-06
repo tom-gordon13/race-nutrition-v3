@@ -9,15 +9,32 @@ import { Dialog } from 'primereact/dialog';
 import { InputText } from 'primereact/inputtext';
 import { InputNumber } from 'primereact/inputnumber';
 import { Button } from 'primereact/button';
+import { Dropdown } from 'primereact/dropdown';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
 
+const FOOD_CATEGORIES = [
+  'ENERGY_GEL',
+  'ENERGY_BAR',
+  'SPORTS_DRINK',
+  'FRUIT',
+  'SNACK',
+  'OTHER'
+] as const;
+
 interface Nutrient {
   id: string;
   nutrient_name: string;
   nutrient_abbreviation: string;
+}
+
+interface EditableFoodItemNutrient {
+  id?: string;
+  nutrient_id: string;
+  quantity: number | string;
+  unit: string;
 }
 
 interface FoodItemNutrient {
@@ -54,6 +71,24 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
   const [editedData, setEditedData] = useState<Partial<FoodItem>>({});
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [availableNutrients, setAvailableNutrients] = useState<Nutrient[]>([]);
+  const [editedNutrients, setEditedNutrients] = useState<EditableFoodItemNutrient[]>([]);
+
+  // Fetch available nutrients
+  useEffect(() => {
+    const fetchNutrients = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/nutrients`);
+        if (!response.ok) throw new Error('Failed to fetch nutrients');
+        const data = await response.json();
+        setAvailableNutrients(data.nutrients);
+      } catch (err) {
+        console.error('Error fetching nutrients:', err);
+      }
+    };
+
+    fetchNutrients();
+  }, []);
 
   // Fetch current user's UUID
   useEffect(() => {
@@ -140,8 +175,35 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
       category: rowData.category || '',
       cost: rowData.cost || 0
     });
+
+    // Convert existing nutrients to editable format
+    const existingNutrients: EditableFoodItemNutrient[] = rowData.foodItemNutrients.map(fin => ({
+      id: fin.id,
+      nutrient_id: fin.nutrient.id,
+      quantity: fin.quantity,
+      unit: fin.unit
+    }));
+
+    // If no nutrients exist, add an empty row
+    setEditedNutrients(existingNutrients.length > 0 ? existingNutrients : [{ nutrient_id: '', quantity: '', unit: '' }]);
     setShowEditDialog(true);
   }, []);
+
+  // Nutrient management functions
+  const addNutrientRow = () => {
+    setEditedNutrients([...editedNutrients, { nutrient_id: '', quantity: '', unit: '' }]);
+  };
+
+  const removeNutrientRow = (index: number) => {
+    const updated = editedNutrients.filter((_, i) => i !== index);
+    setEditedNutrients(updated);
+  };
+
+  const updateNutrient = (index: number, field: keyof EditableFoodItemNutrient, value: string | number) => {
+    const updated = [...editedNutrients];
+    updated[index] = { ...updated[index], [field]: value };
+    setEditedNutrients(updated);
+  };
 
   // Handle edit save
   const handleEditSave = async () => {
@@ -149,12 +211,27 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
 
     setSaving(true);
     try {
+      // Filter out empty nutrient rows
+      const validNutrients = editedNutrients.filter(
+        n => n.nutrient_id && n.quantity && n.unit
+      ).map(n => ({
+        id: n.id,
+        nutrient_id: n.nutrient_id,
+        quantity: parseFloat(n.quantity.toString()),
+        unit: n.unit
+      }));
+
+      const payload = {
+        ...editedData,
+        nutrients: validNutrients
+      };
+
       const response = await fetch(`${API_URL}/api/food-items/${editingItem.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(editedData),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -165,6 +242,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
       setShowEditDialog(false);
       setEditingItem(null);
       setEditedData({});
+      setEditedNutrients([]);
 
       // Trigger a re-fetch
       const fetchResponse = await fetch(
@@ -185,6 +263,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
     setShowEditDialog(false);
     setEditingItem(null);
     setEditedData({});
+    setEditedNutrients([]);
   }, []);
 
   // Template for brand column
@@ -350,16 +429,17 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
       <Dialog
         header="Edit Food Item"
         visible={showEditDialog}
-        style={{ width: '500px' }}
+        style={{ width: '800px', maxHeight: '90vh' }}
         onHide={handleEditCancel}
         footer={
-          <div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
             <Button
               label="Cancel"
               icon="pi pi-times"
               onClick={handleEditCancel}
-              severity="secondary"
-              outlined
+              severity="danger"
+              raised
+              style={{ flex: 1, backgroundColor: '#ef4444', borderColor: '#ef4444', color: 'white', fontWeight: 600 }}
             />
             <Button
               label="Save"
@@ -367,12 +447,14 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
               onClick={handleEditSave}
               loading={saving}
               disabled={!editedData.item_name}
-              style={{ backgroundColor: '#646cff', borderColor: '#646cff' }}
+              severity="success"
+              raised
+              style={{ flex: 1, backgroundColor: '#22c55e', borderColor: '#22c55e', color: 'white', fontWeight: 600 }}
             />
           </div>
         }
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxHeight: '70vh', overflowY: 'auto', padding: '0.5rem' }}>
           <div>
             <label htmlFor="edit-item-name" style={{ display: 'block', marginBottom: '0.5rem', color: '#646cff', fontWeight: 500 }}>
               Food Item Name *
@@ -401,10 +483,18 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
             <label htmlFor="edit-category" style={{ display: 'block', marginBottom: '0.5rem', color: '#646cff', fontWeight: 500 }}>
               Category
             </label>
-            <InputText
+            <Dropdown
               id="edit-category"
               value={editedData.category || ''}
-              onChange={(e) => setEditedData({ ...editedData, category: e.target.value })}
+              onChange={(e) => setEditedData({ ...editedData, category: e.value })}
+              options={[
+                { label: 'Select a category', value: '' },
+                ...FOOD_CATEGORIES.map((cat) => ({
+                  label: cat.replace(/_/g, ' '),
+                  value: cat
+                }))
+              ]}
+              placeholder="Select a category"
               style={{ width: '100%' }}
             />
           </div>
@@ -421,6 +511,76 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
               currency="USD"
               locale="en-US"
               inputStyle={{ width: '100%' }}
+            />
+          </div>
+
+          <div className="nutrients-section">
+            <h3 style={{ marginTop: 0, color: '#646cff' }}>Nutrients</h3>
+
+            {editedNutrients.map((nutrient, index) => (
+              <div key={index} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '4px', display: 'flex', gap: '0.5rem', alignItems: 'flex-end', backgroundColor: 'rgba(0, 0, 0, 0.05)' }}>
+                <div className="p-field" style={{ flex: 2, margin: 0 }}>
+                  <label htmlFor={`edit-nutrient-${index}`} style={{ display: 'block', marginBottom: '0.5rem', color: '#646cff', fontWeight: 500 }}>Nutrient</label>
+                  <Dropdown
+                    id={`edit-nutrient-${index}`}
+                    value={nutrient.nutrient_id}
+                    onChange={(e) => updateNutrient(index, 'nutrient_id', e.value)}
+                    options={availableNutrients.map((n) => ({
+                      label: `${n.nutrient_name} (${n.nutrient_abbreviation})`,
+                      value: n.id
+                    }))}
+                    placeholder="Select a nutrient"
+                    style={{ width: '100%' }}
+                  />
+                </div>
+
+                <div className="p-field" style={{ flex: 1, margin: 0 }}>
+                  <label htmlFor={`edit-quantity-${index}`} style={{ display: 'block', marginBottom: '0.5rem', color: '#646cff', fontWeight: 500 }}>Quantity</label>
+                  <InputNumber
+                    id={`edit-quantity-${index}`}
+                    value={typeof nutrient.quantity === 'string' ? parseFloat(nutrient.quantity) || undefined : nutrient.quantity}
+                    onValueChange={(e) => updateNutrient(index, 'quantity', e.value || '')}
+                    placeholder="e.g., 100"
+                    minFractionDigits={0}
+                    maxFractionDigits={2}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+
+                <div className="p-field" style={{ flex: 1, margin: 0 }}>
+                  <label htmlFor={`edit-unit-${index}`} style={{ display: 'block', marginBottom: '0.5rem', color: '#646cff', fontWeight: 500 }}>Unit</label>
+                  <Dropdown
+                    id={`edit-unit-${index}`}
+                    value={nutrient.unit}
+                    onChange={(e) => updateNutrient(index, 'unit', e.value)}
+                    options={[
+                      { label: 'g (grams)', value: 'g' },
+                      { label: 'mg (milligrams)', value: 'mg' }
+                    ]}
+                    placeholder="Select unit"
+                    style={{ width: '100%' }}
+                  />
+                </div>
+
+                {editedNutrients.length > 1 && (
+                  <Button
+                    type="button"
+                    onClick={() => removeNutrientRow(index)}
+                    icon="pi pi-trash"
+                    severity="danger"
+                    outlined
+                    style={{ marginBottom: '0' }}
+                  />
+                )}
+              </div>
+            ))}
+
+            <Button
+              type="button"
+              onClick={addNutrientRow}
+              icon="pi pi-plus"
+              label="Add Nutrient"
+              outlined
             />
           </div>
         </div>
