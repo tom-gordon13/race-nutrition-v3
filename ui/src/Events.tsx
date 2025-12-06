@@ -87,7 +87,7 @@ const Events = () => {
   const [draggingFoodItemId, setDraggingFoodItemId] = useState<string | null>(null);
 
   // State for left panel visibility
-  const [leftPanelOpen, setLeftPanelOpen] = useState<boolean>(true);
+  const [leftPanelOpen, setLeftPanelOpen] = useState<boolean>(false);
 
   // State for food item selection modal
   const [showFoodItemModal, setShowFoodItemModal] = useState(false);
