@@ -594,7 +594,7 @@ const Events = () => {
   const totalCost = selectedEvent ? calculateTotalCost() : 0;
 
   return (
-    <div className={`events-container ${selectedEvent ? 'split-view' : ''} ${leftPanelOpen ? '' : 'left-panel-collapsed'}`}>
+    <div className={`events-container ${selectedEvent ? 'split-view' : ''} ${selectedEvent && !leftPanelOpen ? 'left-panel-collapsed' : ''}`}>
       {selectedEvent && (
         <button
           className="left-panel-toggle"
@@ -605,7 +605,7 @@ const Events = () => {
         </button>
       )}
 
-      <div className={`events-panel ${selectedEvent ? 'vertical' : ''} ${leftPanelOpen ? '' : 'collapsed'}`}>
+      <div className={`events-panel ${selectedEvent ? 'vertical' : ''} ${selectedEvent && !leftPanelOpen ? 'collapsed' : ''}`}>
         <Card
           title={selectedEvent ? "Food Items" : "My Events"}
           style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f3f0ff' }}
