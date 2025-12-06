@@ -137,6 +137,8 @@ export const EventTimeline = ({
   const [editingInstanceId, setEditingInstanceId] = useState<string | null>(null);
   const [editTime, setEditTime] = useState<string>('');
   const [editServings, setEditServings] = useState<string>('');
+  const [timelineHoverPosition, setTimelineHoverPosition] = useState<{ y: number; x: number; time: number } | null>(null);
+  const [isHoveringInstance, setIsHoveringInstance] = useState(false);
 
   const THREE_HOURS = 3 * 3600;
   const ONE_HOUR = 3600;
@@ -166,6 +168,24 @@ export const EventTimeline = ({
   };
 
   const horizontalOffsets = calculateHorizontalOffsets(foodInstances, event);
+
+  // Handler for mouse move on timeline (to show elapsed time tooltip)
+  const handleTimelineMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const timeline = e.currentTarget;
+    const rect = timeline.getBoundingClientRect();
+    const mouseY = e.clientY - rect.top;
+    const mouseX = e.clientX - rect.left;
+    const percentage = mouseY / rect.height;
+    const timeInSeconds = Math.round(percentage * event.expected_duration);
+
+    setTimelineHoverPosition({ y: mouseY, x: mouseX, time: timeInSeconds });
+  };
+
+  // Handler for mouse leave on timeline
+  const handleTimelineMouseLeave = () => {
+    setTimelineHoverPosition(null);
+    setIsHoveringInstance(false);
+  };
 
   // Handler for click on timeline (to create new food instance)
   const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -245,6 +265,8 @@ export const EventTimeline = ({
         onDragOver={onDragOver}
         onDrop={onDrop}
         onClick={handleTimelineClick}
+        onMouseMove={handleTimelineMouseMove}
+        onMouseLeave={handleTimelineMouseLeave}
       >
         {loadingInstances ? (
           <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255, 255, 255, 0.6)' }}>
@@ -277,8 +299,16 @@ export const EventTimeline = ({
                   draggable={editMode && !isEditing}
                   onDragStart={(e) => (editMode && !isEditing) ? onDragStart(e, instance.id, position) : undefined}
                   onDragEnd={editMode ? onDragEnd : undefined}
-                  onMouseEnter={() => !isEditing && setHoveredInstanceId(instance.id)}
-                  onMouseLeave={() => setHoveredInstanceId(null)}
+                  onMouseEnter={() => {
+                    if (!isEditing) {
+                      setHoveredInstanceId(instance.id);
+                      setIsHoveringInstance(true);
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    setHoveredInstanceId(null);
+                    setIsHoveringInstance(false);
+                  }}
                   onDoubleClick={() => !isEditing && handleDoubleClick(instance)}
                   style={{
                     position: 'absolute',
@@ -386,6 +416,22 @@ export const EventTimeline = ({
                 </div>
               );
             })}
+
+            {/* Timeline elapsed time tooltip - show when not hovering over an instance */}
+            {timelineHoverPosition && !isHoveringInstance && (
+              <div
+                className="timeline-elapsed-tooltip"
+                style={{
+                  position: 'absolute',
+                  top: `${timelineHoverPosition.y}px`,
+                  left: `${timelineHoverPosition.x + 15}px`,
+                  transform: 'translateY(-50%)',
+                  pointerEvents: 'none',
+                }}
+              >
+                {formatTimeHHMM(timelineHoverPosition.time)}
+              </div>
+            )}
           </>
         )}
       </div>
