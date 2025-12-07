@@ -798,7 +798,9 @@ tbody tr.selected {
   height: 2px;
   background: linear-gradient(90deg,
       transparent 0%,
+      rgba(100, 108, 255, 0.3) 15%,
       rgba(100, 108, 255, 0.5) 50%,
+      rgba(100, 108, 255, 0.3) 85%,
       transparent 100%);
   position: absolute;
   left: 0;
@@ -1347,7 +1349,9 @@ tbody tr.selected {
   height: 2px;
   background: linear-gradient(90deg,
       transparent 0%,
+      rgba(100, 108, 255, 0.3) 15%,
       rgba(100, 108, 255, 0.5) 50%,
+      rgba(100, 108, 255, 0.3) 85%,
       transparent 100%);
   position: absolute;
   left: 0;
