@@ -4,6 +4,7 @@ import Nutrients from "./Nutrients";
 import CreateFoodItem from "./CreateFoodItem";
 import FoodItems from "./FoodItems";
 import Events from "./Events";
+import Preferences from "./Preferences";
 import { Button } from 'primereact/button';
 
 function Home() {
@@ -54,6 +55,7 @@ function Home() {
         <Route path="/events" element={<div style={{ maxWidth: '98%', margin: '0 auto', padding: '2rem' }}><Events /></div>} />
         <Route path="/events/:eventId" element={<div style={{ maxWidth: '98%', margin: '0 auto', padding: '2rem' }}><Events /></div>} />
         <Route path="/nutrients" element={<div style={{ maxWidth: '90%', margin: '0 auto', padding: '2rem' }}><Nutrients /></div>} />
+        <Route path="/preferences" element={<div style={{ maxWidth: '90%', margin: '0 auto', padding: '2rem' }}><Preferences /></div>} />
       </Routes>
     </div>
   );
