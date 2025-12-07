@@ -283,7 +283,7 @@ export const EventTimeline = ({
             className="timeline-tick"
             style={{ top: `${tick.percentage}%` }}
           >
-            <span className="tick-label">{formatDuration(tick.time)}</span>
+            <span className="tick-label">{formatTimeHHMM(tick.time)}</span>
             <span className="tick-mark"></span>
           </div>
         ))}
