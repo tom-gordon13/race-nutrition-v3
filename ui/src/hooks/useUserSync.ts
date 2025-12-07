@@ -17,6 +17,17 @@ export const useUserSync = () => {
         return;
       }
 
+      // Check for user roles
+      const roles = (user as any)['https://your-namespace/roles'] ||
+                    (user as any).roles ||
+                    [];
+
+      if (roles.length > 0) {
+        console.log('User roles:', roles);
+      } else {
+        console.log('No roles found for user');
+      }
+
       setIsSyncing(true);
       setSyncError(null);
 
