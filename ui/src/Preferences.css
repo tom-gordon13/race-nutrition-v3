@@ -1,0 +1,92 @@
+.preferences-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.preferences-panel {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.preferences-subtitle {
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.preferences-card {
+  margin-bottom: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.preference-header-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.preference-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #646cff;
+}
+
+.preference-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.preference-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+}
+
+.preference-row label {
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.preference-row span {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.coming-soon {
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+  text-align: center;
+  padding: 1rem;
+}
+
+@media (prefers-color-scheme: light) {
+  .preferences-panel {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .preferences-subtitle {
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  .preferences-card {
+    background: rgba(0, 0, 0, 0.02);
+  }
+
+  .preference-title {
+    color: #535bf2;
+  }
+
+  .preference-row label {
+    color: rgba(0, 0, 0, 0.9);
+  }
+
+  .preference-row span {
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  .coming-soon {
+    color: rgba(0, 0, 0, 0.4);
+  }
+}

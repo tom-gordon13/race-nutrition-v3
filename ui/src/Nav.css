@@ -75,3 +75,30 @@ nav .custom-tabmenu .p-menuitem-link:focus,
   background: white !important;
   background-color: white !important;
 }
+
+/* User dropdown menu styling */
+.nav-user:hover {
+  background-color: rgba(100, 108, 255, 0.1) !important;
+}
+
+.user-dropdown-menu {
+  margin-top: 0.5rem;
+}
+
+.user-dropdown-menu .p-menuitem-link {
+  padding: 0.75rem 1rem;
+  transition: background-color 0.2s;
+}
+
+.user-dropdown-menu .p-menuitem-link:hover {
+  background-color: rgba(100, 108, 255, 0.1) !important;
+}
+
+.user-dropdown-menu .p-menuitem-icon {
+  color: #646cff;
+}
+
+.user-dropdown-menu .p-menuitem-text {
+  color: #646cff;
+  font-weight: 500;
+}
