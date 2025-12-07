@@ -82,6 +82,7 @@ const Events = () => {
   const [editMode, setEditMode] = useState(false);
   const [editableFoodInstances, setEditableFoodInstances] = useState<FoodInstance[]>([]);
   const [draggingInstanceId, setDraggingInstanceId] = useState<string | null>(null);
+  const [dragOffsetY, setDragOffsetY] = useState<number>(0);
 
   // State for dragging food items from left panel
   const [draggingFoodItemId, setDraggingFoodItemId] = useState<string | null>(null);
@@ -246,9 +247,15 @@ const Events = () => {
     }
   };
 
-  const handleDragStart = (_e: React.DragEvent, instanceId: string, _currentTop: number) => {
+  const handleDragStart = (e: React.DragEvent, instanceId: string, _currentTop: number) => {
     if (!editMode) return;
 
+    // Calculate the offset from the top of the dragged element to where the user clicked
+    const draggedElement = e.currentTarget as HTMLElement;
+    const rect = draggedElement.getBoundingClientRect();
+    const offsetY = e.clientY - rect.top;
+
+    setDragOffsetY(offsetY);
     setDraggingInstanceId(instanceId);
   };
 
@@ -342,7 +349,8 @@ const Events = () => {
     const rect = timeline.getBoundingClientRect();
 
     // Calculate drop position relative to timeline
-    const dropY = e.clientY - rect.top;
+    // Subtract the drag offset so the box stays where it was visually (not where the cursor is)
+    const dropY = e.clientY - rect.top - dragOffsetY;
 
     // Check if drop is within timeline bounds
     if (dropY < 0 || dropY > rect.height) {
@@ -414,6 +422,7 @@ const Events = () => {
 
   const handleDragEnd = () => {
     setDraggingInstanceId(null);
+    setDragOffsetY(0);
     setDraggingFoodItemId(null);
   };
 

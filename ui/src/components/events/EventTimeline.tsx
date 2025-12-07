@@ -139,6 +139,8 @@ export const EventTimeline = ({
   const [editServings, setEditServings] = useState<string>('');
   const [timelineHoverPosition, setTimelineHoverPosition] = useState<{ y: number; x: number; time: number } | null>(null);
   const [isHoveringInstance, setIsHoveringInstance] = useState(false);
+  const [mouseDownPosition, setMouseDownPosition] = useState<{ x: number; y: number } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const THREE_HOURS = 3 * 3600;
   const ONE_HOUR = 3600;
@@ -169,7 +171,13 @@ export const EventTimeline = ({
 
   const horizontalOffsets = calculateHorizontalOffsets(foodInstances, event);
 
-  // Handler for mouse move on timeline (to show elapsed time tooltip)
+  // Handler for mouse down on timeline (start tracking potential drag)
+  const handleTimelineMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    setMouseDownPosition({ x: e.clientX, y: e.clientY });
+    setIsDragging(false);
+  };
+
+  // Handler for mouse move on timeline (to show elapsed time tooltip and detect dragging)
   const handleTimelineMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const timeline = e.currentTarget;
     const rect = timeline.getBoundingClientRect();
@@ -179,16 +187,39 @@ export const EventTimeline = ({
     const timeInSeconds = Math.round(percentage * event.expected_duration);
 
     setTimelineHoverPosition({ y: mouseY, x: mouseX, time: timeInSeconds });
+
+    // Detect if user has dragged (moved mouse more than 10 pixels from initial position)
+    if (mouseDownPosition) {
+      const distanceX = Math.abs(e.clientX - mouseDownPosition.x);
+      const distanceY = Math.abs(e.clientY - mouseDownPosition.y);
+      if (distanceX > 10 || distanceY > 10) {
+        setIsDragging(true);
+      }
+    }
+  };
+
+  // Handler for mouse up on timeline
+  const handleTimelineMouseUp = () => {
+    setMouseDownPosition(null);
+    // Reset isDragging after a short delay to prevent click from firing
+    setTimeout(() => setIsDragging(false), 10);
   };
 
   // Handler for mouse leave on timeline
   const handleTimelineMouseLeave = () => {
     setTimelineHoverPosition(null);
     setIsHoveringInstance(false);
+    setMouseDownPosition(null);
+    setIsDragging(false);
   };
 
   // Handler for click on timeline (to create new food instance)
   const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Don't trigger if user was dragging
+    if (isDragging) {
+      return;
+    }
+
     // Only trigger if clicking on the timeline background (not on food instances)
     if ((e.target as HTMLElement).classList.contains('event-timeline') ||
         (e.target as HTMLElement).classList.contains('timeline-divider')) {
@@ -265,7 +296,9 @@ export const EventTimeline = ({
         onDragOver={onDragOver}
         onDrop={onDrop}
         onClick={handleTimelineClick}
+        onMouseDown={handleTimelineMouseDown}
         onMouseMove={handleTimelineMouseMove}
+        onMouseUp={handleTimelineMouseUp}
         onMouseLeave={handleTimelineMouseLeave}
       >
         {loadingInstances ? (
