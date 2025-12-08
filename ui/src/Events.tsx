@@ -10,7 +10,8 @@ import {
   FoodItemsList,
   EventTimeline,
   NutritionSummary,
-  FoodItemSelectionModal
+  FoodItemSelectionModal,
+  NutrientGoalsDialog
 } from './components/events';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
@@ -93,6 +94,9 @@ const Events = () => {
   // State for food item selection modal
   const [showFoodItemModal, setShowFoodItemModal] = useState(false);
   const [modalTimeInSeconds, setModalTimeInSeconds] = useState(0);
+
+  // State for nutrient goals dialog
+  const [showNutrientGoalsDialog, setShowNutrientGoalsDialog] = useState(false);
 
   const fetchEvents = async () => {
     if (!user || !user.sub) {
@@ -679,6 +683,12 @@ const Events = () => {
             </div>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button
+                onClick={() => setShowNutrientGoalsDialog(true)}
+                className="add-nutrient-btn"
+              >
+                Nutrient Goals
+              </button>
+              <button
                 onClick={toggleEditMode}
                 className={`edit-mode-btn ${editMode ? 'active' : ''}`}
               >
@@ -729,6 +739,21 @@ const Events = () => {
         onCategoryFilterChange={setCategoryFilter}
         onMyItemsOnlyChange={setMyItemsOnly}
       />
+
+      {/* Nutrient Goals Dialog */}
+      {selectedEvent && user?.sub && (
+        <NutrientGoalsDialog
+          visible={showNutrientGoalsDialog}
+          eventId={selectedEvent.id}
+          eventDuration={selectedEvent.expected_duration}
+          userId={user.sub}
+          onHide={() => setShowNutrientGoalsDialog(false)}
+          onSave={() => {
+            setSuccess('Nutrient goals saved successfully!');
+            setTimeout(() => setSuccess(null), 3000);
+          }}
+        />
+      )}
     </div>
   );
 };
