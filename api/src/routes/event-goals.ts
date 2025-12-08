@@ -15,10 +15,21 @@ router.get('/base', async (req, res) => {
       });
     }
 
+    // Get user internal ID from auth0_sub
+    const user = await prisma.user.findUnique({
+      where: { auth0_sub: user_id as string }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'User not found'
+      });
+    }
+
     const goals = await prisma.eventGoalsBase.findMany({
       where: {
         event_id: event_id as string,
-        user_id: user_id as string
+        user_id: user.id
       },
       include: {
         nutrient: true
@@ -45,10 +56,21 @@ router.get('/hourly', async (req, res) => {
       });
     }
 
+    // Get user internal ID from auth0_sub
+    const user = await prisma.user.findUnique({
+      where: { auth0_sub: user_id as string }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'User not found'
+      });
+    }
+
     const goals = await prisma.eventGoalsHourly.findMany({
       where: {
         event_id: event_id as string,
-        user_id: user_id as string
+        user_id: user.id
       },
       include: {
         nutrient: true

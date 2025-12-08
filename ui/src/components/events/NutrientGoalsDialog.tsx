@@ -7,6 +7,7 @@ import { Panel } from 'primereact/panel';
 import { Divider } from 'primereact/divider';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Message } from 'primereact/message';
+import './NutrientGoalsDialog.css';
 
 interface Nutrient {
   id: string;
@@ -264,6 +265,7 @@ export const NutrientGoalsDialog = ({
       onHide={onHide}
       footer={footerContent}
       maximizable
+      className="nutrient-goals-dialog"
     >
       {error && (
         <Message severity="error" text={error} style={{ marginBottom: '1rem', width: '100%' }} />
@@ -315,9 +317,17 @@ export const NutrientGoalsDialog = ({
                 const isExpanded = expandedNutrients.has(goal.nutrient_id);
 
                 const headerTemplate = (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
-                    <span style={{ flex: 1, fontWeight: 'bold' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '100%' }}>
+                    <span style={{ fontWeight: 'bold', minWidth: '120px' }}>
                       {getNutrientName(goal.nutrient_id)}
+                    </span>
+                    <span style={{ flex: 1, color: '#666' }}>
+                      Base: {goal.quantity} {goal.unit}/hr
+                      {nutrientHourlyGoals.length > 0 && (
+                        <span style={{ marginLeft: '1rem', fontStyle: 'italic' }}>
+                          ({nutrientHourlyGoals.length} hourly override{nutrientHourlyGoals.length !== 1 ? 's' : ''})
+                        </span>
+                      )}
                     </span>
                     <Button
                       icon="pi pi-trash"

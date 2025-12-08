@@ -47,10 +47,29 @@ interface Event {
   updated_at: string;
 }
 
+interface EventGoalBase {
+  id: string;
+  nutrient_id: string;
+  quantity: number;
+  unit: string;
+  nutrient: Nutrient;
+}
+
+interface EventGoalHourly {
+  id: string;
+  nutrient_id: string;
+  hour: number;
+  quantity: number;
+  unit: string;
+  nutrient: Nutrient;
+}
+
 interface NutritionSummaryProps {
   event: Event;
   foodInstances: FoodInstance[];
   timelineStyle?: React.CSSProperties;
+  userId: string;
+  goalsRefreshTrigger?: number;
 }
 
 const formatDuration = (seconds: number) => {
@@ -59,9 +78,11 @@ const formatDuration = (seconds: number) => {
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 };
 
-export const NutritionSummary = ({ event, foodInstances, timelineStyle }: NutritionSummaryProps) => {
+export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, goalsRefreshTrigger }: NutritionSummaryProps) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const [allNutrients, setAllNutrients] = useState<Nutrient[]>([]);
+  const [baseGoals, setBaseGoals] = useState<EventGoalBase[]>([]);
+  const [hourlyGoals, setHourlyGoals] = useState<EventGoalHourly[]>([]);
   const THREE_HOURS = 3 * 3600;
   const ONE_HOUR = 3600;
   const HALF_HOUR = 1800;
@@ -83,6 +104,51 @@ export const NutritionSummary = ({ event, foodInstances, timelineStyle }: Nutrit
     fetchNutrients();
   }, []);
 
+  // Fetch nutrient goals
+  useEffect(() => {
+    const fetchGoals = async () => {
+      try {
+        const [baseResponse, hourlyResponse] = await Promise.all([
+          fetch(`${API_URL}/api/event-goals/base?event_id=${event.id}&user_id=${userId}`),
+          fetch(`${API_URL}/api/event-goals/hourly?event_id=${event.id}&user_id=${userId}`)
+        ]);
+
+        if (baseResponse.ok) {
+          const baseData = await baseResponse.json();
+          setBaseGoals(baseData.goals || []);
+        }
+
+        if (hourlyResponse.ok) {
+          const hourlyData = await hourlyResponse.json();
+          setHourlyGoals(hourlyData.goals || []);
+        }
+      } catch (err) {
+        console.error('Error fetching goals:', err);
+      }
+    };
+
+    if (userId && event.id) {
+      fetchGoals();
+    }
+  }, [event.id, userId, goalsRefreshTrigger]);
+
+  // Get goal for a specific nutrient and hour
+  const getGoalForNutrient = (nutrientId: string, hour: number): { quantity: number; unit: string } | null => {
+    // Check for hourly override first
+    const hourlyGoal = hourlyGoals.find(g => g.nutrient_id === nutrientId && g.hour === hour);
+    if (hourlyGoal) {
+      return { quantity: hourlyGoal.quantity, unit: hourlyGoal.unit };
+    }
+
+    // Fall back to base goal
+    const baseGoal = baseGoals.find(g => g.nutrient_id === nutrientId);
+    if (baseGoal) {
+      return { quantity: baseGoal.quantity, unit: baseGoal.unit };
+    }
+
+    return null;
+  };
+
   // Generate dividers to match timeline
   const generateDividers = () => {
     const dividers = [];
@@ -103,6 +169,9 @@ export const NutritionSummary = ({ event, foodInstances, timelineStyle }: Nutrit
       const bottomPercentage = (endTime / event.expected_duration) * 100;
       const height = bottomPercentage - topPercentage;
 
+      // Calculate which hour this window represents (for goals)
+      const hour = Math.floor(startTime / 3600);
+
       // Filter instances in this window
       const instancesInWindow = foodInstances.filter(instance =>
         instance.time_elapsed_at_consumption >= startTime &&
@@ -110,13 +179,22 @@ export const NutritionSummary = ({ event, foodInstances, timelineStyle }: Nutrit
       );
 
       // Initialize all nutrients with zero totals
-      const nutrientTotals: { [key: string]: { name: string; total: number; unit: string } } = {};
+      const nutrientTotals: { [key: string]: {
+        id: string;
+        name: string;
+        total: number;
+        unit: string;
+        goal: { quantity: number; unit: string } | null;
+      } } = {};
 
       allNutrients.forEach(nutrient => {
+        const goal = getGoalForNutrient(nutrient.id, hour);
         nutrientTotals[nutrient.id] = {
+          id: nutrient.id,
           name: nutrient.nutrient_name,
           total: 0,
-          unit: 'g' // Default unit, will be overwritten if there's actual data
+          unit: goal?.unit || 'g', // Use goal unit or default to 'g'
+          goal: goal
         };
       });
 
@@ -138,6 +216,7 @@ export const NutritionSummary = ({ event, foodInstances, timelineStyle }: Nutrit
         endTime,
         topPercentage,
         height,
+        hour,
         nutrientTotals: Object.values(nutrientTotals)
       });
     }
@@ -175,18 +254,37 @@ export const NutritionSummary = ({ event, foodInstances, timelineStyle }: Nutrit
                 height: `${window.height}%`
               }}
             >
-              <div className="nutrition-window-header">
-                {formatDuration(window.startTime)} - {formatDuration(window.endTime)}
-              </div>
               <div className="nutrition-window-content">
-                {window.nutrientTotals.map((nutrient, nIndex) => (
-                  <div key={nIndex} className="nutrient-summary-row">
-                    <span className="nutrient-summary-name">{nutrient.name}:</span>
-                    <span className="nutrient-summary-amount">
-                      {Math.round(nutrient.total * 10) / 10} {nutrient.unit}
-                    </span>
-                  </div>
-                ))}
+                <table className="nutrient-summary-table">
+                  <thead>
+                    <tr>
+                      <th colSpan={3} className="nutrition-window-time-header">
+                        {formatDuration(window.startTime)} - {formatDuration(window.endTime)}
+                      </th>
+                    </tr>
+                    <tr>
+                      <th></th>
+                      <th>Goal</th>
+                      <th>Act.</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {window.nutrientTotals.map((nutrient, nIndex) => (
+                      <tr key={nIndex}>
+                        <td className="nutrient-summary-name">{nutrient.name}</td>
+                        <td className="nutrient-summary-goal">
+                          {nutrient.goal
+                            ? `${Math.round(nutrient.goal.quantity * 10) / 10}${nutrient.goal.unit}`
+                            : '-'
+                          }
+                        </td>
+                        <td className="nutrient-summary-actual">
+                          {Math.round(nutrient.total * 10) / 10}{nutrient.unit}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           ))}

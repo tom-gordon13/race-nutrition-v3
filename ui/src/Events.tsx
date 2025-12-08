@@ -97,6 +97,7 @@ const Events = () => {
 
   // State for nutrient goals dialog
   const [showNutrientGoalsDialog, setShowNutrientGoalsDialog] = useState(false);
+  const [goalsRefreshTrigger, setGoalsRefreshTrigger] = useState(0);
 
   const fetchEvents = async () => {
     if (!user || !user.sub) {
@@ -722,6 +723,8 @@ const Events = () => {
               event={selectedEvent}
               foodInstances={editMode ? editableFoodInstances : foodInstances}
               timelineStyle={timelineStyle}
+              userId={user.sub}
+              goalsRefreshTrigger={goalsRefreshTrigger}
             />
           </div>
         </div>
@@ -751,6 +754,7 @@ const Events = () => {
           onSave={() => {
             setSuccess('Nutrient goals saved successfully!');
             setTimeout(() => setSuccess(null), 3000);
+            setGoalsRefreshTrigger(prev => prev + 1);
           }}
         />
       )}
