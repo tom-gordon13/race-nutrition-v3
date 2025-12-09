@@ -859,6 +859,28 @@ tbody tr.selected {
   font-size: 1rem;
 }
 
+/* Food instance name styling - single line only */
+.food-instance-name {
+  color: #e8e8e8;
+  font-size: 0.95rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+  max-width: 100%;
+}
+
+/* Reduce font size for longer names */
+.food-instance-name:has(*) {
+  font-size: 0.85rem;
+}
+
+/* Even smaller for very long names (more than ~20 characters) */
+.food-instance-box .food-instance-name {
+  font-size: clamp(0.75rem, 0.95rem, 0.95rem);
+}
+
 /* Edit mode styling for food instances */
 .food-instance-content.edit-mode {
   background-color: rgba(255, 140, 60, 0.3);
@@ -1072,10 +1094,26 @@ tbody tr.selected {
   line-height: 1.2;
 }
 
+/* Tooltip time and servings section */
+.tooltip-time-servings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 0.4rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tooltip-time {
+  color: rgba(255, 255, 255, 0.87);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
 .tooltip-servings {
   color: rgba(255, 255, 255, 0.87);
   font-size: 0.75rem;
-  margin-bottom: 0.4rem;
   font-weight: 500;
   line-height: 1.2;
 }

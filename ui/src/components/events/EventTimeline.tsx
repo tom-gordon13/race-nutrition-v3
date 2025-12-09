@@ -64,7 +64,7 @@ const formatTimeHHMM = (seconds: number) => {
 // Calculate horizontal offsets for overlapping instances
 const calculateHorizontalOffsets = (instances: FoodInstance[], event: Event) => {
   const ITEM_HEIGHT_PERCENT = 8; // Approximate height of each box as percentage of timeline
-  const ITEM_WIDTH_PX = 150; // Fixed width in pixels
+  const ITEM_WIDTH_PX = 180; // Fixed width in pixels
 
   // Sort instances by time
   const sorted = [...instances].sort((a, b) =>
@@ -341,7 +341,7 @@ export const EventTimeline = ({
                     position: 'absolute',
                     top: `${position}%`,
                     left: `${leftOffset}px`,
-                    width: '150px',
+                    width: '180px',
                     cursor: isEditing ? 'default' : (editMode ? 'grab' : 'pointer'),
                   }}
                 >
@@ -401,13 +401,10 @@ export const EventTimeline = ({
                         </button>
                       </div>
                     ) : (
-                      // Normal display
-                      <>
-                        <strong>{instance.foodItem.item_name}</strong>
-                        <div style={{ fontSize: '0.85rem', opacity: 0.8 }}>
-                          {formatTimeHHMM(instance.time_elapsed_at_consumption)} | {instance.servings} serv.
-                        </div>
-                      </>
+                      // Normal display - only show item name
+                      <div className="food-instance-name">
+                        {instance.foodItem.item_name}
+                      </div>
                     )}
                   </div>
 
@@ -420,8 +417,9 @@ export const EventTimeline = ({
                           <div className="tooltip-category">{instance.foodItem.category.replace(/_/g, ' ')}</div>
                         )}
                       </div>
-                      <div className="tooltip-servings">
-                        Servings: {instance.servings}
+                      <div className="tooltip-time-servings">
+                        <div className="tooltip-time">Time: {formatTimeHHMM(instance.time_elapsed_at_consumption)}</div>
+                        <div className="tooltip-servings">Servings: {instance.servings}</div>
                       </div>
                       {instance.foodItem.foodItemNutrients && instance.foodItem.foodItemNutrients.length > 0 && (
                         <div className="tooltip-nutrients">
