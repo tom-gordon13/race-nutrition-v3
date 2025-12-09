@@ -224,6 +224,22 @@ export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, 
     return windows;
   };
 
+  // Calculate color based on actual vs goal
+  const getRowColor = (actual: number, goal: { quantity: number; unit: string } | null) => {
+    if (!goal) return '';
+
+    const percentage = (actual / goal.quantity) * 100;
+    const deviation = Math.abs(100 - percentage);
+
+    if (deviation <= 10) {
+      return '#22c55e'; // green
+    } else if (deviation <= 40) {
+      return '#eab308'; // yellow
+    } else {
+      return '#ef4444'; // red
+    }
+  };
+
   return (
     <div className={`nutrition-summary-panel ${isExpanded ? 'expanded' : 'collapsed'}`} style={timelineStyle}>
       <button
@@ -258,31 +274,29 @@ export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, 
                 <table className="nutrient-summary-table">
                   <thead>
                     <tr>
-                      <th colSpan={3} className="nutrition-window-time-header">
-                        {formatDuration(window.startTime)} - {formatDuration(window.endTime)}
-                      </th>
-                    </tr>
-                    <tr>
                       <th></th>
                       <th>Goal</th>
-                      <th>Act.</th>
+                      <th>Actual</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {window.nutrientTotals.map((nutrient, nIndex) => (
-                      <tr key={nIndex}>
-                        <td className="nutrient-summary-name">{nutrient.name}</td>
-                        <td className="nutrient-summary-goal">
-                          {nutrient.goal
-                            ? `${Math.round(nutrient.goal.quantity * 10) / 10}${nutrient.goal.unit}`
-                            : '-'
-                          }
-                        </td>
-                        <td className="nutrient-summary-actual">
-                          {Math.round(nutrient.total * 10) / 10}{nutrient.unit}
-                        </td>
-                      </tr>
-                    ))}
+                    {window.nutrientTotals.map((nutrient, nIndex) => {
+                      const rowColor = getRowColor(nutrient.total, nutrient.goal);
+                      return (
+                        <tr key={nIndex} style={{ backgroundColor: rowColor ? `${rowColor}33` : 'transparent' }}>
+                          <td className="nutrient-summary-name">{nutrient.name}</td>
+                          <td className="nutrient-summary-goal">
+                            {nutrient.goal
+                              ? `${Math.round(nutrient.goal.quantity * 10) / 10}${nutrient.goal.unit}`
+                              : '-'
+                            }
+                          </td>
+                          <td className="nutrient-summary-actual">
+                            {Math.round(nutrient.total * 10) / 10}{nutrient.unit}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

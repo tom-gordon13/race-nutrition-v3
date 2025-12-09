@@ -62,15 +62,11 @@ const Nutrients = () => {
       style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f3f0ff' }}
       pt={{
         title: { style: { textAlign: 'left', color: '#646cff', padding: '1.25rem', margin: 0, fontSize: '1.5rem', fontWeight: 700, backgroundColor: '#f3f0ff' } },
-        body: { style: { flex: 1, overflow: 'auto', padding: '0 1.25rem 1.25rem 1.25rem', backgroundColor: '#f3f0ff' } },
+        body: { style: { flex: 1, overflow: 'auto', padding: 0, backgroundColor: '#f3f0ff' } },
         content: { style: { padding: 0 } }
       }}
     >
       {error && <div className="error-message">{error}</div>}
-
-      <div style={{ marginBottom: '1rem' }}>
-        <Tag value={`Total Nutrients: ${nutrients.length}`} severity="info" />
-      </div>
 
       <DataTable
         value={nutrients}
@@ -81,6 +77,9 @@ const Nutrients = () => {
         rowsPerPageOptions={[10, 25, 50, 100]}
         emptyMessage="No nutrients found in the database."
         loading={loading}
+        pt={{
+          root: { style: { borderTop: 'none' } }
+        }}
       >
         <Column field="nutrient_name" header="Name" sortable />
         <Column field="nutrient_abbreviation" header="Abbreviation" sortable />
@@ -91,6 +90,10 @@ const Nutrients = () => {
           sortField="created_at"
         />
       </DataTable>
+
+      <div style={{ padding: '0.75rem 1.25rem', borderTop: '1px solid #dee2e6' }}>
+        <Tag value={`Total Nutrients: ${nutrients.length}`} severity="info" />
+      </div>
     </Card>
   );
 };

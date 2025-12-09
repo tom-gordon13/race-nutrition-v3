@@ -1403,9 +1403,11 @@ tbody tr.selected {
 
 .nutrient-summary-table {
   width: 100%;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   border-collapse: collapse;
   table-layout: fixed;
+  margin-top: 0;
+  border-top: none;
 }
 
 .nutrient-summary-table th:first-child,
@@ -1436,7 +1438,7 @@ tbody tr.selected {
 .nutrient-summary-table thead th {
   color: rgba(255, 255, 255, 0.6);
   font-weight: 500;
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   text-align: right;
   padding: 0.15rem 0.25rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
@@ -1470,7 +1472,7 @@ tbody tr.selected {
 }
 
 .nutrient-summary-goal {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.95);
   font-style: italic;
   text-align: right;
   white-space: nowrap;
