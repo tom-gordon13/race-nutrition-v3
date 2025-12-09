@@ -346,19 +346,18 @@ export const EventTimeline = ({
                   }}
                 >
                   <div className={`food-instance-content ${editMode ? 'edit-mode' : ''} ${isEditing ? 'instance-editing' : ''}`}>
-                    <button
-                      className="delete-instance-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (!isEditing) {
+                    {!isEditing && (
+                      <button
+                        className="delete-instance-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
                           onDeleteInstance(instance.id);
-                        }
-                      }}
-                      title="Delete food instance"
-                      style={{ display: isEditing ? 'none' : 'flex' }}
-                    >
-                      ✕
-                    </button>
+                        }}
+                        title="Delete food instance"
+                      >
+                        ✕
+                      </button>
+                    )}
 
                     {isEditing ? (
                       // Edit mode UI
