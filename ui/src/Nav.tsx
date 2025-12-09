@@ -1,6 +1,6 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import { TabMenu } from 'primereact/tabmenu';
 import { Menu } from 'primereact/menu';
 import { Avatar } from 'primereact/avatar';
@@ -19,6 +19,9 @@ const Nav = ({ className = "" }: NavProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const menuRef = useRef<Menu>(null);
+  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const userDivRef = useRef<HTMLDivElement>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleSignOut = () => {
     logout({ logoutParams: { returnTo: window.location.origin } });
@@ -70,9 +73,64 @@ const Nav = ({ className = "" }: NavProps) => {
     }
   ];
 
+  const clearHideTimeout = () => {
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = null;
+    }
+  };
+
+  const scheduleHide = () => {
+    clearHideTimeout();
+    hideTimeoutRef.current = setTimeout(() => {
+      // PrimeReact's hide() expects an event object, so we create a mock one
+      const mockEvent = {
+        currentTarget: userDivRef.current,
+        target: userDivRef.current
+      } as any;
+      menuRef.current?.hide(mockEvent);
+      setIsMenuOpen(false);
+    }, 150);
+  };
+
   const handleUserMouseEnter = (event: React.MouseEvent<HTMLDivElement>) => {
+    clearHideTimeout();
+    setIsMenuOpen(true);
     menuRef.current?.show(event);
   };
+
+  const handleUserMouseLeave = () => {
+    scheduleHide();
+  };
+
+  useEffect(() => {
+    if (!isMenuOpen) return;
+
+    // Wait a bit for PrimeReact to render the menu in the DOM
+    const timeout = setTimeout(() => {
+      const menuElement = document.querySelector('.user-dropdown-menu');
+
+      if (!menuElement) return;
+
+      const handleMenuMouseEnter = () => {
+        clearHideTimeout();
+      };
+
+      const handleMenuMouseLeave = () => {
+        scheduleHide();
+      };
+
+      menuElement.addEventListener('mouseenter', handleMenuMouseEnter);
+      menuElement.addEventListener('mouseleave', handleMenuMouseLeave);
+
+      return () => {
+        menuElement.removeEventListener('mouseenter', handleMenuMouseEnter);
+        menuElement.removeEventListener('mouseleave', handleMenuMouseLeave);
+      };
+    }, 100);
+
+    return () => clearTimeout(timeout);
+  }, [isMenuOpen]);
 
   return (
     <nav className={`nav ${className}`} style={{ backgroundColor: '#f3f0ff', borderBottom: '1px solid #e5e7eb', padding: '0.75rem 0', width: '100%' }}>
@@ -89,9 +147,11 @@ const Nav = ({ className = "" }: NavProps) => {
         </div>
         <div className="nav-right" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <div
+            ref={userDivRef}
             className="nav-user"
             style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.5rem', borderRadius: '8px', transition: 'background-color 0.2s' }}
             onMouseEnter={handleUserMouseEnter}
+            onMouseLeave={handleUserMouseLeave}
           >
             <Avatar
               label={user?.name?.charAt(0).toUpperCase()}

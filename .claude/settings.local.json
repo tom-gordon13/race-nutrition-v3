@@ -16,7 +16,9 @@
       "Bash(npm install:*)",
       "Bash(git push:*)",
       "Bash(rm:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(git checkout:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []
