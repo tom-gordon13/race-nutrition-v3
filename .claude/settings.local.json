@@ -19,6 +19,8 @@
       "Bash(npx tsc:*)",
       "Bash(git checkout:*)",
       "WebSearch",
+      "Bash(lsof:*)",
+      "Bash(docker inspect:*)"
       "Bash(kill:*)"
     ],
     "deny": [],

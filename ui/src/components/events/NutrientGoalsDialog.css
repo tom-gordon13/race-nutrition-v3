@@ -1,0 +1,43 @@
+/* Target all header icon buttons */
+.nutrient-goals-dialog .p-dialog-header-icons button {
+  color: #646cff !important;
+}
+
+.nutrient-goals-dialog .p-dialog-header-icons button:hover {
+  color: #535bf2 !important;
+  background-color: rgba(100, 108, 255, 0.1) !important;
+}
+
+/* Target the icon elements themselves */
+.nutrient-goals-dialog .p-dialog-header-icons .p-icon {
+  color: #646cff !important;
+}
+
+.nutrient-goals-dialog .p-dialog-header-icons button:hover .p-icon {
+  color: #535bf2 !important;
+}
+
+/* Additional specific targeting */
+.nutrient-goals-dialog .p-dialog-header-icon {
+  color: #646cff !important;
+}
+
+.nutrient-goals-dialog .p-dialog-header-icon:hover {
+  color: #535bf2 !important;
+}
+
+/* Target by specific button classes */
+.nutrient-goals-dialog .p-dialog-header-maximize,
+.nutrient-goals-dialog .p-dialog-header-close,
+.nutrient-goals-dialog button[aria-label="Maximize"],
+.nutrient-goals-dialog button[aria-label="Close"] {
+  color: #646cff !important;
+}
+
+.nutrient-goals-dialog .p-dialog-header-maximize:hover,
+.nutrient-goals-dialog .p-dialog-header-close:hover,
+.nutrient-goals-dialog button[aria-label="Maximize"]:hover,
+.nutrient-goals-dialog button[aria-label="Close"]:hover {
+  color: #535bf2 !important;
+  background-color: rgba(100, 108, 255, 0.1) !important;
+}

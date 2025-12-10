@@ -27,15 +27,17 @@ enum FoodCategory {
 }
 
 model User {
-  id         String   @id @default(uuid())
-  auth0_sub  String   @unique
-  email      String?
-  first_name String
-  last_name  String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  foodItems  FoodItem[]
-  events     Event[]
+  id               String            @id @default(uuid())
+  auth0_sub        String            @unique
+  email            String?
+  first_name       String
+  last_name        String
+  created_at       DateTime          @default(now())
+  updated_at       DateTime          @updatedAt
+  foodItems        FoodItem[]
+  events           Event[]
+  eventGoalsBase   EventGoalsBase[]
+  eventGoalsHourly EventGoalsHourly[]
 }
 
 model FoodItem {
@@ -53,14 +55,16 @@ model FoodItem {
 }
 
 model Event {
-  id                String         @id @default(uuid())
+  id                String             @id @default(uuid())
   event_user_id     String
-  created_at        DateTime       @default(now())
-  updated_at        DateTime       @updatedAt
+  created_at        DateTime           @default(now())
+  updated_at        DateTime           @updatedAt
   expected_duration Int
   type              String
-  user              User           @relation(fields: [event_user_id], references: [id])
+  user              User               @relation(fields: [event_user_id], references: [id])
   foodInstances     FoodInstance[]
+  eventGoalsBase    EventGoalsBase[]
+  eventGoalsHourly  EventGoalsHourly[]
 }
 
 model FoodInstance {
@@ -76,12 +80,14 @@ model FoodInstance {
 }
 
 model Nutrient {
-  id                   String             @id @default(uuid())
-  created_at           DateTime           @default(now())
-  updated_at           DateTime           @updatedAt
+  id                   String               @id @default(uuid())
+  created_at           DateTime             @default(now())
+  updated_at           DateTime             @updatedAt
   nutrient_name        String
   nutrient_abbreviation String
   foodItemNutrients    FoodItemNutrient[]
+  eventGoalsBase       EventGoalsBase[]
+  eventGoalsHourly     EventGoalsHourly[]
 }
 
 model FoodItemNutrient {
@@ -92,4 +98,37 @@ model FoodItemNutrient {
   unit         String
   foodItem     FoodItem @relation(fields: [food_item_id], references: [id])
   nutrient     Nutrient @relation(fields: [nutrient_id], references: [id])
+}
+
+model EventGoalsBase {
+  id          String   @id @default(uuid())
+  user_id     String
+  event_id    String
+  nutrient_id String
+  quantity    Float
+  unit        String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  event       Event    @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  nutrient    Nutrient @relation(fields: [nutrient_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, event_id, nutrient_id])
+}
+
+model EventGoalsHourly {
+  id          String   @id @default(uuid())
+  user_id     String
+  event_id    String
+  nutrient_id String
+  hour        Int
+  quantity    Float
+  unit        String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  event       Event    @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  nutrient    Nutrient @relation(fields: [nutrient_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, event_id, nutrient_id, hour])
 }
