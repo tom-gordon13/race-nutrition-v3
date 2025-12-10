@@ -72,12 +72,6 @@ interface NutritionSummaryProps {
   goalsRefreshTrigger?: number;
 }
 
-const formatDuration = (seconds: number) => {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-};
-
 export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, goalsRefreshTrigger }: NutritionSummaryProps) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const [allNutrients, setAllNutrients] = useState<Nutrient[]>([]);
@@ -179,13 +173,15 @@ export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, 
       );
 
       // Initialize all nutrients with zero totals
-      const nutrientTotals: { [key: string]: {
-        id: string;
-        name: string;
-        total: number;
-        unit: string;
-        goal: { quantity: number; unit: string } | null;
-      } } = {};
+      const nutrientTotals: {
+        [key: string]: {
+          id: string;
+          name: string;
+          total: number;
+          unit: string;
+          goal: { quantity: number; unit: string } | null;
+        }
+      } = {};
 
       allNutrients.forEach(nutrient => {
         const goal = getGoalForNutrient(nutrient.id, hour);
