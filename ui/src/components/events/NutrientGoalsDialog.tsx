@@ -264,7 +264,7 @@ export const NutrientGoalsDialog = ({
       style={{ width: '50vw', minWidth: '600px' }}
       onHide={onHide}
       footer={footerContent}
-      maximizable
+      closable={false}
       className="nutrient-goals-dialog"
     >
       {error && (
@@ -350,9 +350,12 @@ export const NutrientGoalsDialog = ({
                     toggleable
                     collapsed={!isExpanded}
                     onToggle={() => toggleExpanded(goal.nutrient_id)}
+                    collapseIcon="pi pi-chevron-down"
+                    expandIcon="pi pi-chevron-right"
                     pt={{
                       header: { style: { backgroundColor: '#f3f0ff', borderColor: '#646cff' } },
-                      togglerIcon: { style: { color: '#646cff' } }
+                      togglerIcon: { style: { color: 'white' } },
+                      toggler: { style: { backgroundColor: '#646cff', borderColor: '#646cff', color: 'white', borderRadius: '4px' } }
                     }}
                   >
                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
