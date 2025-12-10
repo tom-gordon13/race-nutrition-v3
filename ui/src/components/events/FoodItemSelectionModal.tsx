@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface FoodItemNutrient {
   id: string;
@@ -58,6 +59,7 @@ export const FoodItemSelectionModal = ({
   onCategoryFilterChange,
   onMyItemsOnlyChange
 }: FoodItemSelectionModalProps) => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [servings, setServings] = useState('1');
   const [editedTime, setEditedTime] = useState('');
@@ -108,6 +110,11 @@ export const FoodItemSelectionModal = ({
     }
 
     onSelect(foodItemId, servingsNum, timeSeconds);
+  };
+
+  const handleCreateNewFoodItem = () => {
+    navigate('/food-items');
+    onClose();
   };
 
   return (
@@ -218,6 +225,13 @@ export const FoodItemSelectionModal = ({
                 </div>
               ))
             )}
+
+            <button
+              className="modal-create-food-item-btn"
+              onClick={handleCreateNewFoodItem}
+            >
+              + Create New Food Item
+            </button>
           </div>
         </div>
       </div>

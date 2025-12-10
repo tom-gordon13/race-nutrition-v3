@@ -21,6 +21,7 @@
       "WebSearch",
       "Bash(lsof:*)",
       "Bash(docker inspect:*)"
+      "Bash(kill:*)"
     ],
     "deny": [],
     "ask": []
