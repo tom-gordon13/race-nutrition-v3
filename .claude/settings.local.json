@@ -18,7 +18,8 @@
       "Bash(rm:*)",
       "Bash(npx tsc:*)",
       "Bash(git checkout:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(kill:*)"
     ],
     "deny": [],
     "ask": []
