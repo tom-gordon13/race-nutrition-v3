@@ -133,40 +133,41 @@ const Nav = ({ className = "" }: NavProps) => {
   }, [isMenuOpen]);
 
   return (
-    <nav className={`nav ${className}`} style={{ backgroundColor: '#f3f0ff', borderBottom: '1px solid #e5e7eb', padding: '0.75rem 0', width: '100%' }}>
-      <div className="nav-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 2rem', maxWidth: '100%', margin: '0 auto' }}>
-        <div className="nav-brand" style={{ marginRight: '2rem' }}>
-          <h2 style={{ margin: 0, color: '#646cff', fontSize: '1.5rem', fontWeight: 700 }}>Race Nutrition</h2>
+    <nav className={`nav ${className}`}>
+      <div className="nav-content">
+        <div className="nav-top-row-wrapper">
+          <div className="nav-brand">
+            <h2>RaceFuel</h2>
+          </div>
+          <div className="nav-right">
+            <div
+              ref={userDivRef}
+              className="nav-user"
+              onMouseEnter={handleUserMouseEnter}
+              onMouseLeave={handleUserMouseLeave}
+            >
+              <Avatar
+                label={user?.name?.charAt(0).toUpperCase()}
+                icon="pi pi-user"
+                style={{ backgroundColor: '#646cff', color: 'white' }}
+                shape="circle"
+              />
+              <span className="user-greeting">Hello, {user?.name}</span>
+              <i className="pi pi-chevron-down" style={{ color: '#646cff', fontSize: '0.75rem' }} />
+            </div>
+            <Menu
+              model={userMenuItems}
+              popup
+              ref={menuRef}
+              className="user-dropdown-menu"
+            />
+          </div>
         </div>
-        <div className="nav-center" style={{ flex: 1 }}>
+        <div className="nav-center">
           <TabMenu
             model={items}
             activeIndex={getActiveIndex()}
             className="custom-tabmenu"
-          />
-        </div>
-        <div className="nav-right" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div
-            ref={userDivRef}
-            className="nav-user"
-            style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.5rem', borderRadius: '8px', transition: 'background-color 0.2s' }}
-            onMouseEnter={handleUserMouseEnter}
-            onMouseLeave={handleUserMouseLeave}
-          >
-            <Avatar
-              label={user?.name?.charAt(0).toUpperCase()}
-              icon="pi pi-user"
-              style={{ backgroundColor: '#646cff', color: 'white' }}
-              shape="circle"
-            />
-            <span style={{ color: '#646cff', fontWeight: 500 }}>Hello, {user?.name}</span>
-            <i className="pi pi-chevron-down" style={{ color: '#646cff', fontSize: '0.75rem' }} />
-          </div>
-          <Menu
-            model={userMenuItems}
-            popup
-            ref={menuRef}
-            className="user-dropdown-menu"
           />
         </div>
       </div>
