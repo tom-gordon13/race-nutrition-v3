@@ -73,7 +73,7 @@ interface NutritionSummaryProps {
 }
 
 export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, goalsRefreshTrigger }: NutritionSummaryProps) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [allNutrients, setAllNutrients] = useState<Nutrient[]>([]);
   const [baseGoals, setBaseGoals] = useState<EventGoalBase[]>([]);
   const [hourlyGoals, setHourlyGoals] = useState<EventGoalHourly[]>([]);

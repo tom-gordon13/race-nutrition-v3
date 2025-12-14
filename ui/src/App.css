@@ -1709,12 +1709,22 @@ tbody tr.selected {
   .nutrition-panel-content {
     overflow-x: auto;
     overflow-y: auto;
-    padding-left: 0;
+    padding-left: 48px;
     -webkit-overflow-scrolling: touch;
   }
 
   .nutrition-panel-toggle {
-    display: none;
+    left: 8px;
+  }
+
+  /* Event timeline container horizontal scroll when panel closed */
+  .event-timeline-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .event-timeline {
+    min-width: 100%;
   }
 }
 
