@@ -41,3 +41,18 @@
   color: #535bf2 !important;
   background-color: rgba(100, 108, 255, 0.1) !important;
 }
+
+/* Reduce gaps in hourly override rows */
+.nutrient-goals-dialog .p-panel-content > div > div:last-child > div > div {
+  gap: 0.25rem !important;
+}
+
+/* Also target the hourly override container directly */
+.nutrient-goals-dialog .p-panel-content div[style*="gap: 0.5rem"] {
+  gap: 0.25rem !important;
+}
+
+/* Target base goal inputs container */
+.nutrient-goals-dialog .p-panel-content > div > div:first-child {
+  gap: 0.5rem !important;
+}

@@ -1,3 +1,133 @@
+/* Nav layout */
+.nav {
+  background-color: #f3f0ff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.75rem 2rem 0 2rem;
+  width: 100%;
+  min-height: fit-content;
+  height: auto;
+}
+
+.nav-content {
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+  margin: 0 auto;
+  gap: 1rem;
+}
+
+.nav-top-row-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.nav-brand {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.nav-brand h2 {
+  margin: 0;
+  color: #646cff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.nav-center {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.nav-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.user-greeting {
+  color: #646cff;
+  font-weight: 500;
+}
+
+/* Mobile responsive layout */
+@media (max-width: 768px) {
+  .nav {
+    padding: 0.75rem 0 0 0;
+  }
+
+  .nav-content {
+    gap: 0.5rem;
+  }
+
+  .nav-top-row-wrapper {
+    padding: 0 1rem;
+  }
+
+  .nav-brand h2 {
+    font-size: 1.25rem;
+  }
+
+  .user-greeting {
+    display: none;
+  }
+
+  .nav-user {
+    padding: 0.25rem;
+    gap: 0.25rem;
+  }
+
+  /* Menu row touches edges - no padding needed */
+  .nav-center {
+    width: 100%;
+  }
+
+  /* Ensure buttons span full width evenly */
+  .nav-center .custom-tabmenu {
+    width: 100%;
+  }
+
+  .nav-center .custom-tabmenu .p-tabmenu-nav {
+    display: flex;
+    width: 100%;
+  }
+
+  .nav-center .custom-tabmenu .p-tabmenuitem {
+    flex: 1;
+    border-right: 1px solid #9ca3af !important;
+  }
+
+  .nav-center .custom-tabmenu .p-tabmenuitem:last-child {
+    border-right: none !important;
+  }
+
+  /* Reduce menu button height on mobile */
+  .nav-center .custom-tabmenu .p-menuitem-link {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.9rem !important;
+    justify-content: center !important;
+  }
+
+  .nav-center .custom-tabmenu .p-menuitem-icon {
+    font-size: 0.9rem !important;
+  }
+}
+
 /* Custom TabMenu styling - force white backgrounds everywhere */
 .custom-tabmenu,
 .custom-tabmenu * {

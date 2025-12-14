@@ -489,24 +489,24 @@ const Events = () => {
       {selectedEvent && (
         <div className="event-detail-container">
           <div className="event-detail-header">
-            <div className="event-title-section">
+            <div className="event-header-top-row">
               <h3>{selectedEvent.type}</h3>
-              <span className="event-total-cost">
-                {loadingInstances ? '--' : `$${totalCost.toFixed(2)}`}
-              </span>
-            </div>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button
-                onClick={() => setShowNutrientGoalsDialog(true)}
-                className="add-nutrient-btn"
-              >
-                View/Add Nutrient Goals
-              </button>
               <button
                 onClick={() => handleSelectEvent(null)}
                 className="close-btn"
               >
                 ✕
+              </button>
+            </div>
+            <div className="event-header-bottom-row">
+              <span className="event-total-cost">
+                {loadingInstances ? '--' : `$${totalCost.toFixed(2)}`}
+              </span>
+              <button
+                onClick={() => setShowNutrientGoalsDialog(true)}
+                className="add-nutrient-btn"
+              >
+                View/Add Nutrient Goals
               </button>
             </div>
           </div>
