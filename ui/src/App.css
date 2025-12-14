@@ -1700,6 +1700,22 @@ tbody tr.selected {
   .nutrient-summary-table {
     width: 80%;
   }
+
+  /* Nutrition panel horizontal scroll */
+  .nutrition-summary-panel.expanded {
+    width: 100%;
+  }
+
+  .nutrition-panel-content {
+    overflow-x: auto;
+    overflow-y: auto;
+    padding-left: 0;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nutrition-panel-toggle {
+    display: none;
+  }
 }
 
 /* Food Item Selection Modal */

@@ -2,7 +2,7 @@
 .nav {
   background-color: #f3f0ff;
   border-bottom: 1px solid #e5e7eb;
-  padding: 0.75rem 2rem 0 2rem;
+  padding: 0.75rem 2rem;
   width: 100%;
   min-height: fit-content;
   height: auto;
@@ -10,23 +10,22 @@
 
 .nav-content {
   display: flex;
-  flex-direction: column;
-  max-width: 100%;
-  margin: 0 auto;
-  gap: 1rem;
-}
-
-.nav-top-row-wrapper {
-  display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  gap: 2rem;
+}
+
+.nav-top-row-wrapper {
+  display: contents;
 }
 
 .nav-brand {
   margin: 0;
   flex-shrink: 0;
+  order: 1;
 }
 
 .nav-brand h2 {
@@ -40,7 +39,8 @@
 .nav-center {
   display: flex;
   justify-content: center;
-  width: 100%;
+  flex: 1;
+  order: 2;
 }
 
 .nav-right {
@@ -48,6 +48,7 @@
   align-items: center;
   gap: 1rem;
   flex-shrink: 0;
+  order: 3;
 }
 
 .nav-user {
@@ -72,11 +73,25 @@
   }
 
   .nav-content {
+    flex-direction: column;
     gap: 0.5rem;
   }
 
   .nav-top-row-wrapper {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
     padding: 0 1rem;
+    order: 1;
+  }
+
+  .nav-brand {
+    order: 0;
+  }
+
+  .nav-right {
+    order: 0;
   }
 
   .nav-brand h2 {
@@ -95,6 +110,7 @@
   /* Menu row touches edges - no padding needed */
   .nav-center {
     width: 100%;
+    order: 2;
   }
 
   /* Ensure buttons span full width evenly */
