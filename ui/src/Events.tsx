@@ -79,9 +79,7 @@ const Events = () => {
   // Form state
   const [showCreateForm, setShowCreateForm] = useState(false);
 
-  // Edit mode state
-  const [editMode, setEditMode] = useState(false);
-  const [editableFoodInstances, setEditableFoodInstances] = useState<FoodInstance[]>([]);
+  // Drag and drop state
   const [draggingInstanceId, setDraggingInstanceId] = useState<string | null>(null);
   const [dragOffsetY, setDragOffsetY] = useState<number>(0);
 
@@ -200,60 +198,9 @@ const Events = () => {
     } else {
       setFoodInstances([]);
     }
-    // Reset edit mode when event changes
-    setEditMode(false);
-    setEditableFoodInstances([]);
   }, [selectedEvent]);
 
-  const toggleEditMode = async () => {
-    if (!editMode && selectedEvent) {
-      // Entering edit mode - copy data to editable state
-      setEditableFoodInstances(foodInstances.map(instance => ({ ...instance })));
-      setEditMode(true);
-    } else if (editMode) {
-      // Exiting edit mode - save changes
-      await saveChanges();
-      setEditableFoodInstances([]);
-      setEditMode(false);
-    }
-  };
-
-  const saveChanges = async () => {
-    if (!selectedEvent) return;
-
-    try {
-      // Update food instances that have changed
-      for (const instance of editableFoodInstances) {
-        const original = foodInstances.find(fi => fi.id === instance.id);
-        if (original && original.time_elapsed_at_consumption !== instance.time_elapsed_at_consumption) {
-          const response = await fetch(`${API_URL}/api/food-instances/${instance.id}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              time_elapsed_at_consumption: instance.time_elapsed_at_consumption
-            }),
-          });
-
-          if (!response.ok) {
-            throw new Error('Failed to update food instance');
-          }
-        }
-      }
-
-      // Refresh food instances after save
-      await fetchFoodInstances(selectedEvent.id);
-      setSuccess('Changes saved successfully!');
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save changes');
-      console.error('Error saving changes:', err);
-    }
-  };
-
   const handleDragStart = (e: React.DragEvent, instanceId: string, _currentTop: number) => {
-    if (!editMode) return;
 
     // Calculate the offset from the top of the dragged element to where the user clicked
     const draggedElement = e.currentTarget as HTMLElement;
@@ -266,84 +213,6 @@ const Events = () => {
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-  };
-
-  // Helper function to detect overlap and calculate horizontal offset
-  const calculateNonOverlappingOffset = (
-    newTime: number,
-    existingInstances: typeof editableFoodInstances,
-    currentInstanceId?: string
-  ) => {
-    const ITEM_HEIGHT_PERCENT = 8; // Approximate height of each box as percentage of timeline
-    const ITEM_WIDTH_PERCENT = 16.67; // Width of each box as percentage (1/6th of width)
-
-    const topPercent = (newTime / selectedEvent!.expected_duration) * 100;
-    const bottomPercent = topPercent + ITEM_HEIGHT_PERCENT;
-
-    // Get other instances (excluding the one being dragged if editing)
-    const otherInstances = existingInstances.filter(
-      instance => instance.id !== currentInstanceId
-    );
-
-    // Sort instances by time
-    const sorted = [...otherInstances].sort((a, b) =>
-      a.time_elapsed_at_consumption - b.time_elapsed_at_consumption
-    );
-
-    // Track which horizontal lanes are occupied
-    const lanes: Array<{ topPercent: number; bottomPercent: number }[]> = [[]];
-
-    // First, assign all existing instances to lanes
-    sorted.forEach((instance) => {
-      const instTopPercent = (instance.time_elapsed_at_consumption / selectedEvent!.expected_duration) * 100;
-      const instBottomPercent = instTopPercent + ITEM_HEIGHT_PERCENT;
-
-      // Find the first available lane for this instance
-      let assignedLane = -1;
-      for (let i = 0; i < lanes.length; i++) {
-        const lane = lanes[i];
-        const hasOverlap = lane.some((item) => {
-          return !(instBottomPercent <= item.topPercent || instTopPercent >= item.bottomPercent);
-        });
-
-        if (!hasOverlap) {
-          assignedLane = i;
-          break;
-        }
-      }
-
-      if (assignedLane === -1) {
-        assignedLane = lanes.length;
-        lanes.push([]);
-      }
-
-      lanes[assignedLane].push({
-        topPercent: instTopPercent,
-        bottomPercent: instBottomPercent,
-      });
-    });
-
-    // Now find the first available lane for the new/moved item
-    let targetLane = -1;
-    for (let i = 0; i < lanes.length; i++) {
-      const lane = lanes[i];
-      const hasOverlap = lane.some((item) => {
-        return !(bottomPercent <= item.topPercent || topPercent >= item.bottomPercent);
-      });
-
-      if (!hasOverlap) {
-        targetLane = i;
-        break;
-      }
-    }
-
-    // If no available lane found, create a new one
-    if (targetLane === -1) {
-      targetLane = lanes.length;
-    }
-
-    // Return the horizontal offset (as percentage from left)
-    return targetLane * ITEM_WIDTH_PERCENT;
   };
 
   const handleDrop = async (e: React.DragEvent) => {
@@ -368,30 +237,43 @@ const Events = () => {
     const percentage = dropY / rect.height;
     const newTime = Math.round(percentage * selectedEvent.expected_duration);
 
-    // Handle dragging existing instance (edit mode)
-    if (draggingInstanceId && editMode) {
-      // Calculate non-overlapping horizontal offset
-      const horizontalOffset = calculateNonOverlappingOffset(
-        newTime,
-        editableFoodInstances,
-        draggingInstanceId
-      );
-
-      // Update the editable food instance with both vertical and horizontal position
-      // Note: We store the horizontal offset as a custom property for rendering
-      setEditableFoodInstances(prev =>
+    // Handle dragging existing instance - optimistic update
+    if (draggingInstanceId) {
+      // Optimistic update: Update local state immediately for instant feedback
+      setFoodInstances(prev =>
         prev.map(instance =>
           instance.id === draggingInstanceId
-            ? {
-                ...instance,
-                time_elapsed_at_consumption: newTime,
-                // Store horizontal offset for this specific instance
-                horizontalOffset
-              } as any
+            ? { ...instance, time_elapsed_at_consumption: newTime }
             : instance
         )
       );
-      setDraggingInstanceId(null);
+
+      // Make API call in background
+      try {
+        const response = await fetch(`${API_URL}/api/food-instances/${draggingInstanceId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            time_elapsed_at_consumption: newTime
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update food instance');
+        }
+
+        // Success - no refresh needed, state already updated optimistically
+      } catch (err) {
+        console.error('Error updating food instance:', err);
+        setError(err instanceof Error ? err.message : 'Failed to move food instance');
+        setTimeout(() => setError(null), 3000);
+        // Refresh to revert to original position on error
+        await fetchFoodInstances(selectedEvent.id);
+      } finally {
+        setDraggingInstanceId(null);
+      }
     }
     // Handle dragging food item from left panel (create new instance)
     else if (draggingFoodItemId) {
@@ -690,12 +572,6 @@ const Events = () => {
                 Nutrient Goals
               </button>
               <button
-                onClick={toggleEditMode}
-                className={`edit-mode-btn ${editMode ? 'active' : ''}`}
-              >
-                {editMode ? 'Save & Exit Edit Mode' : 'Edit Mode'}
-              </button>
-              <button
                 onClick={() => handleSelectEvent(null)}
                 className="close-btn"
               >
@@ -706,8 +582,7 @@ const Events = () => {
           <div className="event-timeline-container">
             <EventTimeline
               event={selectedEvent}
-              foodInstances={editMode ? editableFoodInstances : foodInstances}
-              editMode={editMode}
+              foodInstances={foodInstances}
               loadingInstances={loadingInstances}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
@@ -721,7 +596,7 @@ const Events = () => {
 
             <NutritionSummary
               event={selectedEvent}
-              foodInstances={editMode ? editableFoodInstances : foodInstances}
+              foodInstances={foodInstances}
               timelineStyle={timelineStyle}
               userId={user.sub}
               goalsRefreshTrigger={goalsRefreshTrigger}

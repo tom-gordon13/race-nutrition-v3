@@ -43,7 +43,6 @@ interface Event {
 interface EventTimelineProps {
   event: Event;
   foodInstances: FoodInstance[];
-  editMode: boolean;
   loadingInstances: boolean;
   onDragOver: (e: DragEvent) => void;
   onDrop: (e: DragEvent) => void;
@@ -116,7 +115,6 @@ const calculateHorizontalOffsets = (instances: FoodInstance[], event: Event) => 
 export const EventTimeline = ({
   event,
   foodInstances,
-  editMode,
   loadingInstances,
   onDragOver,
   onDrop,
@@ -323,9 +321,9 @@ export const EventTimeline = ({
                 <div
                   key={instance.id}
                   className="food-instance-box"
-                  draggable={editMode && !isEditing}
-                  onDragStart={(e) => (editMode && !isEditing) ? onDragStart(e, instance.id, position) : undefined}
-                  onDragEnd={editMode ? onDragEnd : undefined}
+                  draggable={!isEditing}
+                  onDragStart={(e) => !isEditing ? onDragStart(e, instance.id, position) : undefined}
+                  onDragEnd={onDragEnd}
                   onMouseEnter={() => {
                     if (!isEditing) {
                       setHoveredInstanceId(instance.id);
@@ -342,10 +340,10 @@ export const EventTimeline = ({
                     top: `${position}%`,
                     left: `${leftOffset}px`,
                     width: '180px',
-                    cursor: isEditing ? 'default' : (editMode ? 'grab' : 'pointer'),
+                    cursor: isEditing ? 'default' : 'grab',
                   }}
                 >
-                  <div className={`food-instance-content ${editMode ? 'edit-mode' : ''} ${isEditing ? 'instance-editing' : ''}`}>
+                  <div className={`food-instance-content ${isEditing ? 'instance-editing' : ''}`}>
                     {!isEditing && (
                       <button
                         className="delete-instance-btn"
@@ -401,9 +399,10 @@ export const EventTimeline = ({
                         </button>
                       </div>
                     ) : (
-                      // Normal display - only show item name
+                      // Normal display - show item name and timestamp
                       <div className="food-instance-name">
-                        {instance.foodItem.item_name}
+                        <div className="instance-item-name">{instance.foodItem.item_name}</div>
+                        <div className="instance-timestamp">{formatTimeHHMM(instance.time_elapsed_at_consumption)}</div>
                       </div>
                     )}
                   </div>
