@@ -7,7 +7,6 @@ import 'primereact/resources/primereact.min.css';
 import {
   EventForm,
   EventsTable,
-  FoodItemsList,
   EventTimeline,
   NutritionSummary,
   FoodItemSelectionModal,
@@ -70,7 +69,7 @@ const Events = () => {
   const [foodInstances, setFoodInstances] = useState<FoodInstance[]>([]);
   const [loadingInstances, setLoadingInstances] = useState(false);
 
-  // Sub-tab state (for left panel when event is selected)
+  // Food items state (for modal)
   const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
   const [loadingFoodItems, setLoadingFoodItems] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
@@ -82,12 +81,6 @@ const Events = () => {
   // Drag and drop state
   const [draggingInstanceId, setDraggingInstanceId] = useState<string | null>(null);
   const [dragOffsetY, setDragOffsetY] = useState<number>(0);
-
-  // State for dragging food items from left panel
-  const [draggingFoodItemId, setDraggingFoodItemId] = useState<string | null>(null);
-
-  // State for left panel visibility
-  const [leftPanelOpen, setLeftPanelOpen] = useState<boolean>(false);
 
   // State for food item selection modal
   const [showFoodItemModal, setShowFoodItemModal] = useState(false);
@@ -145,10 +138,10 @@ const Events = () => {
   };
 
   useEffect(() => {
-    if (selectedEvent) {
+    if (showFoodItemModal) {
       fetchFoodItems();
     }
-  }, [selectedEvent, myItemsOnly]);
+  }, [showFoodItemModal, myItemsOnly]);
 
   // Handler for selecting an event (updates state and URL)
   const handleSelectEvent = (event: Event | null) => {
@@ -229,13 +222,14 @@ const Events = () => {
     // Check if drop is within timeline bounds
     if (dropY < 0 || dropY > rect.height) {
       setDraggingInstanceId(null);
-      setDraggingFoodItemId(null);
       return;
     }
 
     // Calculate new time based on position
+    const PRE_START_TIME = 1.25 * 3600; // -1.25 hours in seconds
+    const totalTimelineDuration = selectedEvent.expected_duration + PRE_START_TIME;
     const percentage = dropY / rect.height;
-    const newTime = Math.round(percentage * selectedEvent.expected_duration);
+    const newTime = Math.round((percentage * totalTimelineDuration) - PRE_START_TIME);
 
     // Handle dragging existing instance - optimistic update
     if (draggingInstanceId) {
@@ -275,46 +269,11 @@ const Events = () => {
         setDraggingInstanceId(null);
       }
     }
-    // Handle dragging food item from left panel (create new instance)
-    else if (draggingFoodItemId) {
-      try {
-        const response = await fetch(`${API_URL}/api/food-instances`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            food_item_id: draggingFoodItemId,
-            event_id: selectedEvent.id,
-            time_elapsed_at_consumption: newTime,
-            servings: 1
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to create food instance');
-        }
-
-        // Refresh food instances to show the new one
-        await fetchFoodInstances(selectedEvent.id);
-        setSuccess('Food instance added successfully!');
-        setTimeout(() => setSuccess(null), 3000);
-      } catch (err) {
-        console.error('Error creating food instance:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
-      }
-      setDraggingFoodItemId(null);
-    }
   };
 
   const handleDragEnd = () => {
     setDraggingInstanceId(null);
     setDragOffsetY(0);
-    setDraggingFoodItemId(null);
-  };
-
-  const handleFoodItemDragStart = (_e: React.DragEvent, foodItemId: string) => {
-    setDraggingFoodItemId(foodItemId);
   };
 
   const handleDeleteInstance = async (instanceId: string) => {
@@ -490,31 +449,21 @@ const Events = () => {
   const totalCost = selectedEvent ? calculateTotalCost() : 0;
 
   return (
-    <div className={`events-container ${selectedEvent ? 'split-view' : ''} ${selectedEvent && !leftPanelOpen ? 'left-panel-collapsed' : ''}`}>
-      {selectedEvent && (
-        <button
-          className="left-panel-toggle"
-          onClick={() => setLeftPanelOpen(!leftPanelOpen)}
-          title={leftPanelOpen ? 'Collapse left panel' : 'Expand left panel'}
-        >
-          {leftPanelOpen ? '‹' : '›'}
-        </button>
-      )}
+    <div className={`events-container ${selectedEvent ? 'split-view' : ''}`}>
+      {!selectedEvent && (
+        <div className="events-panel">
+          <Card
+            title="My Events"
+            style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f3f0ff' }}
+            pt={{
+              title: { style: { textAlign: 'left', color: '#646cff', padding: '1.25rem', margin: 0, fontSize: '1.5rem', fontWeight: 700, backgroundColor: '#f3f0ff' } },
+              body: { style: { flex: 1, overflow: 'auto', padding: '0 1.25rem 1.25rem 1.25rem', backgroundColor: '#f3f0ff' } },
+              content: { style: { padding: 0 } }
+            }}
+          >
+            {error && <div className="error-message">{error}</div>}
+            {success && <div className="success-message">{success}</div>}
 
-      <div className={`events-panel ${selectedEvent ? 'vertical' : ''} ${selectedEvent && !leftPanelOpen ? 'collapsed' : ''}`}>
-        <Card
-          title={selectedEvent ? "Food Items" : "My Events"}
-          style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f3f0ff' }}
-          pt={{
-            title: { style: { textAlign: 'left', color: '#646cff', padding: '1.25rem', margin: 0, fontSize: '1.5rem', fontWeight: 700, backgroundColor: '#f3f0ff' } },
-            body: { style: { flex: 1, overflow: 'auto', padding: '0 1.25rem 1.25rem 1.25rem', backgroundColor: '#f3f0ff' } },
-            content: { style: { padding: 0 } }
-          }}
-        >
-          {error && <div className="error-message">{error}</div>}
-          {success && <div className="success-message">{success}</div>}
-
-          {!selectedEvent && (
             <div style={{ marginBottom: '1rem' }}>
               <button
                 onClick={() => setShowCreateForm(!showCreateForm)}
@@ -523,37 +472,22 @@ const Events = () => {
                 {showCreateForm ? 'Cancel' : '+ Create New Event'}
               </button>
             </div>
-          )}
 
-          {showCreateForm && (
-            <EventForm
-              onSubmit={handleCreateEvent}
-              onCancel={() => setShowCreateForm(false)}
-            />
-          )}
+            {showCreateForm && (
+              <EventForm
+                onSubmit={handleCreateEvent}
+                onCancel={() => setShowCreateForm(false)}
+              />
+            )}
 
-          {!selectedEvent && (
             <EventsTable
               events={events}
               selectedEvent={selectedEvent}
               onEventSelect={handleSelectEvent}
             />
-          )}
-
-          {selectedEvent && (
-            <FoodItemsList
-              foodItems={foodItems}
-              categoryFilter={categoryFilter}
-              myItemsOnly={myItemsOnly}
-              loadingFoodItems={loadingFoodItems}
-              onCategoryFilterChange={setCategoryFilter}
-              onMyItemsOnlyChange={setMyItemsOnly}
-              onFoodItemDragStart={handleFoodItemDragStart}
-              onFoodItemDragEnd={handleDragEnd}
-            />
-          )}
-        </Card>
-      </div>
+          </Card>
+        </div>
+      )}
 
       {selectedEvent && (
         <div className="event-detail-panel">
@@ -569,7 +503,7 @@ const Events = () => {
                 onClick={() => setShowNutrientGoalsDialog(true)}
                 className="add-nutrient-btn"
               >
-                Nutrient Goals
+                View/Add Nutrient Goals
               </button>
               <button
                 onClick={() => handleSelectEvent(null)}

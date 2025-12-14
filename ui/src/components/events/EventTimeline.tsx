@@ -55,15 +55,20 @@ interface EventTimelineProps {
 }
 
 const formatTimeHHMM = (seconds: number) => {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  return `${hours}:${minutes.toString().padStart(2, '0')}`;
+  const isNegative = seconds < 0;
+  const absSeconds = Math.abs(seconds);
+  const hours = Math.floor(absSeconds / 3600);
+  const minutes = Math.floor((absSeconds % 3600) / 60);
+  const sign = isNegative ? '-' : '';
+  return `${sign}${hours}:${minutes.toString().padStart(2, '0')}`;
 };
 
 // Calculate horizontal offsets for overlapping instances
 const calculateHorizontalOffsets = (instances: FoodInstance[], event: Event) => {
   const ITEM_HEIGHT_PERCENT = 8; // Approximate height of each box as percentage of timeline
   const ITEM_WIDTH_PX = 180; // Fixed width in pixels
+  const PRE_START_TIME = 1.25 * 3600; // -1.25 hours in seconds
+  const totalTimelineDuration = event.expected_duration + PRE_START_TIME;
 
   // Sort instances by time
   const sorted = [...instances].sort((a, b) =>
@@ -74,7 +79,7 @@ const calculateHorizontalOffsets = (instances: FoodInstance[], event: Event) => 
   const lanes: Array<{ id: string; topPercent: number; bottomPercent: number }[]> = [[]];
 
   sorted.forEach((instance) => {
-    const topPercent = (instance.time_elapsed_at_consumption / event.expected_duration) * 100;
+    const topPercent = ((instance.time_elapsed_at_consumption + PRE_START_TIME) / totalTimelineDuration) * 100;
     const bottomPercent = topPercent + ITEM_HEIGHT_PERCENT;
 
     // Find the first available lane
@@ -137,25 +142,30 @@ export const EventTimeline = ({
   const THREE_HOURS = 3 * 3600;
   const ONE_HOUR = 3600;
   const HALF_HOUR = 1800;
+  const PRE_START_TIME = 1.25 * 3600; // -1.25 hours in seconds (4500 seconds) - for positioning
+  const TICK_START_TIME = 1 * 3600; // -1 hour in seconds - for tick marks
+
+  // Total timeline duration includes pre-start time
+  const totalTimelineDuration = event.expected_duration + PRE_START_TIME;
 
   // Determine tick interval based on event duration
   const tickInterval = event.expected_duration > THREE_HOURS ? ONE_HOUR : HALF_HOUR;
 
-  // Generate tick marks
+  // Generate tick marks (starting from -1 hour, but positioned in -1.25 hour box)
   const generateTicks = () => {
     const ticks = [];
-    for (let time = 0; time <= event.expected_duration; time += tickInterval) {
-      const percentage = (time / event.expected_duration) * 100;
+    for (let time = -TICK_START_TIME; time <= event.expected_duration; time += tickInterval) {
+      const percentage = ((time + PRE_START_TIME) / totalTimelineDuration) * 100;
       ticks.push({ time, percentage });
     }
     return ticks;
   };
 
-  // Generate dividers
+  // Generate dividers (starting from -1 hour, but positioned in -1.25 hour box)
   const generateDividers = () => {
     const dividers = [];
-    for (let time = tickInterval; time < event.expected_duration; time += tickInterval) {
-      const percentage = (time / event.expected_duration) * 100;
+    for (let time = -TICK_START_TIME + tickInterval; time < event.expected_duration; time += tickInterval) {
+      const percentage = ((time + PRE_START_TIME) / totalTimelineDuration) * 100;
       dividers.push({ time, percentage });
     }
     return dividers;
@@ -176,7 +186,7 @@ export const EventTimeline = ({
     const mouseY = e.clientY - rect.top;
     const mouseX = e.clientX - rect.left;
     const percentage = mouseY / rect.height;
-    const timeInSeconds = Math.round(percentage * event.expected_duration);
+    const timeInSeconds = Math.round((percentage * totalTimelineDuration) - PRE_START_TIME);
 
     setTimelineHoverPosition({ y: mouseY, x: mouseX, time: timeInSeconds });
 
@@ -222,7 +232,7 @@ export const EventTimeline = ({
         const rect = timeline.getBoundingClientRect();
         const clickY = e.clientY - rect.top;
         const percentage = clickY / rect.height;
-        const timeInSeconds = Math.round(percentage * event.expected_duration);
+        const timeInSeconds = Math.round((percentage * totalTimelineDuration) - PRE_START_TIME);
 
         // Trigger callback with calculated time
         onClickHoldCreate(timeInSeconds);
@@ -309,7 +319,7 @@ export const EventTimeline = ({
             ))}
 
             {foodInstances.map((instance) => {
-              const position = (instance.time_elapsed_at_consumption / event.expected_duration) * 100;
+              const position = ((instance.time_elapsed_at_consumption + PRE_START_TIME) / totalTimelineDuration) * 100;
               const isHovered = hoveredInstanceId === instance.id;
               const isEditing = editingInstanceId === instance.id;
               // Use custom horizontal offset if set, otherwise use calculated offset
