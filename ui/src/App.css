@@ -791,6 +791,32 @@ tbody tr.selected {
   transform: translateY(-50%);
 }
 
+/* Race start line at timestamp 0 */
+.timeline-race-start {
+  height: 2px;
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(100, 108, 255, 0.3) 15%,
+      rgba(100, 108, 255, 0.5) 50%,
+      rgba(100, 108, 255, 0.3) 85%,
+      transparent 100%);
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 1;
+}
+
+.timeline-race-start::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
 /* Food instance boxes */
 .food-instance-box {
   z-index: 10;
@@ -1378,6 +1404,32 @@ tbody tr.selected {
 }
 
 .nutrition-divider::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Nutrition panel race start line at timestamp 0 */
+.nutrition-race-start {
+  height: 2px;
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(100, 108, 255, 0.3) 15%,
+      rgba(100, 108, 255, 0.5) 50%,
+      rgba(100, 108, 255, 0.3) 85%,
+      transparent 100%);
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 1;
+}
+
+.nutrition-race-start::before {
   content: '';
   position: absolute;
   left: 0;

@@ -67,8 +67,9 @@ const formatTimeHHMM = (seconds: number) => {
 const calculateHorizontalOffsets = (instances: FoodInstance[], event: Event) => {
   const ITEM_HEIGHT_PERCENT = 8; // Approximate height of each box as percentage of timeline
   const ITEM_WIDTH_PX = 180; // Fixed width in pixels
-  const PRE_START_TIME = 1.25 * 3600; // -1.25 hours in seconds
-  const totalTimelineDuration = event.expected_duration + PRE_START_TIME;
+  const PRE_START_TIME = 0.25 * 3600; // 0.25 hours in seconds
+  const POST_END_TIME = 0.25 * 3600; // 0.25 hours in seconds
+  const totalTimelineDuration = event.expected_duration + PRE_START_TIME + POST_END_TIME;
 
   // Sort instances by time
   const sorted = [...instances].sort((a, b) =>
@@ -142,29 +143,29 @@ export const EventTimeline = ({
   const THREE_HOURS = 3 * 3600;
   const ONE_HOUR = 3600;
   const HALF_HOUR = 1800;
-  const PRE_START_TIME = 1.25 * 3600; // -1.25 hours in seconds (4500 seconds) - for positioning
-  const TICK_START_TIME = 1 * 3600; // -1 hour in seconds - for tick marks
+  const PRE_START_TIME = 0.25 * 3600; // 0.25 hours in seconds (900 seconds) - extra space at top
+  const POST_END_TIME = 0.25 * 3600; // 0.25 hours in seconds (900 seconds) - extra space at end
 
-  // Total timeline duration includes pre-start time
-  const totalTimelineDuration = event.expected_duration + PRE_START_TIME;
+  // Total timeline duration includes pre-start time and post-end time
+  const totalTimelineDuration = event.expected_duration + PRE_START_TIME + POST_END_TIME;
 
   // Determine tick interval based on event duration
   const tickInterval = event.expected_duration > THREE_HOURS ? ONE_HOUR : HALF_HOUR;
 
-  // Generate tick marks (starting from -1 hour, but positioned in -1.25 hour box)
+  // Generate tick marks (starting from 0, positioned in box with 0.25 hour buffer)
   const generateTicks = () => {
     const ticks = [];
-    for (let time = -TICK_START_TIME; time <= event.expected_duration; time += tickInterval) {
+    for (let time = 0; time <= event.expected_duration; time += tickInterval) {
       const percentage = ((time + PRE_START_TIME) / totalTimelineDuration) * 100;
       ticks.push({ time, percentage });
     }
     return ticks;
   };
 
-  // Generate dividers (starting from -1 hour, but positioned in -1.25 hour box)
+  // Generate dividers (starting from 0, positioned in box with 0.25 hour buffer)
   const generateDividers = () => {
     const dividers = [];
-    for (let time = -TICK_START_TIME + tickInterval; time < event.expected_duration; time += tickInterval) {
+    for (let time = tickInterval; time < event.expected_duration; time += tickInterval) {
       const percentage = ((time + PRE_START_TIME) / totalTimelineDuration) * 100;
       dividers.push({ time, percentage });
     }
@@ -309,6 +310,16 @@ export const EventTimeline = ({
           </div>
         ) : (
           <>
+            {/* Race start line at timestamp 0 */}
+            <div
+              className="timeline-race-start"
+              style={{
+                top: `${(PRE_START_TIME / totalTimelineDuration) * 100}%`,
+                position: 'absolute',
+                width: '100%'
+              }}
+            ></div>
+
             {/* Generate dividers to match tick marks */}
             {generateDividers().map((divider) => (
               <div

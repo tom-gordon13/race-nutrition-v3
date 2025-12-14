@@ -71,7 +71,6 @@ const Events = () => {
 
   // Food items state (for modal)
   const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
-  const [loadingFoodItems, setLoadingFoodItems] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
   const [myItemsOnly, setMyItemsOnly] = useState<boolean>(true);
 
@@ -120,7 +119,6 @@ const Events = () => {
   const fetchFoodItems = async () => {
     if (!user || !user.sub) return;
 
-    setLoadingFoodItems(true);
     try {
       const response = await fetch(`${API_URL}/api/food-items?auth0_sub=${encodeURIComponent(user.sub)}&my_items_only=${myItemsOnly}`);
 
@@ -132,8 +130,6 @@ const Events = () => {
       setFoodItems(data.foodItems);
     } catch (err) {
       console.error('Error fetching food items:', err);
-    } finally {
-      setLoadingFoodItems(false);
     }
   };
 
@@ -226,8 +222,9 @@ const Events = () => {
     }
 
     // Calculate new time based on position
-    const PRE_START_TIME = 1.25 * 3600; // -1.25 hours in seconds
-    const totalTimelineDuration = selectedEvent.expected_duration + PRE_START_TIME;
+    const PRE_START_TIME = 0.25 * 3600; // 0.25 hours in seconds
+    const POST_END_TIME = 0.25 * 3600; // 0.25 hours in seconds
+    const totalTimelineDuration = selectedEvent.expected_duration + PRE_START_TIME + POST_END_TIME;
     const percentage = dropY / rect.height;
     const newTime = Math.round((percentage * totalTimelineDuration) - PRE_START_TIME);
 

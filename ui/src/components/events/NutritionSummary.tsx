@@ -80,7 +80,12 @@ export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, 
   const THREE_HOURS = 3 * 3600;
   const ONE_HOUR = 3600;
   const HALF_HOUR = 1800;
+  const PRE_START_TIME = 0.25 * 3600; // 0.25 hours in seconds
+  const POST_END_TIME = 0.25 * 3600; // 0.25 hours in seconds
   const tickInterval = event.expected_duration > THREE_HOURS ? ONE_HOUR : HALF_HOUR;
+
+  // Total timeline duration includes pre-start time and post-end time
+  const totalTimelineDuration = event.expected_duration + PRE_START_TIME + POST_END_TIME;
 
   // Fetch all available nutrients
   useEffect(() => {
@@ -143,11 +148,11 @@ export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, 
     return null;
   };
 
-  // Generate dividers to match timeline
+  // Generate dividers to match timeline (starting from 0, positioned in box with 0.25 hour buffer)
   const generateDividers = () => {
     const dividers = [];
     for (let time = tickInterval; time < event.expected_duration; time += tickInterval) {
-      const percentage = (time / event.expected_duration) * 100;
+      const percentage = ((time + PRE_START_TIME) / totalTimelineDuration) * 100;
       dividers.push({ time, percentage });
     }
     return dividers;
@@ -159,8 +164,8 @@ export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, 
 
     for (let startTime = 0; startTime < event.expected_duration; startTime += tickInterval) {
       const endTime = Math.min(startTime + tickInterval, event.expected_duration);
-      const topPercentage = (startTime / event.expected_duration) * 100;
-      const bottomPercentage = (endTime / event.expected_duration) * 100;
+      const topPercentage = ((startTime + PRE_START_TIME) / totalTimelineDuration) * 100;
+      const bottomPercentage = ((endTime + PRE_START_TIME) / totalTimelineDuration) * 100;
       const height = bottomPercentage - topPercentage;
 
       // Calculate which hour this window represents (for goals)
@@ -248,6 +253,16 @@ export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, 
 
       {isExpanded && (
         <div className="nutrition-panel-content" style={timelineStyle}>
+          {/* Race start line at timestamp 0 */}
+          <div
+            className="nutrition-race-start"
+            style={{
+              top: `${(PRE_START_TIME / totalTimelineDuration) * 100}%`,
+              position: 'absolute',
+              width: '100%'
+            }}
+          ></div>
+
           {/* Generate dividers to match timeline */}
           {generateDividers().map((divider) => (
             <div
