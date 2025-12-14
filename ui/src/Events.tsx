@@ -487,7 +487,7 @@ const Events = () => {
       )}
 
       {selectedEvent && (
-        <div className="event-detail-panel">
+        <div className="event-detail-container">
           <div className="event-detail-header">
             <div className="event-title-section">
               <h3>{selectedEvent.type}</h3>
@@ -510,28 +510,30 @@ const Events = () => {
               </button>
             </div>
           </div>
-          <div className="event-timeline-container">
-            <EventTimeline
-              event={selectedEvent}
-              foodInstances={foodInstances}
-              loadingInstances={loadingInstances}
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-              onDeleteInstance={handleDeleteInstance}
-              onUpdateInstance={handleUpdateInstance}
-              onClickHoldCreate={handleClickHoldCreate}
-              timelineStyle={timelineStyle}
-            />
+          <div className="event-detail-content">
+            <div className="event-timeline-container">
+              <EventTimeline
+                event={selectedEvent}
+                foodInstances={foodInstances}
+                loadingInstances={loadingInstances}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDeleteInstance={handleDeleteInstance}
+                onUpdateInstance={handleUpdateInstance}
+                onClickHoldCreate={handleClickHoldCreate}
+                timelineStyle={timelineStyle}
+              />
 
-            <NutritionSummary
-              event={selectedEvent}
-              foodInstances={foodInstances}
-              timelineStyle={timelineStyle}
-              userId={user.sub}
-              goalsRefreshTrigger={goalsRefreshTrigger}
-            />
+              <NutritionSummary
+                event={selectedEvent}
+                foodInstances={foodInstances}
+                timelineStyle={timelineStyle}
+                userId={user.sub}
+                goalsRefreshTrigger={goalsRefreshTrigger}
+              />
+            </div>
           </div>
         </div>
       )}

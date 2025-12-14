@@ -630,18 +630,26 @@ tbody tr.selected {
   border-left: 3px solid #646cff;
 }
 
-/* Event detail panel */
-.event-detail-panel {
+/* Event detail container */
+.event-detail-container {
   flex: 1;
   max-height: 100%;
-  background-color: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 1.5rem;
+  background-color: white;
+  border-radius: 4px;
+  border: 1px solid #d1d5db;
   display: flex;
   flex-direction: column;
   animation: slideIn 0.4s ease;
   overflow: hidden;
+}
+
+/* Event detail content area */
+.event-detail-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 @keyframes slideIn {
@@ -660,8 +668,9 @@ tbody tr.selected {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem 1.5rem;
+  background-color: #f3f4f6;
+  border-bottom: 1px solid #d1d5db;
 }
 
 .event-title-section {
@@ -672,8 +681,9 @@ tbody tr.selected {
 
 .event-detail-header h3 {
   margin: 0;
-  color: #646cff;
+  color: #000000;
   font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .event-total-cost {
@@ -714,7 +724,7 @@ tbody tr.selected {
   display: flex;
   gap: 0;
   position: relative;
-  padding: 0;
+  padding: 1.5rem;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
