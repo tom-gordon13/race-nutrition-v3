@@ -1,6 +1,7 @@
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Tag } from 'primereact/tag';
+import { Button } from 'primereact/button';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 
@@ -17,6 +18,7 @@ interface EventsTableProps {
   events: Event[];
   selectedEvent: Event | null;
   onEventSelect: (event: Event) => void;
+  onEditEvent: (event: Event) => void;
 }
 
 const formatDuration = (seconds: number) => {
@@ -25,7 +27,7 @@ const formatDuration = (seconds: number) => {
   return `${hours}h ${minutes}m`;
 };
 
-export const EventsTable = ({ events, selectedEvent, onEventSelect }: EventsTableProps) => {
+export const EventsTable = ({ events, selectedEvent, onEventSelect, onEditEvent }: EventsTableProps) => {
   // Template for duration column
   const durationBodyTemplate = (rowData: Event) => {
     return formatDuration(rowData.expected_duration);
@@ -34,6 +36,22 @@ export const EventsTable = ({ events, selectedEvent, onEventSelect }: EventsTabl
   // Template for date column
   const dateBodyTemplate = (rowData: Event) => {
     return new Date(rowData.created_at).toLocaleDateString();
+  };
+
+  // Template for actions column
+  const actionsBodyTemplate = (rowData: Event) => {
+    return (
+      <Button
+        icon="pi pi-pencil"
+        className="p-button-rounded p-button-text"
+        onClick={(e) => {
+          e.stopPropagation();
+          onEditEvent(rowData);
+        }}
+        tooltip="Edit event"
+        tooltipOptions={{ position: 'top' }}
+      />
+    );
   };
 
   if (events.length === 0) {
@@ -66,6 +84,11 @@ export const EventsTable = ({ events, selectedEvent, onEventSelect }: EventsTabl
           body={dateBodyTemplate}
           sortable
           sortField="created_at"
+        />
+        <Column
+          header="Actions"
+          body={actionsBodyTemplate}
+          style={{ width: '5rem', textAlign: 'center' }}
         />
       </DataTable>
     </>

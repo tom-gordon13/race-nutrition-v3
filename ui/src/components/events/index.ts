@@ -5,3 +5,4 @@ export { EventTimeline } from './EventTimeline';
 export { NutritionSummary } from './NutritionSummary';
 export { FoodItemSelectionModal } from './FoodItemSelectionModal';
 export { NutrientGoalsDialog } from './NutrientGoalsDialog';
+export { EditEventDialog } from './EditEventDialog';

@@ -102,4 +102,55 @@ router.post('/', async (req, res) => {
   }
 });
 
+// PUT update an event
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type, expected_duration } = req.body;
+
+    console.log('Received event update request:', { id, type, expected_duration });
+
+    // Validate required fields
+    if (!type && !expected_duration) {
+      return res.status(400).json({
+        error: 'At least one field (type or expected_duration) must be provided'
+      });
+    }
+
+    // Check if event exists
+    const existingEvent = await prisma.event.findUnique({
+      where: { id }
+    });
+
+    if (!existingEvent) {
+      return res.status(404).json({
+        error: 'Event not found'
+      });
+    }
+
+    // Update the event
+    const updatedEvent = await prisma.event.update({
+      where: { id },
+      data: {
+        ...(type && { type }),
+        ...(expected_duration && { expected_duration: parseInt(expected_duration) })
+      }
+    });
+
+    console.log('Event updated:', updatedEvent.id, 'Type:', updatedEvent.type);
+
+    return res.status(200).json({
+      message: 'Event updated successfully',
+      event: updatedEvent
+    });
+
+  } catch (error) {
+    console.error('Error updating event:', error);
+    return res.status(500).json({
+      error: 'Failed to update event',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 export default router;

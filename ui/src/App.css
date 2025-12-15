@@ -2008,3 +2008,44 @@ tbody tr.selected {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
 }
+
+/* Edit Event Button */
+.edit-event-btn {
+  background-color: rgba(100, 108, 255, 0.2);
+  color: #646cff;
+  border: 1px solid #646cff;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.25s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.edit-event-btn:hover {
+  background-color: rgba(100, 108, 255, 0.3);
+}
+
+.edit-event-icon {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .edit-event-btn {
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    font-size: 1.25rem;
+  }
+
+  .edit-event-text {
+    display: none;
+  }
+
+  .edit-event-icon {
+    display: inline;
+  }
+}

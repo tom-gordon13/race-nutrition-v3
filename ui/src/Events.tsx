@@ -10,7 +10,8 @@ import {
   EventTimeline,
   NutritionSummary,
   FoodItemSelectionModal,
-  NutrientGoalsDialog
+  NutrientGoalsDialog,
+  EditEventDialog
 } from './components/events';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
@@ -88,6 +89,10 @@ const Events = () => {
   // State for nutrient goals dialog
   const [showNutrientGoalsDialog, setShowNutrientGoalsDialog] = useState(false);
   const [goalsRefreshTrigger, setGoalsRefreshTrigger] = useState(0);
+
+  // State for edit event dialog
+  const [showEditEventDialog, setShowEditEventDialog] = useState(false);
+  const [eventToEdit, setEventToEdit] = useState<Event | null>(null);
 
   const fetchEvents = async () => {
     if (!user || !user.sub) {
@@ -404,6 +409,24 @@ const Events = () => {
     }
   };
 
+  // Handler for opening edit event dialog
+  const handleEditEvent = (event: Event) => {
+    setEventToEdit(event);
+    setShowEditEventDialog(true);
+  };
+
+  // Handler for saving edited event
+  const handleSaveEditedEvent = async () => {
+    await fetchEvents();
+    // If the edited event is currently selected, update it
+    if (selectedEvent && eventToEdit && selectedEvent.id === eventToEdit.id) {
+      const updatedEvent = events.find(e => e.id === eventToEdit.id);
+      if (updatedEvent) {
+        setSelectedEvent(updatedEvent);
+      }
+    }
+  };
+
   if (loading) {
     return <div>Loading events...</div>;
   }
@@ -520,6 +543,7 @@ const Events = () => {
               events={events}
               selectedEvent={selectedEvent}
               onEventSelect={handleSelectEvent}
+              onEditEvent={handleEditEvent}
             />
           </Card>
         </div>
@@ -530,12 +554,21 @@ const Events = () => {
           <div className="event-detail-header">
             <div className="event-header-top-row">
               <h3>{selectedEvent.type}</h3>
-              <button
-                onClick={() => handleSelectEvent(null)}
-                className="close-btn"
-              >
-                ✕
-              </button>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  onClick={() => handleEditEvent(selectedEvent)}
+                  className="edit-event-btn"
+                >
+                  <span className="edit-event-text">Edit Event</span>
+                  <span className="edit-event-icon">✎</span>
+                </button>
+                <button
+                  onClick={() => handleSelectEvent(null)}
+                  className="close-btn"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
             <div className="event-header-bottom-row">
               <span className="event-total-cost">
@@ -611,6 +644,17 @@ const Events = () => {
           }}
         />
       )}
+
+      {/* Edit Event Dialog */}
+      <EditEventDialog
+        visible={showEditEventDialog}
+        event={eventToEdit}
+        onHide={() => {
+          setShowEditEventDialog(false);
+          setEventToEdit(null);
+        }}
+        onSave={handleSaveEditedEvent}
+      />
     </div>
   );
 };
