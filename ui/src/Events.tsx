@@ -443,7 +443,46 @@ const Events = () => {
     }, 0);
   };
 
+  // Calculate total carbs per hour
+  const calculateCarbsPerHour = () => {
+    if (!selectedEvent) return 0;
+    const totalCarbs = foodInstances.reduce((total, instance) => {
+      const carbNutrient = instance.foodItem.foodItemNutrients.find(
+        n => n.nutrient.nutrient_name.toLowerCase().includes('carb')
+      );
+      if (carbNutrient) {
+        return total + (carbNutrient.quantity * instance.servings);
+      }
+      return total;
+    }, 0);
+    const durationHours = selectedEvent.expected_duration / 3600;
+    return durationHours > 0 ? totalCarbs / durationHours : 0;
+  };
+
+  // Calculate total sodium per hour
+  const calculateSodiumPerHour = () => {
+    if (!selectedEvent) return 0;
+    const totalSodium = foodInstances.reduce((total, instance) => {
+      const sodiumNutrient = instance.foodItem.foodItemNutrients.find(
+        n => n.nutrient.nutrient_name.toLowerCase().includes('sodium')
+      );
+      if (sodiumNutrient) {
+        // Convert to mg if needed
+        let sodiumInMg = sodiumNutrient.quantity;
+        if (sodiumNutrient.unit === 'g') {
+          sodiumInMg = sodiumNutrient.quantity * 1000;
+        }
+        return total + (sodiumInMg * instance.servings);
+      }
+      return total;
+    }, 0);
+    const durationHours = selectedEvent.expected_duration / 3600;
+    return durationHours > 0 ? totalSodium / durationHours : 0;
+  };
+
   const totalCost = selectedEvent ? calculateTotalCost() : 0;
+  const carbsPerHour = selectedEvent ? calculateCarbsPerHour() : 0;
+  const sodiumPerHour = selectedEvent ? calculateSodiumPerHour() : 0;
 
   return (
     <div className={`events-container ${selectedEvent ? 'split-view' : ''}`}>
@@ -501,6 +540,12 @@ const Events = () => {
             <div className="event-header-bottom-row">
               <span className="event-total-cost">
                 {loadingInstances ? '--' : `$${totalCost.toFixed(2)}`}
+              </span>
+              <span className="event-nutrient-stat">
+                {loadingInstances ? '--' : `${carbsPerHour.toFixed(0)}g carbs/hr`}
+              </span>
+              <span className="event-nutrient-stat">
+                {loadingInstances ? '--' : `${sodiumPerHour.toFixed(0)}mg sodium/hr`}
               </span>
               <button
                 onClick={() => setShowNutrientGoalsDialog(true)}

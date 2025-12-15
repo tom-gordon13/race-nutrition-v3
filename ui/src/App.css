@@ -708,13 +708,17 @@ tbody tr.selected {
 }
 
 .event-total-cost {
-  background-color: rgba(34, 197, 94, 0.2);
   color: #22c55e;
   padding: 0.5rem 1rem;
-  border-radius: 6px;
   font-size: 1.25rem;
   font-weight: 700;
-  border: 2px solid rgba(34, 197, 94, 0.4);
+}
+
+.event-nutrient-stat {
+  color: #646cff;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .close-btn {
@@ -1673,6 +1677,11 @@ tbody tr.selected {
   .event-total-cost {
     font-size: 1rem;
     padding: 0.4rem 0.8rem;
+  }
+
+  .event-nutrient-stat {
+    font-size: 0.85rem;
+    padding: 0.35rem 0.65rem;
   }
 
   .add-nutrient-btn {
