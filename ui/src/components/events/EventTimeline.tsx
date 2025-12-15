@@ -1,4 +1,4 @@
-import { useState, type DragEvent } from 'react';
+import { useState, useRef, type DragEvent, type TouchEvent } from 'react';
 
 interface FoodItemNutrient {
   id: string;
@@ -140,6 +140,11 @@ export const EventTimeline = ({
   const [mouseDownPosition, setMouseDownPosition] = useState<{ x: number; y: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
+  // Touch/mobile drag state
+  const [touchDraggingInstanceId, setTouchDraggingInstanceId] = useState<string | null>(null);
+  const [touchDragPosition, setTouchDragPosition] = useState<{ y: number } | null>(null);
+  const timelineRef = useRef<HTMLDivElement>(null);
+
   const THREE_HOURS = 3 * 3600;
   const ONE_HOUR = 3600;
   const HALF_HOUR = 1800;
@@ -276,6 +281,70 @@ export const EventTimeline = ({
     }
   };
 
+  // Touch event handlers for mobile drag and drop
+  const handleTouchStart = (e: TouchEvent<HTMLDivElement>, instanceId: string, currentTop: number) => {
+    if (editingInstanceId) return; // Don't start drag if editing
+
+    const touch = e.touches[0];
+    const element = e.currentTarget as HTMLElement;
+
+    setTouchDraggingInstanceId(instanceId);
+
+    // Call the parent's onDragStart to set the dragging state
+    const syntheticDragEvent = {
+      currentTarget: element,
+      clientY: touch.clientY,
+      preventDefault: () => {},
+      stopPropagation: () => {},
+    } as unknown as DragEvent;
+
+    onDragStart(syntheticDragEvent, instanceId, currentTop);
+
+    // Prevent scrolling while dragging
+    e.preventDefault();
+  };
+
+  const handleTouchMove = (e: TouchEvent<HTMLDivElement>) => {
+    if (!touchDraggingInstanceId || !timelineRef.current) return;
+
+    const touch = e.touches[0];
+    const timeline = timelineRef.current;
+    const rect = timeline.getBoundingClientRect();
+
+    // Calculate position relative to timeline
+    const touchY = touch.clientY - rect.top;
+
+    // Update the visual position of the dragged item
+    setTouchDragPosition({ y: touchY });
+
+    // Prevent default to stop scrolling
+    e.preventDefault();
+  };
+
+  const handleTouchEnd = async (e: TouchEvent<HTMLDivElement>) => {
+    if (!touchDraggingInstanceId || !timelineRef.current) return;
+
+    const touch = e.changedTouches[0];
+    const timeline = timelineRef.current;
+
+    // Create a synthetic DragEvent to reuse existing drop logic
+    const syntheticEvent = {
+      preventDefault: () => {},
+      currentTarget: timeline,
+      clientY: touch.clientY,
+    } as unknown as DragEvent;
+
+    // Clean up touch state
+    setTouchDraggingInstanceId(null);
+    setTouchDragPosition(null);
+
+    // Call the existing drop handler
+    await onDrop(syntheticEvent);
+
+    // Call drag end to clean up parent state
+    onDragEnd();
+  };
+
   return (
     <>
       {/* Y-axis with tick marks */}
@@ -294,6 +363,7 @@ export const EventTimeline = ({
 
       {/* Timeline content area */}
       <div
+        ref={timelineRef}
         className="event-timeline"
         style={timelineStyle}
         onDragOver={onDragOver}
@@ -303,6 +373,8 @@ export const EventTimeline = ({
         onMouseMove={handleTimelineMouseMove}
         onMouseUp={handleTimelineMouseUp}
         onMouseLeave={handleTimelineMouseLeave}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         {loadingInstances ? (
           <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255, 255, 255, 0.6)' }}>
@@ -333,10 +405,34 @@ export const EventTimeline = ({
               const position = ((instance.time_elapsed_at_consumption + PRE_START_TIME) / totalTimelineDuration) * 100;
               const isHovered = hoveredInstanceId === instance.id;
               const isEditing = editingInstanceId === instance.id;
+              const isTouchDragging = touchDraggingInstanceId === instance.id;
+
               // Use custom horizontal offset if set, otherwise use calculated offset
               const leftOffset = instance.horizontalOffset !== undefined
                 ? instance.horizontalOffset
                 : (horizontalOffsets[instance.id] || 0);
+
+              // Calculate visual position - use touch drag position if this instance is being dragged
+              let visualStyle: React.CSSProperties = {
+                position: 'absolute',
+                top: `${position}%`,
+                left: `${leftOffset}px`,
+                width: '180px',
+                cursor: isEditing ? 'default' : 'grab',
+                touchAction: isEditing ? 'auto' : 'none',
+              };
+
+              // Override position if this instance is being touch-dragged
+              if (isTouchDragging && touchDragPosition) {
+                visualStyle = {
+                  ...visualStyle,
+                  top: `${touchDragPosition.y}px`,
+                  transform: 'translateY(-50%)', // Center on finger
+                  opacity: 0.8,
+                  zIndex: 1000,
+                  transition: 'none', // Disable transition during drag for immediate feedback
+                };
+              }
 
               return (
                 <div
@@ -345,6 +441,7 @@ export const EventTimeline = ({
                   draggable={!isEditing}
                   onDragStart={(e) => !isEditing ? onDragStart(e, instance.id, position) : undefined}
                   onDragEnd={onDragEnd}
+                  onTouchStart={(e) => !isEditing ? handleTouchStart(e, instance.id, position) : undefined}
                   onMouseEnter={() => {
                     if (!isEditing) {
                       setHoveredInstanceId(instance.id);
@@ -356,13 +453,7 @@ export const EventTimeline = ({
                     setIsHoveringInstance(false);
                   }}
                   onDoubleClick={() => !isEditing && handleDoubleClick(instance)}
-                  style={{
-                    position: 'absolute',
-                    top: `${position}%`,
-                    left: `${leftOffset}px`,
-                    width: '180px',
-                    cursor: isEditing ? 'default' : 'grab',
-                  }}
+                  style={visualStyle}
                 >
                   <div className={`food-instance-content ${isEditing ? 'instance-editing' : ''}`}>
                     {!isEditing && (
