@@ -153,4 +153,72 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+// POST duplicate an event (creates a copy with all food instances)
+router.post('/:id/duplicate', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    console.log('Received event duplicate request:', { id });
+
+    // Find the original event
+    const originalEvent = await prisma.event.findUnique({
+      where: { id }
+    });
+
+    if (!originalEvent) {
+      return res.status(404).json({
+        error: 'Event not found'
+      });
+    }
+
+    // Get all food instances for the original event
+    const originalFoodInstances = await prisma.foodInstance.findMany({
+      where: { event_id: id }
+    });
+
+    // Create the new event with " - copy" appended to the name
+    const newEvent = await prisma.event.create({
+      data: {
+        event_user_id: originalEvent.event_user_id,
+        expected_duration: originalEvent.expected_duration,
+        type: `${originalEvent.type} - copy`
+      }
+    });
+
+    // Create copies of all food instances for the new event
+    if (originalFoodInstances.length > 0) {
+      await prisma.foodInstance.createMany({
+        data: originalFoodInstances.map(instance => ({
+          event_id: newEvent.id,
+          food_item_id: instance.food_item_id,
+          time_elapsed_at_consumption: instance.time_elapsed_at_consumption,
+          servings: instance.servings
+        }))
+      });
+    }
+
+    console.log(
+      'Event duplicated:',
+      newEvent.id,
+      'Type:',
+      newEvent.type,
+      'Food instances copied:',
+      originalFoodInstances.length
+    );
+
+    return res.status(201).json({
+      message: 'Event duplicated successfully',
+      event: newEvent,
+      foodInstancesCopied: originalFoodInstances.length
+    });
+
+  } catch (error) {
+    console.error('Error duplicating event:', error);
+    return res.status(500).json({
+      error: 'Failed to duplicate event',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 export default router;

@@ -427,6 +427,36 @@ const Events = () => {
     }
   };
 
+  // Handler for duplicating an event
+  const handleDuplicateEvent = async (event: Event) => {
+    try {
+      const response = await fetch(`${API_URL}/api/events/${event.id}/duplicate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to duplicate event');
+      }
+
+      const data = await response.json();
+      console.log('Event duplicated:', data);
+
+      // Refresh the events list
+      await fetchEvents();
+
+      // Show success message
+      setSuccess(`Event duplicated successfully! ${data.foodInstancesCopied} food items copied.`);
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to duplicate event');
+      console.error('Error duplicating event:', err);
+      setTimeout(() => setError(null), 3000);
+    }
+  };
+
   if (loading) {
     return <div>Loading events...</div>;
   }
@@ -544,6 +574,7 @@ const Events = () => {
               selectedEvent={selectedEvent}
               onEventSelect={handleSelectEvent}
               onEditEvent={handleEditEvent}
+              onDuplicateEvent={handleDuplicateEvent}
             />
           </Card>
         </div>

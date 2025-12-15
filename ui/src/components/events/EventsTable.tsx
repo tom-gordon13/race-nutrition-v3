@@ -19,6 +19,7 @@ interface EventsTableProps {
   selectedEvent: Event | null;
   onEventSelect: (event: Event) => void;
   onEditEvent: (event: Event) => void;
+  onDuplicateEvent: (event: Event) => void;
 }
 
 const formatDuration = (seconds: number) => {
@@ -27,7 +28,7 @@ const formatDuration = (seconds: number) => {
   return `${hours}h ${minutes}m`;
 };
 
-export const EventsTable = ({ events, selectedEvent, onEventSelect, onEditEvent }: EventsTableProps) => {
+export const EventsTable = ({ events, selectedEvent, onEventSelect, onEditEvent, onDuplicateEvent }: EventsTableProps) => {
   // Template for duration column
   const durationBodyTemplate = (rowData: Event) => {
     return formatDuration(rowData.expected_duration);
@@ -41,16 +42,28 @@ export const EventsTable = ({ events, selectedEvent, onEventSelect, onEditEvent 
   // Template for actions column
   const actionsBodyTemplate = (rowData: Event) => {
     return (
-      <Button
-        icon="pi pi-pencil"
-        className="p-button-rounded p-button-text"
-        onClick={(e) => {
-          e.stopPropagation();
-          onEditEvent(rowData);
-        }}
-        tooltip="Edit event"
-        tooltipOptions={{ position: 'top' }}
-      />
+      <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
+        <Button
+          icon="pi pi-pencil"
+          className="p-button-rounded p-button-text"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEditEvent(rowData);
+          }}
+          tooltip="Edit event"
+          tooltipOptions={{ position: 'top' }}
+        />
+        <Button
+          icon="pi pi-copy"
+          className="p-button-rounded p-button-text"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDuplicateEvent(rowData);
+          }}
+          tooltip="Duplicate event"
+          tooltipOptions={{ position: 'top' }}
+        />
+      </div>
     );
   };
 
@@ -88,7 +101,7 @@ export const EventsTable = ({ events, selectedEvent, onEventSelect, onEditEvent 
         <Column
           header="Actions"
           body={actionsBodyTemplate}
-          style={{ width: '5rem', textAlign: 'center' }}
+          style={{ width: '7rem', textAlign: 'center' }}
         />
       </DataTable>
     </>
