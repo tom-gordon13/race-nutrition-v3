@@ -20,7 +20,7 @@ function Home() {
       <Routes>
         <Route path="/" element={<Navigate to="/food-items" replace />} />
         <Route path="/food-items" element={
-          <div style={{ maxWidth: '90%', margin: '0 auto', padding: '2rem', height: '100%', boxSizing: 'border-box' }}>
+          <div className="food-items-page-container" style={{ maxWidth: '90%', margin: '0 auto', padding: '2rem', height: '100%', boxSizing: 'border-box' }}>
             <div style={{ marginBottom: '1rem' }}>
               <Button
                 icon={showCreateForm ? "pi pi-eye-slash" : "pi pi-eye"}

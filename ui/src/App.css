@@ -514,6 +514,11 @@ tbody tr:last-child td {
 }
 
 @media (max-width: 768px) {
+  /* Prevent horizontal scrolling on mobile */
+  body {
+    overflow-x: hidden !important;
+  }
+
   .nav {
     padding: 0 1rem;
   }
@@ -550,6 +555,233 @@ tbody tr:last-child td {
 
   .remove-btn {
     width: 100%;
+  }
+
+  /* Food Items page mobile styles */
+  .food-items-page-container {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0.5rem 2px !important;
+    overflow-x: hidden !important;
+  }
+
+  .food-items-page-container > div:nth-child(2) {
+    overflow-x: hidden !important;
+  }
+
+  .food-items-page-container > div:nth-child(2) > div {
+    overflow-x: hidden !important;
+  }
+
+  .food-items-page-container > div:first-child {
+    margin-bottom: 0.5rem !important;
+  }
+
+  .food-items-page-container .p-button {
+    font-size: 0.75rem !important;
+    padding: 0.4rem 0.6rem !important;
+  }
+
+  .food-items-card .p-card-header {
+    padding: 0.75rem 2px !important;
+  }
+
+  .food-items-card .p-card-header > div {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    align-items: flex-start !important;
+  }
+
+  .food-items-card .p-card-header h3 {
+    font-size: 1rem !important;
+  }
+
+  .food-items-card .p-card-header button {
+    font-size: 0.75rem !important;
+    padding: 0.35rem 0.6rem !important;
+  }
+
+  .food-items-card .p-card-header .p-tag {
+    font-size: 0.75rem !important;
+  }
+
+  .food-items-card .p-card-body {
+    padding: 0 2px 0.75rem 2px !important;
+    overflow-x: hidden !important;
+  }
+
+  .food-items-card .p-card-content {
+    padding: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Prevent horizontal scrolling on all table elements */
+  .food-items-card .p-datatable-scrollable-body,
+  .food-items-card .p-datatable-scrollable-header {
+    overflow-x: hidden !important;
+  }
+
+  /* Make table columns thinner on mobile */
+  .food-items-card .p-datatable {
+    min-width: 100% !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  .food-items-card .p-datatable table {
+    min-width: 100% !important;
+    width: 100% !important;
+    table-layout: fixed !important;
+  }
+
+  .food-items-card .p-datatable-wrapper {
+    overflow-x: hidden !important;
+  }
+
+  .food-items-card .p-datatable-thead > tr > th,
+  .food-items-card .p-datatable-tbody > tr > td {
+    min-width: auto !important;
+    padding: 0.35rem 0.25rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Specific column widths for mobile - use percentages for better fit */
+  .food-items-card .p-datatable-thead > tr > th:nth-child(1),
+  .food-items-card .p-datatable-tbody > tr > td:nth-child(1) {
+    width: 38% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+
+  /* Truncate food item names with ellipsis on mobile */
+  .food-items-card .p-datatable-tbody > tr > td:nth-child(1) {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* Hide Brand column on mobile */
+  .food-items-card .p-datatable-thead > tr > th:nth-child(2),
+  .food-items-card .p-datatable-tbody > tr > td:nth-child(2) {
+    display: none !important;
+  }
+
+  .food-items-card .p-datatable-thead > tr > th:nth-child(3),
+  .food-items-card .p-datatable-tbody > tr > td:nth-child(3) {
+    width: 30% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+
+  .food-items-card .p-datatable-thead > tr > th:nth-child(4),
+  .food-items-card .p-datatable-tbody > tr > td:nth-child(4) {
+    width: 20% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+
+  /* Hide Nutrients column on mobile */
+  .food-items-card .p-datatable-thead > tr > th:nth-child(5),
+  .food-items-card .p-datatable-tbody > tr > td:nth-child(5) {
+    display: none !important;
+  }
+
+  .food-items-card .p-datatable-thead > tr > th:nth-child(6),
+  .food-items-card .p-datatable-tbody > tr > td:nth-child(6) {
+    width: 12% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    text-align: center !important;
+  }
+
+  /* Make table text wrap (except first column which truncates) */
+  .food-items-card .p-datatable-tbody > tr > td:not(:nth-child(1)) {
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+
+  /* Ensure equal padding on both sides */
+  .food-items-card .p-datatable-tbody > tr > td:first-child {
+    padding-left: 0.25rem !important;
+  }
+
+  .food-items-card .p-datatable-tbody > tr > td:last-child {
+    padding-right: 0.25rem !important;
+  }
+
+  .food-items-card .p-datatable-thead > tr > th:first-child {
+    padding-left: 0.25rem !important;
+  }
+
+  .food-items-card .p-datatable-thead > tr > th:last-child {
+    padding-right: 0.25rem !important;
+  }
+
+  /* Edit button smaller on mobile - icon only */
+  .food-items-card .p-button {
+    font-size: 0.9rem !important;
+    padding: 0.4rem !important;
+    min-width: auto !important;
+  }
+
+  .food-items-card .p-button .p-button-label {
+    display: none !important;
+  }
+
+  .food-items-card .p-button .p-button-icon {
+    margin: 0 !important;
+  }
+
+  /* Mobile-friendly edit dialog */
+  .p-dialog.food-item-edit-dialog {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    height: 95vh !important;
+    max-height: 95vh !important;
+    margin: 0 !important;
+  }
+
+  .p-dialog.food-item-edit-dialog .p-dialog-content {
+    max-height: calc(95vh - 120px) !important;
+    overflow-y: auto !important;
+    padding: 0.75rem !important;
+  }
+
+  .p-dialog.food-item-edit-dialog .p-dialog-header {
+    padding: 0.75rem !important;
+  }
+
+  .p-dialog.food-item-edit-dialog .p-dialog-footer {
+    padding: 0.75rem !important;
+  }
+
+  /* Smaller inputs in edit dialog on mobile */
+  .p-dialog.food-item-edit-dialog .p-inputtext,
+  .p-dialog.food-item-edit-dialog .p-dropdown,
+  .p-dialog.food-item-edit-dialog .p-inputnumber-input {
+    font-size: 0.875rem !important;
+    padding: 0.5rem !important;
+  }
+
+  .p-dialog.food-item-edit-dialog label {
+    font-size: 0.875rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .p-dialog.food-item-edit-dialog h3 {
+    font-size: 1rem !important;
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  /* Nutrient rows in edit dialog */
+  .p-dialog.food-item-edit-dialog .nutrients-section {
+    padding: 0.75rem !important;
+  }
+
+  .p-dialog.food-item-edit-dialog .p-button-icon {
+    font-size: 0.875rem !important;
   }
 }
 

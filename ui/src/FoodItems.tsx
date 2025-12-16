@@ -24,6 +24,15 @@ const FOOD_CATEGORIES = [
   'OTHER'
 ] as const;
 
+const CATEGORY_DISPLAY_NAMES: Record<string, string> = {
+  'ENERGY_GEL': 'Gel',
+  'ENERGY_BAR': 'Bar',
+  'SPORTS_DRINK': 'Drink',
+  'FRUIT': 'Fruit',
+  'SNACK': 'Snack',
+  'OTHER': 'Other'
+};
+
 interface Nutrient {
   id: string;
   nutrient_name: string;
@@ -99,7 +108,6 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
         const response = await fetch(`${API_URL}/api/users?auth0_sub=${encodeURIComponent(user.sub)}`);
         if (response.ok) {
           const data = await response.json();
-          console.log('Fetched current user:', data.user);
           setCurrentUserId(data.user?.id || null);
         } else {
           console.error('Failed to fetch current user:', response.status, response.statusText);
@@ -273,7 +281,11 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
 
   // Template for category column
   const categoryBodyTemplate = (rowData: FoodItem) => {
-    return rowData.category || <Tag severity="secondary" value="N/A" />;
+    if (!rowData.category) {
+      return <Tag severity="secondary" value="N/A" />;
+    }
+    const displayName = CATEGORY_DISPLAY_NAMES[rowData.category] || rowData.category;
+    return displayName;
   };
 
   // Template for cost column
@@ -364,6 +376,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
   return (
     <Card
       header={headerContent}
+      className="food-items-card"
       style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f3f0ff' }}
       pt={{
         header: { style: { textAlign: 'left', color: '#646cff', padding: '1.25rem', backgroundColor: '#f3f0ff' } },
@@ -429,6 +442,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
       <Dialog
         header="Edit Food Item"
         visible={showEditDialog}
+        className="food-item-edit-dialog"
         style={{ width: '800px', maxHeight: '90vh' }}
         onHide={handleEditCancel}
         footer={
@@ -490,7 +504,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
               options={[
                 { label: 'Select a category', value: '' },
                 ...FOOD_CATEGORIES.map((cat) => ({
-                  label: cat.replace(/_/g, ' '),
+                  label: CATEGORY_DISPLAY_NAMES[cat] || cat,
                   value: cat
                 }))
               ]}

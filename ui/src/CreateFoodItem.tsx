@@ -20,6 +20,15 @@ const FOOD_CATEGORIES = [
   'OTHER'
 ] as const;
 
+const CATEGORY_DISPLAY_NAMES: Record<string, string> = {
+  'ENERGY_GEL': 'Gel',
+  'ENERGY_BAR': 'Bar',
+  'SPORTS_DRINK': 'Drink',
+  'FRUIT': 'Fruit',
+  'SNACK': 'Snack',
+  'OTHER': 'Other'
+};
+
 interface Nutrient {
   id: string;
   nutrient_name: string;
@@ -210,7 +219,7 @@ const CreateFoodItem = ({ onFoodItemCreated }: CreateFoodItemProps) => {
               options={[
                 { label: 'Select a category', value: '' },
                 ...FOOD_CATEGORIES.map((cat) => ({
-                  label: cat.replace(/_/g, ' '),
+                  label: CATEGORY_DISPLAY_NAMES[cat] || cat,
                   value: cat
                 }))
               ]}

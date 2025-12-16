@@ -48,6 +48,16 @@ const FOOD_CATEGORIES = [
   'OTHER'
 ] as const;
 
+const CATEGORY_DISPLAY_NAMES: Record<string, string> = {
+  'ALL': 'All Categories',
+  'ENERGY_GEL': 'Gel',
+  'ENERGY_BAR': 'Bar',
+  'SPORTS_DRINK': 'Drink',
+  'FRUIT': 'Fruit',
+  'SNACK': 'Snack',
+  'OTHER': 'Other'
+};
+
 export const FoodItemsList = ({
   foodItems,
   categoryFilter,
@@ -65,7 +75,7 @@ export const FoodItemsList = ({
     : foodItems.filter(item => item.category === categoryFilter);
 
   const categoryOptions = FOOD_CATEGORIES.map((category) => ({
-    label: category === 'ALL' ? 'All Categories' : category.toLowerCase().replace(/_/g, ' '),
+    label: CATEGORY_DISPLAY_NAMES[category] || category,
     value: category
   }));
 
@@ -151,7 +161,7 @@ export const FoodItemsList = ({
                     <div className="tooltip-header">
                       <strong>{item.item_name}</strong>
                       {item.brand && <div className="tooltip-brand">{item.brand}</div>}
-                      {item.category && <div className="tooltip-category">{item.category.toLowerCase().replace(/_/g, ' ')}</div>}
+                      {item.category && <div className="tooltip-category">{CATEGORY_DISPLAY_NAMES[item.category] || item.category}</div>}
                     </div>
 
                     <div className="tooltip-nutrients">
