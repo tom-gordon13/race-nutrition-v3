@@ -543,11 +543,11 @@ const Events = () => {
         <div className="events-panel">
           <Card
             title="My Events"
-            style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f3f0ff' }}
+            style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #d1d5db' }}
             pt={{
-              title: { style: { textAlign: 'left', color: '#646cff', padding: '1.25rem', margin: 0, fontSize: '1.5rem', fontWeight: 700, backgroundColor: '#f3f0ff' } },
-              body: { style: { flex: 1, overflow: 'auto', padding: '0 1.25rem 1.25rem 1.25rem', backgroundColor: '#f3f0ff' } },
-              content: { style: { padding: 0 } }
+              title: { style: { textAlign: 'left', color: '#000000', padding: '1rem 1.5rem', margin: 0, fontSize: '1.5rem', fontWeight: 600, backgroundColor: '#f3f4f6', borderBottom: '1px solid #d1d5db' } },
+              body: { style: { flex: 1, overflow: 'auto', padding: 0, backgroundColor: 'white' } },
+              content: { style: { padding: '0 1.5rem 1.5rem 1.5rem' } }
             }}
           >
             {error && <div className="error-message">{error}</div>}

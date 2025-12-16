@@ -347,7 +347,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
   const headerContent = (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>
+        <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600, color: '#000000' }}>
           {myItemsOnly ? 'My Food Items' : 'All Food Items'}
         </h3>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -381,7 +381,6 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
           </button>
         </div>
       </div>
-      <Tag value={`Total: ${foodItems.length}`} severity="info" />
     </div>
   );
 
@@ -389,11 +388,11 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
     <Card
       header={headerContent}
       className="food-items-card"
-      style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f3f0ff' }}
+      style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #d1d5db' }}
       pt={{
-        header: { style: { textAlign: 'left', color: '#646cff', padding: '1.25rem', backgroundColor: '#f3f0ff' } },
-        body: { style: { flex: 1, overflow: 'auto', padding: '0 1.25rem 1.25rem 1.25rem', backgroundColor: '#f3f0ff' } },
-        content: { style: { padding: 0 } }
+        header: { style: { textAlign: 'left', padding: '1rem 1.5rem', backgroundColor: '#f3f4f6', borderBottom: '1px solid #d1d5db' } },
+        body: { style: { flex: 1, overflow: 'auto', padding: 0, backgroundColor: 'white' } },
+        content: { style: { padding: '0 1.5rem 1.5rem 1.5rem' } }
       }}
     >
       {foodItems.length === 0 ? (
@@ -448,6 +447,12 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
             style={{ minWidth: '150px' }}
           />
         </DataTable>
+      )}
+
+      {foodItems.length > 0 && (
+        <div style={{ display: 'flex', justifyContent: 'flex-start', padding: '1rem 0' }}>
+          <Tag value={`Total: ${foodItems.length}`} severity="info" />
+        </div>
       )}
 
       {/* Edit Dialog */}
