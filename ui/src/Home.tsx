@@ -6,6 +6,7 @@ import FoodItems from "./FoodItems";
 import Events from "./Events";
 import Preferences from "./Preferences";
 import { Button } from 'primereact/button';
+import './Home.css';
 
 function Home() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -55,7 +56,7 @@ function Home() {
         <Route path="/events" element={<div className="events-route-container"><Events /></div>} />
         <Route path="/events/:eventId" element={<div className="events-route-container"><Events /></div>} />
         <Route path="/nutrients" element={<div style={{ maxWidth: '90%', margin: '0 auto', padding: '2rem' }}><Nutrients /></div>} />
-        <Route path="/preferences" element={<div style={{ maxWidth: '90%', margin: '0 auto', padding: '2rem' }}><Preferences /></div>} />
+        <Route path="/preferences" element={<div className="preferences-wrapper"><Preferences /></div>} />
       </Routes>
     </div>
   );

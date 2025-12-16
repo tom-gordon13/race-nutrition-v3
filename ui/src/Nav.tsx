@@ -32,7 +32,7 @@ const Nav = ({ className = "" }: NavProps) => {
     if (location.pathname.startsWith('/food-items')) return 0;
     if (location.pathname.startsWith('/events')) return 1;
     if (location.pathname.startsWith('/nutrients')) return 2;
-    return 0;
+    return -1; // No tab selected for other pages like preferences
   };
 
   const items = [

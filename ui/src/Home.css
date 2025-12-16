@@ -1,0 +1,13 @@
+.preferences-wrapper {
+  max-width: 90%;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+@media (max-width: 768px) {
+  .preferences-wrapper {
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+}

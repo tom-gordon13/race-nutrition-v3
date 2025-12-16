@@ -112,11 +112,12 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
     <Dialog
       header="Edit Event"
       visible={visible}
-      style={{ width: '550px', maxWidth: '90vw' }}
+      style={{ width: '100vw', height: '75vh' }}
       footer={footer}
       onHide={onHide}
       modal
       dismissableMask
+      position="bottom"
       className="edit-event-dialog"
     >
       {loading && (

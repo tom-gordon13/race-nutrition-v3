@@ -12,6 +12,7 @@ import { Button } from 'primereact/button';
 import { Dropdown } from 'primereact/dropdown';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
+import './FoodItems.css';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
 
@@ -443,8 +444,10 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
         header="Edit Food Item"
         visible={showEditDialog}
         className="food-item-edit-dialog"
-        style={{ width: '800px', maxHeight: '90vh' }}
+        style={{ width: '600px', maxHeight: '85vh' }}
         onHide={handleEditCancel}
+        modal
+        dismissableMask
         footer={
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <Button
@@ -532,8 +535,8 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
             <h3 style={{ marginTop: 0, color: '#646cff' }}>Nutrients</h3>
 
             {editedNutrients.map((nutrient, index) => (
-              <div key={index} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '4px', display: 'flex', gap: '0.5rem', alignItems: 'flex-end', backgroundColor: 'rgba(0, 0, 0, 0.05)' }}>
-                <div className="p-field" style={{ flex: 2, margin: 0 }}>
+              <div key={index} className="nutrient-row" style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '4px', display: 'flex', gap: '0.5rem', alignItems: 'flex-end', backgroundColor: 'rgba(0, 0, 0, 0.05)' }}>
+                <div className="p-field nutrient-field-name" style={{ flex: 2, margin: 0 }}>
                   <label htmlFor={`edit-nutrient-${index}`} style={{ display: 'block', marginBottom: '0.5rem', color: '#646cff', fontWeight: 500 }}>Nutrient</label>
                   <Dropdown
                     id={`edit-nutrient-${index}`}
@@ -548,7 +551,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
                   />
                 </div>
 
-                <div className="p-field" style={{ flex: 1, margin: 0 }}>
+                <div className="p-field nutrient-field-quantity" style={{ flex: 1, margin: 0 }}>
                   <label htmlFor={`edit-quantity-${index}`} style={{ display: 'block', marginBottom: '0.5rem', color: '#646cff', fontWeight: 500 }}>Quantity</label>
                   <InputNumber
                     id={`edit-quantity-${index}`}
@@ -561,7 +564,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
                   />
                 </div>
 
-                <div className="p-field" style={{ flex: 1, margin: 0 }}>
+                <div className="p-field nutrient-field-unit" style={{ flex: 1, margin: 0 }}>
                   <label htmlFor={`edit-unit-${index}`} style={{ display: 'block', marginBottom: '0.5rem', color: '#646cff', fontWeight: 500 }}>Unit</label>
                   <Dropdown
                     id={`edit-unit-${index}`}
@@ -583,6 +586,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
                     icon="pi pi-trash"
                     severity="danger"
                     outlined
+                    className="nutrient-delete-btn"
                     style={{ marginBottom: '0' }}
                   />
                 )}
