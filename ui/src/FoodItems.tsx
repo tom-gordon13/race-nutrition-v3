@@ -83,6 +83,17 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
   const [saving, setSaving] = useState(false);
   const [availableNutrients, setAvailableNutrients] = useState<Nutrient[]>([]);
   const [editedNutrients, setEditedNutrients] = useState<EditableFoodItemNutrient[]>([]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Fetch available nutrients
   useEffect(() => {
@@ -446,6 +457,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
         className="food-item-edit-dialog"
         style={{ width: '600px', maxHeight: '85vh' }}
         onHide={handleEditCancel}
+        position={isMobile ? "bottom" : "center"}
         modal
         dismissableMask
         footer={
@@ -471,7 +483,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
           </div>
         }
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxHeight: '70vh', overflowY: 'auto', padding: '0.5rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxHeight: '90vh', overflowY: 'auto', padding: '0.5rem' }}>
           <div>
             <label htmlFor="edit-item-name" style={{ display: 'block', marginBottom: '0.5rem', color: '#646cff', fontWeight: 500 }}>
               Food Item Name *

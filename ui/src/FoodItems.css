@@ -96,7 +96,7 @@
     max-width: 100% !important;
   }
 
-  /* Quantity and unit fields share a row */
+  /* Quantity and unit fields share a row - 50% each */
   .nutrient-field-quantity,
   .nutrient-field-unit {
     flex: 1 1 calc(50% - 0.25rem) !important;
