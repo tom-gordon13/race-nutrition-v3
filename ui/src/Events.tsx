@@ -615,15 +615,36 @@ const Events = () => {
               </div>
             </div>
             <div className="event-header-bottom-row">
-              <span className="event-total-cost">
-                {loadingInstances ? '--' : `$${totalCost.toFixed(2)}`}
-              </span>
-              <span className="event-nutrient-stat">
-                {loadingInstances ? '--' : `${carbsPerHour.toFixed(0)}g carbs/hr`}
-              </span>
-              <span className="event-nutrient-stat">
-                {loadingInstances ? '--' : `${sodiumPerHour.toFixed(0)}mg sodium/hr`}
-              </span>
+              <div className="event-stats-container">
+                <div className="event-stat">
+                  <div className="event-stat-value">
+                    {(() => {
+                      const hours = Math.floor(selectedEvent.expected_duration / 3600);
+                      const minutes = Math.floor((selectedEvent.expected_duration % 3600) / 60);
+                      return `${hours}h ${minutes}m`;
+                    })()}
+                  </div>
+                  <div className="event-stat-label">Duration</div>
+                </div>
+                <div className="event-stat">
+                  <div className="event-stat-value">
+                    {loadingInstances ? '--' : `$${totalCost.toFixed(2)}`}
+                  </div>
+                  <div className="event-stat-label">Total Cost</div>
+                </div>
+                <div className="event-stat">
+                  <div className="event-stat-value">
+                    {loadingInstances ? '--' : `${carbsPerHour.toFixed(0)}g`}
+                  </div>
+                  <div className="event-stat-label">carbs/hr</div>
+                </div>
+                <div className="event-stat">
+                  <div className="event-stat-value">
+                    {loadingInstances ? '--' : `${sodiumPerHour.toFixed(0)}mg`}
+                  </div>
+                  <div className="event-stat-label">sodium/hr</div>
+                </div>
+              </div>
               <button
                 onClick={() => setShowNutrientGoalsDialog(true)}
                 className="add-nutrient-btn"
