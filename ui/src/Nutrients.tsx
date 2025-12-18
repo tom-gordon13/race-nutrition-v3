@@ -56,14 +56,22 @@ const Nutrients = () => {
     );
   }
 
+  const headerContent = (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600, color: '#000000' }}>
+        Nutrients
+      </h3>
+    </div>
+  );
+
   return (
     <Card
-      title="Nutrients"
-      style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f3f0ff' }}
+      header={headerContent}
+      style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #d1d5db' }}
       pt={{
-        title: { style: { textAlign: 'left', color: '#646cff', padding: '1.25rem', margin: 0, fontSize: '1.5rem', fontWeight: 700, backgroundColor: '#f3f0ff' } },
-        body: { style: { flex: 1, overflow: 'auto', padding: 0, backgroundColor: '#f3f0ff' } },
-        content: { style: { padding: 0 } }
+        header: { style: { textAlign: 'left', padding: '1rem 1.5rem', backgroundColor: '#f3f4f6', borderBottom: '1px solid #d1d5db' } },
+        body: { style: { flex: 1, overflow: 'auto', padding: 0, backgroundColor: 'white' } },
+        content: { style: { padding: '0 1.5rem 1.5rem 1.5rem' } }
       }}
     >
       {error && <div className="error-message">{error}</div>}
@@ -108,9 +116,11 @@ const Nutrients = () => {
         />
       </DataTable>
 
-      <div style={{ padding: '0.75rem 1.25rem', borderTop: '1px solid #dee2e6' }}>
-        <Tag value={`Total Nutrients: ${nutrients.length}`} severity="info" />
-      </div>
+      {nutrients.length > 0 && (
+        <div style={{ display: 'flex', justifyContent: 'flex-start', padding: '1rem 0' }}>
+          <Tag value={`Total: ${nutrients.length}`} severity="info" />
+        </div>
+      )}
     </Card>
   );
 };

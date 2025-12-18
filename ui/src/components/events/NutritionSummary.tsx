@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
 
@@ -70,10 +70,12 @@ interface NutritionSummaryProps {
   timelineStyle?: React.CSSProperties;
   userId: string;
   goalsRefreshTrigger?: number;
+  scrollContainerRef?: React.RefObject<HTMLDivElement>;
 }
 
-export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, goalsRefreshTrigger }: NutritionSummaryProps) => {
+export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, goalsRefreshTrigger, scrollContainerRef }: NutritionSummaryProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const hasAutoExpanded = useRef(false);
   const [allNutrients, setAllNutrients] = useState<Nutrient[]>([]);
   const [baseGoals, setBaseGoals] = useState<EventGoalBase[]>([]);
   const [hourlyGoals, setHourlyGoals] = useState<EventGoalHourly[]>([]);
@@ -130,6 +132,31 @@ export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, 
       fetchGoals();
     }
   }, [event.id, userId, goalsRefreshTrigger]);
+
+  // Auto-expand panel on mobile when scrolled to the right
+  useEffect(() => {
+    const isMobile = window.innerWidth <= 768;
+    if (!isMobile || !scrollContainerRef?.current) return;
+
+    const container = scrollContainerRef.current;
+
+    const handleScroll = () => {
+      const scrollLeft = container.scrollLeft;
+      const scrollWidth = container.scrollWidth;
+      const clientWidth = container.clientWidth;
+
+      // Check if scrolled to the right edge (within 50px threshold)
+      const isAtRightEdge = scrollLeft + clientWidth >= scrollWidth - 50;
+
+      if (isAtRightEdge && !hasAutoExpanded.current && !isExpanded) {
+        setIsExpanded(true);
+        hasAutoExpanded.current = true;
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [scrollContainerRef, isExpanded]);
 
   // Get goal for a specific nutrient and hour
   const getGoalForNutrient = (nutrientId: string, hour: number): { quantity: number; unit: string } | null => {

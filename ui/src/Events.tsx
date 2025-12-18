@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card } from 'primereact/card';
@@ -60,6 +60,7 @@ const Events = () => {
   const { user } = useAuth0();
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
+  const timelineContainerRef = useRef<HTMLDivElement>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -620,7 +621,7 @@ const Events = () => {
             </div>
           </div>
           <div className="event-detail-content">
-            <div className="event-timeline-container">
+            <div className="event-timeline-container" ref={timelineContainerRef}>
               <EventTimeline
                 event={selectedEvent}
                 foodInstances={foodInstances}
@@ -641,6 +642,7 @@ const Events = () => {
                 timelineStyle={timelineStyle}
                 userId={user.sub}
                 goalsRefreshTrigger={goalsRefreshTrigger}
+                scrollContainerRef={timelineContainerRef}
               />
             </div>
           </div>
