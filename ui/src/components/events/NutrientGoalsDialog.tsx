@@ -64,6 +64,17 @@ export const NutrientGoalsDialog = ({
   const [error, setError] = useState<string | null>(null);
   const [selectedNutrientId, setSelectedNutrientId] = useState<string | null>(null);
   const [expandedNutrients, setExpandedNutrients] = useState<Set<string>>(new Set());
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Fetch nutrients and goals when dialog opens
   useEffect(() => {
@@ -238,13 +249,15 @@ export const NutrientGoalsDialog = ({
     .map(n => ({ label: n.nutrient_name, value: n.id }));
 
   const footerContent = (
-    <div>
+    <div style={{ display: 'flex', gap: '0.5rem' }}>
       <Button
         label="Cancel"
         icon="pi pi-times"
         onClick={onHide}
         disabled={saving}
-        style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: 'white' }}
+        severity="danger"
+        raised
+        style={{ flex: 1, backgroundColor: '#ef4444', borderColor: '#ef4444', color: 'white', fontWeight: 600 }}
       />
       <Button
         label={saving ? 'Saving...' : 'Save Goals'}
@@ -252,7 +265,9 @@ export const NutrientGoalsDialog = ({
         onClick={handleSave}
         autoFocus
         disabled={saving || baseGoals.length === 0}
-        style={{ backgroundColor: '#646cff', borderColor: '#646cff', color: 'white' }}
+        severity="success"
+        raised
+        style={{ flex: 1, backgroundColor: '#22c55e', borderColor: '#22c55e', color: 'white', fontWeight: 600 }}
       />
     </div>
   );
@@ -261,10 +276,13 @@ export const NutrientGoalsDialog = ({
     <Dialog
       header="Nutrient Goals"
       visible={visible}
-      style={{ width: '50vw', minWidth: '600px' }}
+      style={isMobile ? { width: '100vw', height: '85vh' } : { width: '50vw', minWidth: '600px' }}
       onHide={onHide}
       footer={footerContent}
-      closable={false}
+      position={isMobile ? "bottom" : "center"}
+      modal
+      dismissableMask
+      closable={!isMobile}
       className="nutrient-goals-dialog"
     >
       {error && (

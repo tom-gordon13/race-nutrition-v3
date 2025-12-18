@@ -1,45 +1,46 @@
-/* Target all header icon buttons */
-.nutrient-goals-dialog .p-dialog-header-icons button {
-  color: #646cff !important;
+/* Close button styling */
+.nutrient-goals-dialog .p-dialog-header-close {
+  color: #ef4444 !important;
+  background-color: #fee2e2 !important;
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+  width: 2rem !important;
+  height: 2rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
-.nutrient-goals-dialog .p-dialog-header-icons button:hover {
-  color: #535bf2 !important;
-  background-color: rgba(100, 108, 255, 0.1) !important;
+.nutrient-goals-dialog .p-dialog-header-close::before {
+  content: '✕' !important;
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: #ef4444 !important;
+  line-height: 1 !important;
 }
 
-/* Target the icon elements themselves */
-.nutrient-goals-dialog .p-dialog-header-icons .p-icon {
-  color: #646cff !important;
+.nutrient-goals-dialog .p-dialog-header-close .p-icon {
+  display: none !important;
 }
 
-.nutrient-goals-dialog .p-dialog-header-icons button:hover .p-icon {
-  color: #535bf2 !important;
+.nutrient-goals-dialog .p-dialog-header-close:hover {
+  background-color: #fecaca !important;
+  color: #dc2626 !important;
 }
 
-/* Additional specific targeting */
-.nutrient-goals-dialog .p-dialog-header-icon {
-  color: #646cff !important;
+.nutrient-goals-dialog .p-dialog-header-close:hover::before {
+  color: #dc2626 !important;
 }
 
-.nutrient-goals-dialog .p-dialog-header-icon:hover {
-  color: #535bf2 !important;
+.nutrient-goals-dialog .p-dialog-header-close:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
 }
 
-/* Target by specific button classes */
-.nutrient-goals-dialog .p-dialog-header-maximize,
-.nutrient-goals-dialog .p-dialog-header-close,
-.nutrient-goals-dialog button[aria-label="Maximize"],
-.nutrient-goals-dialog button[aria-label="Close"] {
-  color: #646cff !important;
-}
-
-.nutrient-goals-dialog .p-dialog-header-maximize:hover,
-.nutrient-goals-dialog .p-dialog-header-close:hover,
-.nutrient-goals-dialog button[aria-label="Maximize"]:hover,
-.nutrient-goals-dialog button[aria-label="Close"]:hover {
-  color: #535bf2 !important;
-  background-color: rgba(100, 108, 255, 0.1) !important;
+.nutrient-goals-dialog .p-dialog {
+  border-radius: 20px 20px 0 0 !important;
+  box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.15), 0 -10px 10px -5px rgba(0, 0, 0, 0.08) !important;
+  margin: 0 !important;
+  overflow: hidden !important;
 }
 
 /* Reduce gaps in hourly override rows */
@@ -55,4 +56,28 @@
 /* Target base goal inputs container */
 .nutrient-goals-dialog .p-panel-content > div > div:first-child {
   gap: 0.5rem !important;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  .nutrient-goals-dialog .p-dialog {
+    margin: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 85vh !important;
+    max-height: 85vh !important;
+    border-radius: 16px 16px 0 0 !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    top: auto !important;
+    transform: none !important;
+    box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.15), 0 -10px 10px -5px rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .nutrient-goals-dialog .p-dialog-content {
+    padding: 1rem !important;
+    max-height: calc(85vh - 180px) !important;
+    overflow-y: auto !important;
+  }
 }
