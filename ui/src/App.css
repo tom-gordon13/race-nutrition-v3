@@ -891,7 +891,7 @@ tbody tr.selected {
   flex-direction: column;
   overflow: hidden;
   background-color: rgba(255, 255, 255, 0.05);
-  touch-action: pan-y;
+  overscroll-behavior-x: contain;
 }
 
 @keyframes slideIn {
@@ -1002,6 +1002,7 @@ tbody tr.selected {
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  overscroll-behavior-x: contain;
 }
 
 /* Y-axis with tick marks */
@@ -1902,7 +1903,7 @@ tbody tr.selected {
 
   .event-detail-container {
     width: 100%;
-    touch-action: pan-y;
+    overscroll-behavior-x: contain;
   }
 
   .left-panel-toggle {
@@ -1984,14 +1985,13 @@ tbody tr.selected {
 
   /* Event timeline container horizontal scroll when panel closed */
   .event-timeline-container {
-    overflow-x: hidden;
+    overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-y;
+    overscroll-behavior-x: contain;
   }
 
   .event-timeline {
     min-width: 100%;
-    touch-action: pan-y;
   }
 }
 
