@@ -78,7 +78,20 @@ const Nutrients = () => {
         emptyMessage="No nutrients found in the database."
         loading={loading}
         pt={{
-          root: { style: { borderTop: 'none' } }
+          root: { style: { borderTop: 'none' } },
+          thead: {
+            style: {
+              backgroundColor: '#f3f4f6',
+              borderBottom: '1px solid #d1d5db'
+            }
+          },
+          headerCell: {
+            style: {
+              color: '#000000',
+              fontWeight: 600,
+              backgroundColor: '#f3f4f6'
+            }
+          }
         }}
       >
         <Column field="nutrient_name" header="Name" sortable />
