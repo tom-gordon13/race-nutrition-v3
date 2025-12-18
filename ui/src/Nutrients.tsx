@@ -84,23 +84,27 @@ const Nutrients = () => {
               backgroundColor: '#f3f4f6',
               borderBottom: '1px solid #d1d5db'
             }
-          },
-          headerCell: {
-            style: {
-              color: '#000000',
-              fontWeight: 600,
-              backgroundColor: '#f3f4f6'
-            }
           }
         }}
       >
-        <Column field="nutrient_name" header="Name" sortable />
-        <Column field="nutrient_abbreviation" header="Abbreviation" sortable />
+        <Column
+          field="nutrient_name"
+          header="Name"
+          sortable
+          headerStyle={{ color: '#000000', fontWeight: 600, backgroundColor: '#f3f4f6' }}
+        />
+        <Column
+          field="nutrient_abbreviation"
+          header="Abbreviation"
+          sortable
+          headerStyle={{ color: '#000000', fontWeight: 600, backgroundColor: '#f3f4f6' }}
+        />
         <Column
           header="Created"
           body={dateBodyTemplate}
           sortable
           sortField="created_at"
+          headerStyle={{ color: '#000000', fontWeight: 600, backgroundColor: '#f3f4f6' }}
         />
       </DataTable>
 
