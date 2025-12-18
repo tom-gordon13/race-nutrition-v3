@@ -180,8 +180,12 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
 
   // Check if user owns this food item
   const isOwnedByUser = (rowData: FoodItem) => {
-    if (!currentUserId) return false;
+    if (!currentUserId) {
+      console.log('No currentUserId');
+      return false;
+    }
     const isOwned = String(currentUserId) === String(rowData.created_by);
+    console.log('Ownership check:', { currentUserId, created_by: rowData.created_by, isOwned });
     return isOwned;
   };
 
@@ -313,7 +317,8 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
 
   // Template for actions column
   const actionsBodyTemplate = (rowData: FoodItem) => {
-    if (!isOwnedByUser(rowData)) {
+    // If we're in "My Items" mode, all items are owned by the user
+    if (!myItemsOnly && !isOwnedByUser(rowData)) {
       return null;
     }
 
