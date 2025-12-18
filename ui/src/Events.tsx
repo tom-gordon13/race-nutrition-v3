@@ -65,6 +65,7 @@ const Events = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   // Selected event state
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -94,6 +95,16 @@ const Events = () => {
   // State for edit event dialog
   const [showEditEventDialog, setShowEditEventDialog] = useState(false);
   const [eventToEdit, setEventToEdit] = useState<Event | null>(null);
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const fetchEvents = async () => {
     if (!user || !user.sub) {
@@ -548,13 +559,13 @@ const Events = () => {
             pt={{
               title: { style: { textAlign: 'left', color: '#000000', padding: '1rem 1.5rem', margin: 0, fontSize: '1.5rem', fontWeight: 600, backgroundColor: '#f3f4f6', borderBottom: '1px solid #d1d5db' } },
               body: { style: { flex: 1, overflow: 'auto', padding: 0, backgroundColor: 'white' } },
-              content: { style: { padding: '0 1.5rem 1.5rem 1.5rem' } }
+              content: { style: { padding: 0 } }
             }}
           >
             {error && <div className="error-message">{error}</div>}
             {success && <div className="success-message">{success}</div>}
 
-            <div style={{ marginBottom: '1rem' }}>
+            <div style={{ padding: '1rem', marginBottom: '1rem' }}>
               <button
                 onClick={() => setShowCreateForm(!showCreateForm)}
                 className="add-nutrient-btn"
@@ -576,6 +587,7 @@ const Events = () => {
               onEventSelect={handleSelectEvent}
               onEditEvent={handleEditEvent}
               onDuplicateEvent={handleDuplicateEvent}
+              isMobile={isMobile}
             />
           </Card>
         </div>

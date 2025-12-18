@@ -71,7 +71,7 @@ const Nutrients = () => {
       pt={{
         header: { style: { textAlign: 'left', padding: '1rem 1.5rem', backgroundColor: '#f3f4f6', borderBottom: '1px solid #d1d5db' } },
         body: { style: { flex: 1, overflow: 'auto', padding: 0, backgroundColor: 'white' } },
-        content: { style: { padding: '0 1.5rem 1.5rem 1.5rem' } }
+        content: { style: { padding: 0 } }
       }}
     >
       {error && <div className="error-message">{error}</div>}
@@ -103,7 +103,7 @@ const Nutrients = () => {
         />
         <Column
           field="nutrient_abbreviation"
-          header="Abbreviation"
+          header="Abbrev"
           sortable
           headerStyle={{ color: '#000000', fontWeight: 600, backgroundColor: '#f3f4f6' }}
         />

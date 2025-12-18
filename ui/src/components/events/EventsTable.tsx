@@ -20,6 +20,7 @@ interface EventsTableProps {
   onEventSelect: (event: Event) => void;
   onEditEvent: (event: Event) => void;
   onDuplicateEvent: (event: Event) => void;
+  isMobile?: boolean;
 }
 
 const formatDuration = (seconds: number) => {
@@ -28,7 +29,7 @@ const formatDuration = (seconds: number) => {
   return `${hours}h ${minutes}m`;
 };
 
-export const EventsTable = ({ events, selectedEvent, onEventSelect, onEditEvent, onDuplicateEvent }: EventsTableProps) => {
+export const EventsTable = ({ events, selectedEvent, onEventSelect, onEditEvent, onDuplicateEvent, isMobile }: EventsTableProps) => {
   // Template for duration column
   const durationBodyTemplate = (rowData: Event) => {
     return formatDuration(rowData.expected_duration);
@@ -73,9 +74,6 @@ export const EventsTable = ({ events, selectedEvent, onEventSelect, onEditEvent,
 
   return (
     <>
-      <div style={{ marginBottom: '1rem' }}>
-        <Tag value={`Total Events: ${events.length}`} severity="info" />
-      </div>
       <DataTable
         value={events}
         selectionMode="single"
@@ -92,18 +90,23 @@ export const EventsTable = ({ events, selectedEvent, onEventSelect, onEditEvent,
           sortable
           sortField="expected_duration"
         />
-        <Column
-          header="Created"
-          body={dateBodyTemplate}
-          sortable
-          sortField="created_at"
-        />
+        {!isMobile && (
+          <Column
+            header="Created"
+            body={dateBodyTemplate}
+            sortable
+            sortField="created_at"
+          />
+        )}
         <Column
           header="Actions"
           body={actionsBodyTemplate}
           style={{ width: '7rem', textAlign: 'center' }}
         />
       </DataTable>
+      <div style={{ display: 'flex', justifyContent: 'flex-start', padding: '1rem 0' }}>
+        <Tag value={`Total Events: ${events.length}`} severity="info" />
+      </div>
     </>
   );
 };

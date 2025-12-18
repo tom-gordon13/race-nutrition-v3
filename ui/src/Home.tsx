@@ -86,7 +86,7 @@ function Home() {
         } />
         <Route path="/events" element={<div className="events-route-container"><Events /></div>} />
         <Route path="/events/:eventId" element={<div className="events-route-container"><Events /></div>} />
-        <Route path="/nutrients" element={<div style={{ maxWidth: '90%', margin: '0 auto', padding: '2rem' }}><Nutrients /></div>} />
+        <Route path="/nutrients" element={<div style={{ maxWidth: isMobile ? '100%' : '90%', margin: '0 auto', padding: isMobile ? '0.5rem' : '2rem' }}><Nutrients /></div>} />
         <Route path="/preferences" element={<div className="preferences-wrapper"><Preferences /></div>} />
       </Routes>
     </div>

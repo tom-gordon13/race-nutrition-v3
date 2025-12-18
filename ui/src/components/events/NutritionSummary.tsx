@@ -70,7 +70,7 @@ interface NutritionSummaryProps {
   timelineStyle?: React.CSSProperties;
   userId: string;
   goalsRefreshTrigger?: number;
-  scrollContainerRef?: React.RefObject<HTMLDivElement>;
+  scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, goalsRefreshTrigger, scrollContainerRef }: NutritionSummaryProps) => {
