@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card } from 'primereact/card';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
+import 'primeicons/primeicons.css';
 import {
   EventForm,
   EventsTable,
@@ -99,6 +100,9 @@ const Events = () => {
 
   // State for analytics dialog
   const [showAnalyticsDialog, setShowAnalyticsDialog] = useState(false);
+
+  // State for fullscreen mode
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Detect mobile screen size
   useEffect(() => {
@@ -604,6 +608,13 @@ const Events = () => {
               <h3>{selectedEvent.type}</h3>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button
+                  onClick={() => setIsFullscreen(true)}
+                  className="expand-btn"
+                  title="Expand fullscreen"
+                >
+                  <i className="pi pi-window-maximize"></i>
+                </button>
+                <button
                   onClick={() => handleEditEvent(selectedEvent)}
                   className="edit-event-btn"
                 >
@@ -664,30 +675,76 @@ const Events = () => {
             </div>
           </div>
           <div className="event-detail-content">
-            <div className="event-timeline-container" ref={timelineContainerRef}>
-              <EventTimeline
-                event={selectedEvent}
-                foodInstances={foodInstances}
-                loadingInstances={loadingInstances}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-                onDeleteInstance={handleDeleteInstance}
-                onUpdateInstance={handleUpdateInstance}
-                onClickHoldCreate={handleClickHoldCreate}
-                timelineStyle={timelineStyle}
-              />
+            {isFullscreen ? (
+              <div className="fullscreen-wrapper">
+                <div className="fullscreen-info-header">
+                  <div className="fullscreen-stat">
+                    <div className="fullscreen-stat-value">{carbsPerHour.toFixed(0)}g</div>
+                    <div className="fullscreen-stat-label">carbs/hr</div>
+                  </div>
+                  <div className="fullscreen-stat">
+                    <div className="fullscreen-stat-value">{sodiumPerHour.toFixed(0)}mg</div>
+                    <div className="fullscreen-stat-label">sodium/hr</div>
+                  </div>
+                  <button
+                    onClick={() => setIsFullscreen(false)}
+                    className="minimize-btn"
+                    title="Exit fullscreen"
+                  >
+                    <i className="pi pi-window-minimize"></i>
+                  </button>
+                </div>
+                <div className="event-timeline-container fullscreen" ref={timelineContainerRef}>
+                  <EventTimeline
+                    event={selectedEvent}
+                    foodInstances={foodInstances}
+                    loadingInstances={loadingInstances}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    onDeleteInstance={handleDeleteInstance}
+                    onUpdateInstance={handleUpdateInstance}
+                    onClickHoldCreate={handleClickHoldCreate}
+                    timelineStyle={timelineStyle}
+                  />
 
-              <NutritionSummary
-                event={selectedEvent}
-                foodInstances={foodInstances}
-                timelineStyle={timelineStyle}
-                userId={user.sub}
-                goalsRefreshTrigger={goalsRefreshTrigger}
-                scrollContainerRef={timelineContainerRef}
-              />
-            </div>
+                  <NutritionSummary
+                    event={selectedEvent}
+                    foodInstances={foodInstances}
+                    timelineStyle={timelineStyle}
+                    userId={user.sub}
+                    goalsRefreshTrigger={goalsRefreshTrigger}
+                    scrollContainerRef={timelineContainerRef}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="event-timeline-container" ref={timelineContainerRef}>
+                <EventTimeline
+                  event={selectedEvent}
+                  foodInstances={foodInstances}
+                  loadingInstances={loadingInstances}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  onDeleteInstance={handleDeleteInstance}
+                  onUpdateInstance={handleUpdateInstance}
+                  onClickHoldCreate={handleClickHoldCreate}
+                  timelineStyle={timelineStyle}
+                />
+
+                <NutritionSummary
+                  event={selectedEvent}
+                  foodInstances={foodInstances}
+                  timelineStyle={timelineStyle}
+                  userId={user.sub}
+                  goalsRefreshTrigger={goalsRefreshTrigger}
+                  scrollContainerRef={timelineContainerRef}
+                />
+              </div>
+            )}
           </div>
         </div>
       )}
