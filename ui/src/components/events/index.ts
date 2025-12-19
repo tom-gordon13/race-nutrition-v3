@@ -7,3 +7,4 @@ export { FoodItemSelectionModal } from './FoodItemSelectionModal';
 export { NutrientGoalsDialog } from './NutrientGoalsDialog';
 export { EditEventDialog } from './EditEventDialog';
 export { EventAnalyticsDialog } from './EventAnalyticsDialog';
+export { ShareEventDialog } from './ShareEventDialog';

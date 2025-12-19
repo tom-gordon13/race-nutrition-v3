@@ -13,7 +13,8 @@ import {
   FoodItemSelectionModal,
   NutrientGoalsDialog,
   EditEventDialog,
-  EventAnalyticsDialog
+  EventAnalyticsDialog,
+  ShareEventDialog
 } from './components/events';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
@@ -100,6 +101,9 @@ const Events = () => {
 
   // State for analytics dialog
   const [showAnalyticsDialog, setShowAnalyticsDialog] = useState(false);
+
+  // State for share event dialog
+  const [showShareEventDialog, setShowShareEventDialog] = useState(false);
 
   // State for fullscreen mode
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -608,6 +612,13 @@ const Events = () => {
               <h3>{selectedEvent.type}</h3>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button
+                  onClick={() => setShowShareEventDialog(true)}
+                  className="share-event-btn"
+                  title="Share event"
+                >
+                  <i className="pi pi-share-alt"></i>
+                </button>
+                <button
                   onClick={() => setIsFullscreen(true)}
                   className="expand-btn"
                   title="Expand fullscreen"
@@ -794,6 +805,20 @@ const Events = () => {
         visible={showAnalyticsDialog}
         onHide={() => setShowAnalyticsDialog(false)}
       />
+
+      {/* Share Event Dialog */}
+      {selectedEvent && user?.sub && (
+        <ShareEventDialog
+          visible={showShareEventDialog}
+          eventId={selectedEvent.id}
+          userId={user.sub}
+          onHide={() => setShowShareEventDialog(false)}
+          onShare={() => {
+            setSuccess('Event shared successfully!');
+            setTimeout(() => setSuccess(null), 3000);
+          }}
+        />
+      )}
     </div>
   );
 };
