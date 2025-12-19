@@ -558,7 +558,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
 
             {editedNutrients.map((nutrient, index) => (
               <div key={index} className="nutrient-row" style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '4px', display: 'flex', gap: '0.5rem', alignItems: 'flex-end', backgroundColor: 'rgba(0, 0, 0, 0.05)' }}>
-                <div className="p-field nutrient-field-name" style={{ flex: 2, margin: 0 }}>
+                <div className="p-field nutrient-field-name" style={{ flex: '3 1 0', minWidth: 0, margin: 0 }}>
                   <label htmlFor={`edit-nutrient-${index}`} style={{ display: 'block', marginBottom: '0.5rem', color: '#646cff', fontWeight: 500 }}>Nutrient</label>
                   <Dropdown
                     id={`edit-nutrient-${index}`}
@@ -573,7 +573,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
                   />
                 </div>
 
-                <div className="p-field nutrient-field-quantity" style={{ flex: 1, margin: 0 }}>
+                <div className="p-field nutrient-field-quantity" style={{ flex: '1 1 0', minWidth: 0, margin: 0 }}>
                   <label htmlFor={`edit-quantity-${index}`} style={{ display: 'block', marginBottom: '0.5rem', color: '#646cff', fontWeight: 500 }}>Quantity</label>
                   <InputNumber
                     id={`edit-quantity-${index}`}
@@ -582,11 +582,11 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
                     placeholder="e.g., 100"
                     minFractionDigits={0}
                     maxFractionDigits={2}
-                    style={{ width: '100%' }}
+                    inputStyle={{ width: '100%' }}
                   />
                 </div>
 
-                <div className="p-field nutrient-field-unit" style={{ flex: 1, margin: 0 }}>
+                <div className="p-field nutrient-field-unit" style={{ flex: '1 1 0', minWidth: 0, margin: 0 }}>
                   <label htmlFor={`edit-unit-${index}`} style={{ display: 'block', marginBottom: '0.5rem', color: '#646cff', fontWeight: 500 }}>Unit</label>
                   <Dropdown
                     id={`edit-unit-${index}`}

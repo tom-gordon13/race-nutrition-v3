@@ -22,6 +22,9 @@ dist-ssr
 # Database
 data/
 
+# Planning and documentation
+future-plans/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

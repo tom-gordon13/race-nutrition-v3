@@ -5,6 +5,91 @@ import { PrismaClient } from '@prisma/client';
 const router = Router();
 const prisma = new PrismaClient();
 
+router.get('/users/all', async (req, res) => {
+  try {
+    const { current_user_id } = req.query;
+
+    if (!current_user_id || typeof current_user_id !== 'string') {
+      return res.status(400).json({
+        error: 'Missing required query parameter: current_user_id'
+      });
+    }
+
+    const users = await prisma.user.findMany({
+      where: {
+        id: {
+          not: current_user_id // Exclude current user from list
+        }
+      },
+      select: {
+        id: true,
+        first_name: true,
+        last_name: true
+      },
+      orderBy: {
+        first_name: 'asc'
+      }
+    });
+
+    // Fetch all connections involving the current user
+    const connections = await prisma.userConnection.findMany({
+      where: {
+        OR: [
+          { initiating_user: current_user_id },
+          { receiving_user: current_user_id }
+        ]
+      }
+    });
+
+    // Build a map of user connections
+    const connectionMap = new Map();
+    connections.forEach(conn => {
+      if (conn.initiating_user === current_user_id) {
+        connectionMap.set(conn.receiving_user, {
+          connectionId: conn.id,
+          status: conn.status,
+          type: 'INITIATED'
+        });
+      } else {
+        connectionMap.set(conn.initiating_user, {
+          connectionId: conn.id,
+          status: conn.status,
+          type: 'RECEIVED'
+        });
+      }
+    });
+
+    // Filter out users where the connection was denied by them
+    // and attach connection info to each user
+    const usersWithConnections = users
+      .filter(user => {
+        const connection = connectionMap.get(user.id);
+        // Exclude if they denied my request
+        if (connection && connection.type === 'INITIATED' && connection.status === 'DENIED') {
+          return false;
+        }
+        return true;
+      })
+      .map(user => {
+        const connection = connectionMap.get(user.id);
+        return {
+          ...user,
+          connection: connection || null
+        };
+      });
+
+    return res.status(200).json({
+      users: usersWithConnections
+    });
+
+  } catch (error) {
+    console.error('Error fetching all users:', error);
+    return res.status(500).json({
+      error: 'Failed to fetch users'
+    });
+  }
+});
+
 router.get('/users', async (req, res) => {
   try {
     const { auth0_sub } = req.query;

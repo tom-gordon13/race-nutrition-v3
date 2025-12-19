@@ -31,8 +31,8 @@ const Nav = ({ className = "" }: NavProps) => {
   const getActiveIndex = () => {
     if (location.pathname.startsWith('/food-items')) return 0;
     if (location.pathname.startsWith('/events')) return 1;
-    if (location.pathname.startsWith('/nutrients')) return 2;
-    return -1; // No tab selected for other pages like preferences
+    if (location.pathname.startsWith('/users')) return 2;
+    return -1; // No tab selected for other pages like preferences and nutrients
   };
 
   const items = [
@@ -47,13 +47,20 @@ const Nav = ({ className = "" }: NavProps) => {
       command: () => navigate('/events')
     },
     {
-      label: 'Nutrients',
-      icon: 'pi pi-chart-bar',
-      command: () => navigate('/nutrients')
+      label: 'Users',
+      icon: 'pi pi-users',
+      command: () => navigate('/users')
     }
   ];
 
   const userMenuItems: MenuItem[] = [
+    {
+      label: 'Nutrients',
+      icon: 'pi pi-chart-bar',
+      command: () => {
+        navigate('/nutrients');
+      }
+    },
     {
       label: 'Preferences',
       icon: 'pi pi-cog',

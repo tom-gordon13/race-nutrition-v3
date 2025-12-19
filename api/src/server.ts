@@ -6,6 +6,7 @@ import foodItemsRoutes from './routes/food-items.js';
 import eventsRoutes from './routes/events.js';
 import foodInstancesRoutes from './routes/food-instances.js';
 import eventGoalsRoutes from './routes/event-goals.js';
+import userConnectionsRoutes from './routes/user-connections.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -20,6 +21,7 @@ app.use('/api/food-items', foodItemsRoutes);
 app.use('/api/events', eventsRoutes);
 app.use('/api/food-instances', foodInstancesRoutes);
 app.use('/api/event-goals', eventGoalsRoutes);
+app.use('/api/user-connections', userConnectionsRoutes);
 
 app.listen(PORT, () => {
   console.log(`API server running on http://localhost:${PORT}`);
