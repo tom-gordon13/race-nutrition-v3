@@ -5,6 +5,7 @@ import CreateFoodItem from "./CreateFoodItem";
 import FoodItems from "./FoodItems";
 import Events from "./Events";
 import Preferences from "./Preferences";
+import Users from "./Users";
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import './Home.css';
@@ -88,6 +89,7 @@ function Home() {
         <Route path="/events/:eventId" element={<div className="events-route-container"><Events /></div>} />
         <Route path="/nutrients" element={<div style={{ maxWidth: isMobile ? '100%' : '90%', margin: '0 auto', padding: isMobile ? '0.5rem' : '2rem' }}><Nutrients /></div>} />
         <Route path="/preferences" element={<div className="preferences-wrapper"><Preferences /></div>} />
+        <Route path="/users" element={<div className="users-route-container"><Users /></div>} />
       </Routes>
     </div>
   );

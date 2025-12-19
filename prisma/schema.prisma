@@ -26,18 +26,26 @@ enum FoodCategory {
   OTHER
 }
 
+enum ConnectionStatus {
+  PENDING
+  DENIED
+  ACCEPTED
+}
+
 model User {
-  id               String            @id @default(uuid())
-  auth0_sub        String            @unique
-  email            String?
-  first_name       String
-  last_name        String
-  created_at       DateTime          @default(now())
-  updated_at       DateTime          @updatedAt
-  foodItems        FoodItem[]
-  events           Event[]
-  eventGoalsBase   EventGoalsBase[]
-  eventGoalsHourly EventGoalsHourly[]
+  id                      String            @id @default(uuid())
+  auth0_sub               String            @unique
+  email                   String?
+  first_name              String
+  last_name               String
+  created_at              DateTime          @default(now())
+  updated_at              DateTime          @updatedAt
+  foodItems               FoodItem[]
+  events                  Event[]
+  eventGoalsBase          EventGoalsBase[]
+  eventGoalsHourly        EventGoalsHourly[]
+  initiatedConnections    UserConnection[]  @relation("InitiatingUser")
+  receivedConnections     UserConnection[]  @relation("ReceivingUser")
 }
 
 model FoodItem {
@@ -131,4 +139,18 @@ model EventGoalsHourly {
   nutrient    Nutrient @relation(fields: [nutrient_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, event_id, nutrient_id, hour])
+}
+
+model UserConnection {
+  id              String           @id @default(uuid())
+  initiating_user String
+  receiving_user  String
+  status          ConnectionStatus @default(PENDING)
+  created_at      DateTime         @default(now())
+  updated_at      DateTime         @updatedAt
+  deleted_at      DateTime?
+  initiator       User             @relation("InitiatingUser", fields: [initiating_user], references: [id], onDelete: Cascade)
+  receiver        User             @relation("ReceivingUser", fields: [receiving_user], references: [id], onDelete: Cascade)
+
+  @@unique([initiating_user, receiving_user])
 }
