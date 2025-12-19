@@ -32,6 +32,12 @@ enum ConnectionStatus {
   ACCEPTED
 }
 
+enum SharedEventStatus {
+  PENDING
+  ACCEPTED
+  DENIED
+}
+
 model User {
   id                      String            @id @default(uuid())
   auth0_sub               String            @unique
@@ -46,6 +52,8 @@ model User {
   eventGoalsHourly        EventGoalsHourly[]
   initiatedConnections    UserConnection[]  @relation("InitiatingUser")
   receivedConnections     UserConnection[]  @relation("ReceivingUser")
+  sharedEvents            SharedEvent[]     @relation("SenderUser")
+  receivedEvents          SharedEvent[]     @relation("ReceiverUser")
 }
 
 model FoodItem {
@@ -73,6 +81,7 @@ model Event {
   foodInstances     FoodInstance[]
   eventGoalsBase    EventGoalsBase[]
   eventGoalsHourly  EventGoalsHourly[]
+  sharedEvents      SharedEvent[]
 }
 
 model FoodInstance {
@@ -153,4 +162,20 @@ model UserConnection {
   receiver        User             @relation("ReceivingUser", fields: [receiving_user], references: [id], onDelete: Cascade)
 
   @@unique([initiating_user, receiving_user])
+}
+
+model SharedEvent {
+  id          String            @id @default(uuid())
+  event_id    String
+  sender_id   String
+  receiver_id String
+  status      SharedEventStatus @default(PENDING)
+  created_at  DateTime          @default(now())
+  updated_at  DateTime          @updatedAt
+  event       Event             @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  sender      User              @relation("SenderUser", fields: [sender_id], references: [id], onDelete: Cascade)
+  receiver    User              @relation("ReceiverUser", fields: [receiver_id], references: [id], onDelete: Cascade)
+
+  @@index([receiver_id])
+  @@index([status])
 }

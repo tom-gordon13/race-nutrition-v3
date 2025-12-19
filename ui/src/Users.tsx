@@ -186,7 +186,13 @@ const Users = () => {
               e.stopPropagation();
               handleViewRequest(rowData);
             }}
-            style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
+            style={{
+              fontSize: '0.75rem',
+              padding: '0.25rem 0.5rem',
+              backgroundColor: '#9333ea',
+              borderColor: '#9333ea',
+              color: 'white'
+            }}
           />
         </div>
       );
@@ -302,6 +308,7 @@ const Users = () => {
         header="Connection Request"
         visible={showRequestDialog}
         style={{ width: '400px' }}
+        closable={false}
         onHide={() => {
           setShowRequestDialog(false);
           setSelectedRequest(null);
