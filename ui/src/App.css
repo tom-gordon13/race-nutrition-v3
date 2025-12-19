@@ -1991,7 +1991,7 @@ tbody tr.selected {
   }
 
   .event-timeline {
-    min-width: 100%;
+    /* min-width is now set dynamically based on food instances */
   }
 }
 

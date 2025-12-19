@@ -179,6 +179,11 @@ export const EventTimeline = ({
 
   const horizontalOffsets = calculateHorizontalOffsets(foodInstances, event);
 
+  // Calculate minimum width needed to show all food instances
+  const ITEM_WIDTH_PX = 180;
+  const maxOffset = Math.max(0, ...Object.values(horizontalOffsets));
+  const minTimelineWidth = maxOffset + ITEM_WIDTH_PX + 20; // Add 20px padding on the right
+
   // Handler for mouse down on timeline (start tracking potential drag)
   const handleTimelineMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     setMouseDownPosition({ x: e.clientX, y: e.clientY });
@@ -365,7 +370,7 @@ export const EventTimeline = ({
       <div
         ref={timelineRef}
         className="event-timeline"
-        style={timelineStyle}
+        style={{ ...timelineStyle, minWidth: `${minTimelineWidth}px` }}
         onDragOver={onDragOver}
         onDrop={onDrop}
         onClick={handleTimelineClick}
