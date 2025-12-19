@@ -14,7 +14,9 @@ import {
   NutrientGoalsDialog,
   EditEventDialog,
   EventAnalyticsDialog,
-  ShareEventDialog
+  ShareEventDialog,
+  PendingEventsTable,
+  AcceptSharedEventDialog
 } from './components/events';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
@@ -59,6 +61,27 @@ interface FoodInstance {
   foodItem: FoodItem;
 }
 
+interface SharedEvent {
+  id: string;
+  event_id: string;
+  sender_id: string;
+  receiver_id: string;
+  status: string;
+  created_at: string;
+  event: {
+    id: string;
+    type: string;
+    expected_duration: number;
+    created_at: string;
+  };
+  sender: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string | null;
+  };
+}
+
 const Events = () => {
   const { user } = useAuth0();
   const { eventId } = useParams<{ eventId: string }>();
@@ -69,6 +92,9 @@ const Events = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // Pending shared events state
+  const [pendingSharedEvents, setPendingSharedEvents] = useState<SharedEvent[]>([]);
 
   // Selected event state
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -104,6 +130,10 @@ const Events = () => {
 
   // State for share event dialog
   const [showShareEventDialog, setShowShareEventDialog] = useState(false);
+
+  // State for accept shared event dialog
+  const [showAcceptSharedEventDialog, setShowAcceptSharedEventDialog] = useState(false);
+  const [selectedSharedEvent, setSelectedSharedEvent] = useState<SharedEvent | null>(null);
 
   // State for fullscreen mode
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -141,8 +171,26 @@ const Events = () => {
     }
   };
 
+  const fetchPendingSharedEvents = async () => {
+    if (!user || !user.sub) return;
+
+    try {
+      const response = await fetch(`${API_URL}/api/shared-events/pending/${encodeURIComponent(user.sub)}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch pending shared events');
+      }
+
+      const data = await response.json();
+      setPendingSharedEvents(data.sharedEvents);
+    } catch (err) {
+      console.error('Error fetching pending shared events:', err);
+    }
+  };
+
   useEffect(() => {
     fetchEvents();
+    fetchPendingSharedEvents();
   }, [user]);
 
   const fetchFoodItems = async () => {
@@ -481,6 +529,33 @@ const Events = () => {
     }
   };
 
+  // Handler for viewing a shared event (opens dialog)
+  const handleViewSharedEvent = (sharedEvent: SharedEvent) => {
+    setSelectedSharedEvent(sharedEvent);
+    setShowAcceptSharedEventDialog(true);
+  };
+
+  // Handler for accepting a shared event (called from dialog)
+  const handleAcceptSharedEvent = async () => {
+    // Refresh pending shared events and user's events
+    await fetchPendingSharedEvents();
+    await fetchEvents();
+
+    // Show success message
+    setSuccess('Event accepted! A copy has been added to your events.');
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  // Handler for denying a shared event (called from dialog)
+  const handleDenySharedEvent = async () => {
+    // Refresh pending shared events
+    await fetchPendingSharedEvents();
+
+    // Show success message
+    setSuccess('Event denied.');
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
   if (loading) {
     return <div>Loading events...</div>;
   }
@@ -601,6 +676,21 @@ const Events = () => {
               onDuplicateEvent={handleDuplicateEvent}
               isMobile={isMobile}
             />
+
+            {pendingSharedEvents.length > 0 && (
+              <>
+                <div style={{ padding: '1rem 1.5rem', marginTop: '1.5rem' }}>
+                  <h4 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: '#000000' }}>
+                    Pending Shared Events
+                  </h4>
+                </div>
+                <PendingEventsTable
+                  sharedEvents={pendingSharedEvents}
+                  onViewEvent={handleViewSharedEvent}
+                  isMobile={isMobile}
+                />
+              </>
+            )}
           </Card>
         </div>
       )}
@@ -819,6 +909,18 @@ const Events = () => {
           }}
         />
       )}
+
+      {/* Accept Shared Event Dialog */}
+      <AcceptSharedEventDialog
+        visible={showAcceptSharedEventDialog}
+        sharedEvent={selectedSharedEvent}
+        onHide={() => {
+          setShowAcceptSharedEventDialog(false);
+          setSelectedSharedEvent(null);
+        }}
+        onAccept={handleAcceptSharedEvent}
+        onDeny={handleDenySharedEvent}
+      />
     </div>
   );
 };

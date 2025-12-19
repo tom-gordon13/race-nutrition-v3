@@ -61,6 +61,11 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
       }
 
       const data = await response.json();
+      console.log('ShareEventDialog - Fetched connections:', {
+        currentUserId: data.currentUserId,
+        connectedUsersCount: data.users?.length,
+        currentUserId_type: typeof data.currentUserId
+      });
       setConnectedUsers(data.users);
       setCurrentUserId(data.currentUserId); // Save the database user ID
     } catch (err) {
@@ -73,6 +78,13 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
 
   const handleShareEvent = async (receiverId: string) => {
     if (!eventId || !currentUserId) return;
+
+    console.log('ShareEventDialog - Sharing event:', {
+      event_id: eventId,
+      sender_id: currentUserId,
+      receiver_id: receiverId,
+      sender_id_type: typeof currentUserId
+    });
 
     setSharingUserId(receiverId);
     setError(null);
