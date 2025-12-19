@@ -175,7 +175,7 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { item_name, brand, category, cost } = req.body;
+    const { item_name, brand, category, cost, nutrients } = req.body;
 
     console.log('Update request for food item:', id, req.body);
 
@@ -186,30 +186,85 @@ router.put('/:id', async (req, res) => {
       });
     }
 
-    // Update the food item
-    const updatedFoodItem = await prisma.foodItem.update({
-      where: { id },
-      data: {
-        item_name,
-        brand: brand || null,
-        category: category || null,
-        cost: cost !== undefined && cost !== null ? cost : null
-      },
-      include: {
-        foodItemNutrients: {
-          include: {
-            nutrient: true
-          }
+    // Validate nutrients array if provided
+    if (nutrients && !Array.isArray(nutrients)) {
+      return res.status(400).json({
+        error: 'nutrients must be an array'
+      });
+    }
+
+    // Validate each nutrient entry
+    if (nutrients) {
+      for (const nutrient of nutrients) {
+        if (!nutrient.nutrient_id || nutrient.quantity === undefined || !nutrient.unit) {
+          return res.status(400).json({
+            error: 'Each nutrient must have nutrient_id, quantity, and unit'
+          });
         }
       }
+    }
+
+    // Update food item with nutrients in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Delete existing nutrients
+      await tx.foodItemNutrient.deleteMany({
+        where: { food_item_id: id }
+      });
+
+      // Update the food item
+      await tx.foodItem.update({
+        where: { id },
+        data: {
+          item_name,
+          brand: brand || null,
+          category: category || null,
+          cost: cost !== undefined && cost !== null ? cost : null
+        }
+      });
+
+      // Create new nutrients if provided
+      if (nutrients && nutrients.length > 0) {
+        await Promise.all(
+          nutrients.map((nutrient: any) =>
+            tx.foodItemNutrient.create({
+              data: {
+                food_item_id: id,
+                nutrient_id: nutrient.nutrient_id,
+                quantity: nutrient.quantity,
+                unit: nutrient.unit
+              }
+            })
+          )
+        );
+      }
+
+      // Fetch the updated food item with nutrients
+      const updatedFoodItem = await tx.foodItem.findUnique({
+        where: { id },
+        include: {
+          foodItemNutrients: {
+            include: {
+              nutrient: true
+            }
+          }
+        }
+      });
+
+      return updatedFoodItem;
     });
 
-    console.log('Food item updated:', updatedFoodItem.item_name);
+    if (!result) {
+      return res.status(404).json({
+        error: 'Food item not found after update'
+      });
+    }
+
+    console.log('Food item updated:', result.item_name);
 
     // Convert Decimal cost to number for JSON serialization
     const foodItemWithCost = {
-      ...updatedFoodItem,
-      cost: updatedFoodItem.cost ? Number(updatedFoodItem.cost) : null
+      ...result,
+      cost: result.cost ? Number(result.cost) : null
     };
 
     return res.status(200).json({
