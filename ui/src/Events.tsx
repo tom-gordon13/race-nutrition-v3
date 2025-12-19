@@ -11,7 +11,8 @@ import {
   NutritionSummary,
   FoodItemSelectionModal,
   NutrientGoalsDialog,
-  EditEventDialog
+  EditEventDialog,
+  EventAnalyticsDialog
 } from './components/events';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
@@ -95,6 +96,9 @@ const Events = () => {
   // State for edit event dialog
   const [showEditEventDialog, setShowEditEventDialog] = useState(false);
   const [eventToEdit, setEventToEdit] = useState<Event | null>(null);
+
+  // State for analytics dialog
+  const [showAnalyticsDialog, setShowAnalyticsDialog] = useState(false);
 
   // Detect mobile screen size
   useEffect(() => {
@@ -651,6 +655,12 @@ const Events = () => {
               >
                 View/Add Nutrient Goals
               </button>
+              <button
+                onClick={() => setShowAnalyticsDialog(true)}
+                className="add-nutrient-btn"
+              >
+                View Analytics
+              </button>
             </div>
           </div>
           <div className="event-detail-content">
@@ -720,6 +730,12 @@ const Events = () => {
           setEventToEdit(null);
         }}
         onSave={handleSaveEditedEvent}
+      />
+
+      {/* Analytics Dialog */}
+      <EventAnalyticsDialog
+        visible={showAnalyticsDialog}
+        onHide={() => setShowAnalyticsDialog(false)}
       />
     </div>
   );
