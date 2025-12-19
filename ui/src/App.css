@@ -1078,7 +1078,7 @@ tbody tr.selected {
   position: relative;
   min-height: 0;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: auto;
   overscroll-behavior-x: contain;
   background-color: #1a1a1a;
 }
