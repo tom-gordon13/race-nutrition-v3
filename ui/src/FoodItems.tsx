@@ -730,7 +730,6 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
 
             {/* Nutrient List */}
             {editedNutrients.map((nutrient, index) => {
-              const nutrientData = availableNutrients.find(n => n.id === nutrient.nutrient_id);
               return (
                 <div
                   key={index}
