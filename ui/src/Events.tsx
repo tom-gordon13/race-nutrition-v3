@@ -82,6 +82,11 @@ interface SharedEvent {
   };
 }
 
+interface CategoryColorPreference {
+  category_name: string;
+  hex: string;
+}
+
 const Events = () => {
   const { user } = useAuth0();
   const { eventId } = useParams<{ eventId: string }>();
@@ -138,6 +143,9 @@ const Events = () => {
   // State for fullscreen mode
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // State for category color preferences
+  const [categoryColors, setCategoryColors] = useState<Map<string, string>>(new Map());
+
   // Detect mobile screen size
   useEffect(() => {
     const handleResize = () => {
@@ -188,9 +196,34 @@ const Events = () => {
     }
   };
 
+  const fetchCategoryColorPreferences = async () => {
+    if (!user || !user.sub) return;
+
+    try {
+      const response = await fetch(`${API_URL}/api/preferences/user-colors?auth0_sub=${encodeURIComponent(user.sub)}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch color preferences');
+      }
+
+      const data = await response.json();
+
+      // Create a map of category_name -> hex color
+      const colorMap = new Map<string, string>();
+      data.preferences.forEach((pref: any) => {
+        colorMap.set(pref.foodCategory.category_name, pref.color.hex);
+      });
+
+      setCategoryColors(colorMap);
+    } catch (err) {
+      console.error('Error fetching color preferences:', err);
+    }
+  };
+
   useEffect(() => {
     fetchEvents();
     fetchPendingSharedEvents();
+    fetchCategoryColorPreferences();
   }, [user]);
 
   const fetchFoodItems = async () => {
@@ -808,6 +841,7 @@ const Events = () => {
                     onUpdateInstance={handleUpdateInstance}
                     onClickHoldCreate={handleClickHoldCreate}
                     timelineStyle={timelineStyle}
+                    categoryColors={categoryColors}
                   />
 
                   <NutritionSummary
@@ -834,6 +868,7 @@ const Events = () => {
                   onUpdateInstance={handleUpdateInstance}
                   onClickHoldCreate={handleClickHoldCreate}
                   timelineStyle={timelineStyle}
+                  categoryColors={categoryColors}
                 />
 
                 <NutritionSummary

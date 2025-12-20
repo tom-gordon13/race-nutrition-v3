@@ -52,6 +52,7 @@ interface EventTimelineProps {
   onUpdateInstance: (instanceId: string, time: number, servings: number) => Promise<void>;
   onClickHoldCreate?: (timeInSeconds: number) => void;
   timelineStyle?: React.CSSProperties;
+  categoryColors?: Map<string, string>;
 }
 
 const formatTimeHHMM = (seconds: number) => {
@@ -129,7 +130,8 @@ export const EventTimeline = ({
   onDeleteInstance,
   onUpdateInstance,
   onClickHoldCreate,
-  timelineStyle
+  timelineStyle,
+  categoryColors
 }: EventTimelineProps) => {
   const [hoveredInstanceId, setHoveredInstanceId] = useState<string | null>(null);
   const [editingInstanceId, setEditingInstanceId] = useState<string | null>(null);
@@ -439,6 +441,24 @@ export const EventTimeline = ({
                 };
               }
 
+              // Get color for this category
+              const categoryColor = instance.foodItem.category && categoryColors
+                ? categoryColors.get(instance.foodItem.category)
+                : undefined;
+
+              // Determine background and border color
+              const backgroundColor = isEditing
+                ? 'rgba(255, 140, 60, 0.4)'  // Keep orange for editing
+                : categoryColor
+                  ? `${categoryColor}B3`  // Add B3 for 70% opacity (hex for 0.7 alpha)
+                  : 'rgba(100, 108, 255, 0.7)';  // Default blue if no preference
+
+              const borderColor = isEditing
+                ? '#ff8c3c'
+                : categoryColor
+                  ? categoryColor
+                  : '#646cff';
+
               return (
                 <div
                   key={instance.id}
@@ -460,7 +480,13 @@ export const EventTimeline = ({
                   onDoubleClick={() => !isEditing && handleDoubleClick(instance)}
                   style={visualStyle}
                 >
-                  <div className={`food-instance-content ${isEditing ? 'instance-editing' : ''}`}>
+                  <div
+                    className={`food-instance-content ${isEditing ? 'instance-editing' : ''}`}
+                    style={{
+                      backgroundColor,
+                      borderColor
+                    }}
+                  >
                     {!isEditing && (
                       <button
                         className="delete-instance-btn"

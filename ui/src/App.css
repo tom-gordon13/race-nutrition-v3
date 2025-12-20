@@ -1277,9 +1277,9 @@ tbody tr.selected {
 }
 
 .food-instance-content:hover {
-  background-color: rgba(100, 108, 255, 0.85);
+  filter: brightness(1.15);
   transform: scale(1.02);
-  box-shadow: 0 4px 12px rgba(100, 108, 255, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .food-instance-content strong {
