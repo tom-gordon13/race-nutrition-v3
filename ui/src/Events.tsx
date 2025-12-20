@@ -82,11 +82,6 @@ interface SharedEvent {
   };
 }
 
-interface CategoryColorPreference {
-  category_name: string;
-  hex: string;
-}
-
 const Events = () => {
   const { user } = useAuth0();
   const { eventId } = useParams<{ eventId: string }>();
