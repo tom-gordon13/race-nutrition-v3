@@ -39,21 +39,22 @@ enum SharedEventStatus {
 }
 
 model User {
-  id                      String            @id @default(uuid())
-  auth0_sub               String            @unique
+  id                      String                  @id @default(uuid())
+  auth0_sub               String                  @unique
   email                   String?
   first_name              String
   last_name               String
-  created_at              DateTime          @default(now())
-  updated_at              DateTime          @updatedAt
+  created_at              DateTime                @default(now())
+  updated_at              DateTime                @updatedAt
   foodItems               FoodItem[]
   events                  Event[]
   eventGoalsBase          EventGoalsBase[]
   eventGoalsHourly        EventGoalsHourly[]
-  initiatedConnections    UserConnection[]  @relation("InitiatingUser")
-  receivedConnections     UserConnection[]  @relation("ReceivingUser")
-  sharedEvents            SharedEvent[]     @relation("SenderUser")
-  receivedEvents          SharedEvent[]     @relation("ReceiverUser")
+  initiatedConnections    UserConnection[]        @relation("InitiatingUser")
+  receivedConnections     UserConnection[]        @relation("ReceivingUser")
+  sharedEvents            SharedEvent[]           @relation("SenderUser")
+  receivedEvents          SharedEvent[]           @relation("ReceiverUser")
+  preferenceUserColors    PreferenceUserColor[]
 }
 
 model FoodItem {
@@ -178,4 +179,35 @@ model SharedEvent {
 
   @@index([receiver_id])
   @@index([status])
+}
+
+model ReferenceColor {
+  id                   String                  @id @default(uuid())
+  hex                  String                  @unique
+  color_name           String
+  created_at           DateTime                @default(now())
+  updated_at           DateTime                @updatedAt
+  userColorPreferences PreferenceUserColor[]
+}
+
+model ReferenceFoodCategory {
+  id                   String                  @id @default(uuid())
+  category_name        String                  @unique
+  created_at           DateTime                @default(now())
+  updated_at           DateTime                @updatedAt
+  userColorPreferences PreferenceUserColor[]
+}
+
+model PreferenceUserColor {
+  id              String                 @id @default(uuid())
+  user_id         String
+  food_category   String
+  color_id        String
+  created_at      DateTime               @default(now())
+  updated_at      DateTime               @updatedAt
+  user            User                   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  foodCategory    ReferenceFoodCategory  @relation(fields: [food_category], references: [id], onDelete: Cascade)
+  color           ReferenceColor         @relation(fields: [color_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, food_category])
 }

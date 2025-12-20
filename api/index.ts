@@ -9,6 +9,7 @@ import foodInstancesRoutes from './src/routes/food-instances.js';
 import eventGoalsRoutes from './src/routes/event-goals.js';
 import userConnectionsRoutes from './src/routes/user-connections.js';
 import sharedEventsRoutes from './src/routes/shared-events.js';
+import preferencesRoutes from './src/routes/preferences.js';
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use('/api/food-instances', foodInstancesRoutes);
 app.use('/api/event-goals', eventGoalsRoutes);
 app.use('/api/user-connections', userConnectionsRoutes);
 app.use('/api/shared-events', sharedEventsRoutes);
+app.use('/api/preferences', preferencesRoutes);
 
 // Export for Vercel serverless
 export default app;

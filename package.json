@@ -6,13 +6,17 @@
     "scripts": {
         "dev": "cd ui && npm run dev",
         "dev:api": "tsx watch api/src/server.ts",
-        "build": "cd ui && npm run build",
+        "build": "cd ui && npm run build && npm run seed",
         "migrate": "prisma migrate deploy",
+        "seed": "tsx prisma/seed.ts",
         "lint": "cd ui && npm run lint",
         "preview": "cd ui && npm run preview",
         "install:ui": "cd ui && npm install",
         "clean": "rm -rf dist",
         "postinstall": "prisma generate"
+    },
+    "prisma": {
+        "seed": "tsx prisma/seed.ts"
     },
     "dependencies": {
         "@auth0/auth0-react": "^2.4.0",
