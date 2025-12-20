@@ -24,36 +24,112 @@ export const EventAnalyticsDialog = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const footerContent = (
-    <div style={{ display: 'flex', gap: '0.5rem' }}>
-      <Button
-        label="Close"
-        icon="pi pi-times"
-        onClick={onHide}
-        severity="secondary"
-        raised
-        style={{ flex: 1, backgroundColor: '#6b7280', borderColor: '#6b7280', color: 'white', fontWeight: 600 }}
-      />
-    </div>
-  );
-
   return (
     <Dialog
-      header="Event Analytics"
+      header=""
       visible={visible}
-      style={isMobile ? { width: '100vw', height: '85vh' } : { width: '70vw', minWidth: '800px', height: '80vh' }}
+      style={{
+        width: isMobile ? '100%' : '800px',
+        maxHeight: '90vh',
+        borderRadius: '20px'
+      }}
       onHide={onHide}
-      footer={footerContent}
       position={isMobile ? "bottom" : "center"}
       modal
       dismissableMask
-      closable={!isMobile}
+      closable={false}
       className="event-analytics-dialog"
+      pt={{
+        root: { style: { borderRadius: '20px', overflow: 'hidden' } },
+        header: { style: { display: 'none' } },
+        content: { style: { padding: 0, borderRadius: '20px', overflow: 'hidden' } }
+      }}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '2rem' }}>
-        <p style={{ fontSize: '1.5rem', color: '#6b7280', textAlign: 'center' }}>
-          Analytics coming soon...
-        </p>
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: '#e5e7eb',
+        padding: '1rem',
+        gap: '0.5rem',
+        borderRadius: '20px'
+      }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <div style={{
+              fontSize: '0.75rem',
+              fontWeight: 500,
+              color: '#9ca3af',
+              letterSpacing: '0.1em',
+              marginBottom: '0.5rem'
+            }}>
+              ANALYTICS
+            </div>
+            <div style={{
+              fontSize: '1.5rem',
+              fontWeight: 700,
+              color: '#000',
+              lineHeight: 1.2
+            }}>
+              Event Analytics
+            </div>
+          </div>
+          <button
+            onClick={onHide}
+            style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              backgroundColor: '#d1d5db',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.25rem',
+              color: '#6b7280'
+            }}
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Content Section */}
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '8px',
+          padding: '3rem',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '300px'
+        }}>
+          <p style={{
+            fontSize: '1.25rem',
+            color: '#6b7280',
+            textAlign: 'center',
+            margin: 0
+          }}>
+            Analytics coming soon...
+          </p>
+        </div>
+
+        {/* Footer Button */}
+        <Button
+          label="Close"
+          icon="pi pi-times"
+          onClick={onHide}
+          style={{
+            backgroundColor: '#1f2937',
+            border: 'none',
+            color: 'white',
+            fontWeight: 600,
+            padding: '0.75rem',
+            borderRadius: '8px',
+            fontSize: '0.9375rem'
+          }}
+        />
       </div>
     </Dialog>
   );

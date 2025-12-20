@@ -248,86 +248,167 @@ export const NutrientGoalsDialog = ({
     .filter(n => !baseGoals.find(g => g.nutrient_id === n.id))
     .map(n => ({ label: n.nutrient_name, value: n.id }));
 
-  const footerContent = (
-    <div style={{ display: 'flex', gap: '0.5rem' }}>
-      <Button
-        label="Cancel"
-        icon="pi pi-times"
-        onClick={onHide}
-        disabled={saving}
-        severity="danger"
-        raised
-        style={{ flex: 1, backgroundColor: '#ef4444', borderColor: '#ef4444', color: 'white', fontWeight: 600 }}
-      />
-      <Button
-        label={saving ? 'Saving...' : 'Save Goals'}
-        icon="pi pi-check"
-        onClick={handleSave}
-        autoFocus
-        disabled={saving || baseGoals.length === 0}
-        severity="success"
-        raised
-        style={{ flex: 1, backgroundColor: '#22c55e', borderColor: '#22c55e', color: 'white', fontWeight: 600 }}
-      />
-    </div>
-  );
-
   return (
     <Dialog
-      header="Nutrient Goals"
+      header=""
       visible={visible}
-      style={isMobile ? { width: '100vw', height: '85vh' } : { width: '50vw', minWidth: '600px' }}
+      style={{
+        width: isMobile ? '100%' : '700px',
+        maxHeight: '90vh',
+        borderRadius: '20px'
+      }}
       onHide={onHide}
-      footer={footerContent}
       position={isMobile ? "bottom" : "center"}
       modal
       dismissableMask
-      closable={!isMobile}
+      closable={false}
       className="nutrient-goals-dialog"
+      pt={{
+        root: { style: { borderRadius: '20px', overflow: 'hidden' } },
+        header: { style: { display: 'none' } },
+        content: { style: { padding: 0, borderRadius: '20px', overflow: 'auto', maxHeight: '80vh' } }
+      }}
     >
-      {error && (
-        <Message severity="error" text={error} style={{ marginBottom: '1rem', width: '100%' }} />
-      )}
-
-      {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
-          <ProgressSpinner />
-        </div>
-      ) : (
-        <>
-          {/* Add Base Goal Section */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <h4 style={{ marginTop: 0 }}>Base Goals (per hour)</h4>
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <Dropdown
-                value={selectedNutrientId}
-                options={availableNutrients}
-                onChange={(e) => setSelectedNutrientId(e.value)}
-                placeholder="Select nutrient..."
-                style={{ flex: 1 }}
-                filter
-              />
-              <Button
-                label="Add Goal"
-                icon="pi pi-plus"
-                onClick={addBaseGoal}
-                disabled={!selectedNutrientId}
-                style={{ backgroundColor: '#646cff', borderColor: '#646cff', color: 'white' }}
-              />
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: '#e5e7eb',
+        padding: '1rem',
+        gap: '0.5rem',
+        borderRadius: '20px'
+      }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <div style={{
+              fontSize: '0.75rem',
+              fontWeight: 500,
+              color: '#9ca3af',
+              letterSpacing: '0.1em',
+              marginBottom: '0.5rem'
+            }}>
+              GOALS
+            </div>
+            <div style={{
+              fontSize: '1.5rem',
+              fontWeight: 700,
+              color: '#000',
+              lineHeight: 1.2
+            }}>
+              Nutrient Goals
             </div>
           </div>
+          <button
+            onClick={onHide}
+            style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              backgroundColor: '#d1d5db',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.25rem',
+              color: '#6b7280'
+            }}
+          >
+            ✕
+          </button>
+        </div>
 
-          <Divider />
+        {/* Error Message */}
+        {error && (
+          <Message severity="error" text={error} style={{ width: '100%', marginBottom: '0.5rem' }} />
+        )}
 
-          {/* Base Goals List */}
-          {baseGoals.length === 0 ? (
-            <Message
-              severity="info"
-              text="No nutrient goals set. Add a goal to get started."
-              style={{ width: '100%' }}
-            />
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        {loading ? (
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '8px',
+            padding: '2rem',
+            display: 'flex',
+            justifyContent: 'center'
+          }}>
+            <ProgressSpinner />
+          </div>
+        ) : (
+          <>
+            {/* Add Base Goal Section */}
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              padding: '0.875rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.75rem'
+            }}>
+              <div style={{
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                color: '#9ca3af',
+                letterSpacing: '0.1em'
+              }}>
+                ADD BASE GOAL (PER HOUR)
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <Dropdown
+                  value={selectedNutrientId}
+                  options={availableNutrients}
+                  onChange={(e) => setSelectedNutrientId(e.value)}
+                  placeholder="Select nutrient..."
+                  style={{ flex: 1 }}
+                  filter
+                />
+                <Button
+                  label="Add"
+                  icon="pi pi-plus"
+                  onClick={addBaseGoal}
+                  disabled={!selectedNutrientId}
+                  style={{
+                    backgroundColor: '#1f2937',
+                    borderColor: '#1f2937',
+                    color: 'white',
+                    padding: '0.625rem 1rem',
+                    borderRadius: '6px'
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Base Goals List */}
+            {baseGoals.length === 0 ? (
+              <div style={{
+                backgroundColor: 'white',
+                borderRadius: '8px',
+                padding: '2rem',
+                textAlign: 'center'
+              }}>
+                <Message
+                  severity="info"
+                  text="No nutrient goals set. Add a goal to get started."
+                  style={{ width: '100%' }}
+                />
+              </div>
+            ) : (
+              <div style={{
+                backgroundColor: 'white',
+                borderRadius: '8px',
+                padding: '0.875rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.75rem'
+              }}>
+                <div style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  color: '#9ca3af',
+                  letterSpacing: '0.1em'
+                }}>
+                  YOUR GOALS
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {baseGoals.map(goal => {
                 const nutrientHourlyGoals = hourlyGoals.filter(
                   h => h.nutrient_id === goal.nutrient_id
@@ -492,10 +573,48 @@ export const NutrientGoalsDialog = ({
                   </Panel>
                 );
               })}
+                </div>
+              </div>
+            )}
+
+            {/* Footer Buttons */}
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0' }}>
+              <Button
+                label="Cancel"
+                icon="pi pi-times"
+                onClick={onHide}
+                disabled={saving}
+                style={{
+                  flex: 1,
+                  backgroundColor: '#d1d5db',
+                  border: 'none',
+                  color: '#6b7280',
+                  fontWeight: 600,
+                  padding: '0.75rem',
+                  borderRadius: '8px',
+                  fontSize: '0.9375rem'
+                }}
+              />
+              <Button
+                label={saving ? 'Saving...' : 'Save Goals'}
+                icon={saving ? 'pi pi-spin pi-spinner' : 'pi pi-check'}
+                onClick={handleSave}
+                disabled={saving || baseGoals.length === 0}
+                style={{
+                  flex: 1,
+                  backgroundColor: '#22c55e',
+                  border: 'none',
+                  color: 'white',
+                  fontWeight: 600,
+                  padding: '0.75rem',
+                  borderRadius: '8px',
+                  fontSize: '0.9375rem'
+                }}
+              />
             </div>
-          )}
-        </>
-      )}
+          </>
+        )}
+      </div>
     </Dialog>
   );
 };

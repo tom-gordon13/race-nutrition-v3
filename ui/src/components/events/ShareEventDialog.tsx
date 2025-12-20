@@ -34,6 +34,17 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
   const [sharingUserId, setSharingUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Fetch connected users when dialog opens
   useEffect(() => {
@@ -128,60 +139,176 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
 
   return (
     <Dialog
+      header=""
       visible={visible}
+      style={{
+        width: isMobile ? '100%' : '500px',
+        maxHeight: '90vh',
+        borderRadius: '20px'
+      }}
       onHide={onHide}
-      header="Share Event"
-      style={{ width: '450px' }}
+      position={isMobile ? "bottom" : "center"}
       modal
+      dismissableMask
+      closable={false}
       className="share-event-dialog"
+      pt={{
+        root: { style: { borderRadius: '20px', overflow: 'hidden' } },
+        header: { style: { display: 'none' } },
+        content: { style: { padding: 0, borderRadius: '20px', overflow: 'hidden' } }
+      }}
     >
-      <div className="share-event-content">
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: '#e5e7eb',
+        padding: '1rem',
+        gap: '0.5rem',
+        borderRadius: '20px'
+      }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <div style={{
+              fontSize: '0.75rem',
+              fontWeight: 500,
+              color: '#9ca3af',
+              letterSpacing: '0.1em',
+              marginBottom: '0.5rem'
+            }}>
+              SHARING
+            </div>
+            <div style={{
+              fontSize: '1.5rem',
+              fontWeight: 700,
+              color: '#000',
+              lineHeight: 1.2
+            }}>
+              Share Event
+            </div>
+          </div>
+          <button
+            onClick={onHide}
+            style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              backgroundColor: '#d1d5db',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.25rem',
+              color: '#6b7280'
+            }}
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Error Message */}
         {error && (
-          <Message severity="error" text={error} style={{ width: '100%', marginBottom: '1rem' }} />
+          <Message severity="error" text={error} style={{ width: '100%', marginBottom: '0.5rem' }} />
         )}
 
+        {/* Success Message */}
         {success && (
-          <Message severity="success" text={success} style={{ width: '100%', marginBottom: '1rem' }} />
+          <Message severity="success" text={success} style={{ width: '100%', marginBottom: '0.5rem' }} />
         )}
 
-        {loading ? (
-          <div className="loading-container">
-            <ProgressSpinner style={{ width: '50px', height: '50px' }} />
-            <p>Loading connected users...</p>
-          </div>
-        ) : connectedUsers.length === 0 ? (
-          <div className="no-users-message">
-            <p>You don't have any connected users yet.</p>
-            <p>Connect with other users to share events with them.</p>
-          </div>
-        ) : (
-          <div className="users-list">
-            <p className="users-list-header">Select a user to share this event with:</p>
-            {connectedUsers.map((user) => (
-              <div
-                key={user.id}
-                className="user-item"
-                onClick={() => !sharingUserId && handleShareEvent(user.id)}
-                style={{
-                  cursor: sharingUserId ? 'not-allowed' : 'pointer',
-                  opacity: sharingUserId && sharingUserId !== user.id ? 0.5 : 1,
-                }}
-              >
-                <div className="user-info">
-                  <div className="user-name">
-                    {user.first_name} {user.last_name}
-                  </div>
-                  {user.email && (
-                    <div className="user-email">{user.email}</div>
-                  )}
-                </div>
-                {sharingUserId === user.id && (
-                  <ProgressSpinner style={{ width: '20px', height: '20px' }} />
-                )}
+        {/* Content Section */}
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '8px',
+          padding: '0.875rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.75rem'
+        }}>
+          {loading ? (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '2rem'
+            }}>
+              <ProgressSpinner style={{ width: '50px', height: '50px' }} />
+              <p style={{ marginTop: '1rem', color: '#6b7280' }}>Loading connected users...</p>
+            </div>
+          ) : connectedUsers.length === 0 ? (
+            <div style={{
+              textAlign: 'center',
+              padding: '2rem',
+              color: '#6b7280'
+            }}>
+              <p style={{ marginBottom: '0.5rem' }}>You don't have any connected users yet.</p>
+              <p>Connect with other users to share events with them.</p>
+            </div>
+          ) : (
+            <>
+              <div style={{
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                color: '#9ca3af',
+                letterSpacing: '0.1em'
+              }}>
+                SELECT A USER
               </div>
-            ))}
-          </div>
-        )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {connectedUsers.map((user) => (
+                  <div
+                    key={user.id}
+                    onClick={() => !sharingUserId && handleShareEvent(user.id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.75rem',
+                      backgroundColor: '#f9fafb',
+                      borderRadius: '6px',
+                      cursor: sharingUserId ? 'not-allowed' : 'pointer',
+                      opacity: sharingUserId && sharingUserId !== user.id ? 0.5 : 1,
+                      transition: 'background-color 0.2s',
+                      border: '1px solid #e5e7eb'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!sharingUserId) {
+                        e.currentTarget.style.backgroundColor = '#f3f4f6';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#f9fafb';
+                    }}
+                  >
+                    <div>
+                      <div style={{
+                        fontWeight: 600,
+                        color: '#000',
+                        marginBottom: '0.25rem'
+                      }}>
+                        {user.first_name} {user.last_name}
+                      </div>
+                      {user.email && (
+                        <div style={{
+                          fontSize: '0.875rem',
+                          color: '#6b7280'
+                        }}>
+                          {user.email}
+                        </div>
+                      )}
+                    </div>
+                    {sharingUserId === user.id && (
+                      <ProgressSpinner style={{ width: '20px', height: '20px' }} />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </Dialog>
   );
