@@ -32,6 +32,7 @@ interface FoodItemSelectionModalProps {
   onSelect: (foodItemId: string, servings: number, timeInSeconds: number) => void;
   onCategoryFilterChange: (category: string) => void;
   onMyItemsOnlyChange: (myItemsOnly: boolean) => void;
+  categoryColors?: Map<string, string>;
 }
 
 const formatTimeHHMM = (seconds: number) => {
@@ -57,7 +58,8 @@ export const FoodItemSelectionModal = ({
   onClose,
   onSelect,
   onCategoryFilterChange,
-  onMyItemsOnlyChange
+  onMyItemsOnlyChange,
+  categoryColors
 }: FoodItemSelectionModalProps) => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
@@ -198,32 +200,54 @@ export const FoodItemSelectionModal = ({
                 No food items found. Try a different search term.
               </div>
             ) : (
-              filteredItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="modal-food-item"
-                  onClick={() => handleSelect(item.id)}
-                >
-                  <div className="modal-food-item-header">
-                    <strong>{item.item_name}</strong>
-                    {item.brand && <span className="modal-food-item-brand">{item.brand}</span>}
+              filteredItems.map((item) => {
+                // Get color for this category
+                const categoryColor = item.category && categoryColors
+                  ? categoryColors.get(item.category)
+                  : undefined;
+
+                // Determine background and border color
+                const backgroundColor = categoryColor
+                  ? `${categoryColor}1A`  // Add 1A for 10% opacity (hex for ~0.1 alpha)
+                  : undefined;
+
+                const borderLeftColor = categoryColor
+                  ? categoryColor
+                  : undefined;
+
+                return (
+                  <div
+                    key={item.id}
+                    className="modal-food-item"
+                    onClick={() => handleSelect(item.id)}
+                    style={{
+                      backgroundColor,
+                      borderLeftColor,
+                      borderLeftWidth: borderLeftColor ? '4px' : undefined,
+                      borderLeftStyle: borderLeftColor ? 'solid' : undefined
+                    }}
+                  >
+                    <div className="modal-food-item-header">
+                      <strong>{item.item_name}</strong>
+                      {item.brand && <span className="modal-food-item-brand">{item.brand}</span>}
+                    </div>
+                    {item.category && (
+                      <div className="modal-food-item-category">
+                        {item.category.replace(/_/g, ' ')}
+                      </div>
+                    )}
+                    {item.foodItemNutrients && item.foodItemNutrients.length > 0 && (
+                      <div className="modal-food-item-nutrients">
+                        {item.foodItemNutrients.slice(0, 3).map((nutrient) => (
+                          <span key={nutrient.id} className="modal-nutrient-badge">
+                            {nutrient.nutrient.nutrient_abbreviation}: {nutrient.quantity} {nutrient.unit}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  {item.category && (
-                    <div className="modal-food-item-category">
-                      {item.category.replace(/_/g, ' ')}
-                    </div>
-                  )}
-                  {item.foodItemNutrients && item.foodItemNutrients.length > 0 && (
-                    <div className="modal-food-item-nutrients">
-                      {item.foodItemNutrients.slice(0, 3).map((nutrient) => (
-                        <span key={nutrient.id} className="modal-nutrient-badge">
-                          {nutrient.nutrient.nutrient_abbreviation}: {nutrient.quantity} {nutrient.unit}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))
+                );
+              })
             )}
 
             <button

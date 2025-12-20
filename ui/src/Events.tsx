@@ -891,6 +891,7 @@ const Events = () => {
         onSelect={handleFoodItemSelect}
         onCategoryFilterChange={setCategoryFilter}
         onMyItemsOnlyChange={setMyItemsOnly}
+        categoryColors={categoryColors}
       />
 
       {/* Nutrient Goals Dialog */}
