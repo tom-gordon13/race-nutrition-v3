@@ -2,6 +2,30 @@
   padding: 1.5rem;
 }
 
+/* Red X close button styling */
+.share-event-dialog .p-dialog-header-close {
+  background-color: #ef4444 !important;
+  color: white !important;
+  border-radius: 4px;
+  width: 2rem;
+  height: 2rem;
+  transition: all 0.2s ease;
+}
+
+.share-event-dialog .p-dialog-header-close:hover {
+  background-color: #dc2626 !important;
+  transform: scale(1.1);
+}
+
+.share-event-dialog .p-dialog-header-close:focus {
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.5) !important;
+}
+
+.share-event-dialog .p-dialog-header-close-icon {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
 .share-event-content {
   min-height: 200px;
 }
