@@ -149,7 +149,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
         }
 
         const data = await response.json();
-        const favoriteIds = new Set(data.favorites.map((fav: any) => fav.food_item_id));
+        const favoriteIds = new Set<string>(data.favorites.map((fav: any) => fav.food_item_id as string));
         setFavoriteFoodItemIds(favoriteIds);
       } catch (err) {
         console.error('Error fetching favorites:', err);
