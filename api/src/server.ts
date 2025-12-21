@@ -9,6 +9,7 @@ import eventGoalsRoutes from './routes/event-goals.js';
 import userConnectionsRoutes from './routes/user-connections.js';
 import sharedEventsRoutes from './routes/shared-events.js';
 import preferencesRoutes from './routes/preferences.js';
+import favoriteFoodItemsRoutes from './routes/favorite-food-items.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -26,6 +27,7 @@ app.use('/api/event-goals', eventGoalsRoutes);
 app.use('/api/user-connections', userConnectionsRoutes);
 app.use('/api/shared-events', sharedEventsRoutes);
 app.use('/api/preferences', preferencesRoutes);
+app.use('/api/favorite-food-items', favoriteFoodItemsRoutes);
 
 app.listen(PORT, () => {
   console.log(`API server running on http://localhost:${PORT}`);

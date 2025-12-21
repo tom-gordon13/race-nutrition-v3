@@ -85,6 +85,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
   const [editedNutrients, setEditedNutrients] = useState<EditableFoodItemNutrient[]>([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isEditingCost, setIsEditingCost] = useState(false);
+  const [favoriteFoodItemIds, setFavoriteFoodItemIds] = useState<Set<string>>(new Set());
 
   // Detect mobile screen size
   useEffect(() => {
@@ -132,6 +133,31 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
 
     fetchCurrentUser();
   }, [user]);
+
+  // Fetch favorite food items
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      if (!user || !user.sub) return;
+
+      try {
+        const response = await fetch(
+          `${API_URL}/api/favorite-food-items?auth0_sub=${encodeURIComponent(user.sub)}`
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch favorites');
+        }
+
+        const data = await response.json();
+        const favoriteIds = new Set(data.favorites.map((fav: any) => fav.food_item_id));
+        setFavoriteFoodItemIds(favoriteIds);
+      } catch (err) {
+        console.error('Error fetching favorites:', err);
+      }
+    };
+
+    fetchFavorites();
+  }, [user, refreshTrigger]);
 
   useEffect(() => {
     const fetchFoodItems = async () => {
@@ -317,6 +343,54 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
       style: 'currency',
       currency: 'USD',
     }).format(rowData.cost);
+  };
+
+  // Toggle favorite status
+  const handleToggleFavorite = async (foodItemId: string) => {
+    if (!user || !user.sub) return;
+
+    const isFavorite = favoriteFoodItemIds.has(foodItemId);
+
+    try {
+      if (isFavorite) {
+        // Remove from favorites
+        const response = await fetch(
+          `${API_URL}/api/favorite-food-items/${foodItemId}?auth0_sub=${encodeURIComponent(user.sub)}`,
+          { method: 'DELETE' }
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to remove favorite');
+        }
+
+        setFavoriteFoodItemIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(foodItemId);
+          return newSet;
+        });
+      } else {
+        // Add to favorites
+        const response = await fetch(`${API_URL}/api/favorite-food-items`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            auth0_sub: user.sub,
+            food_item_id: foodItemId
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to add favorite');
+        }
+
+        setFavoriteFoodItemIds(prev => new Set(prev).add(foodItemId));
+      }
+    } catch (err) {
+      console.error('Error toggling favorite:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update favorite');
+    }
   };
 
   // Template for actions column
@@ -514,24 +588,40 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
                 {editedData.item_name || 'Food Item'}
               </div>
             </div>
-            <button
-              onClick={handleEditCancel}
-              style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                backgroundColor: '#d1d5db',
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '1.25rem',
-                color: '#6b7280'
-              }}
-            >
-              ✕
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <Button
+                icon={editingItem && favoriteFoodItemIds.has(editingItem.id) ? "pi pi-star-fill" : "pi pi-star"}
+                onClick={() => editingItem && handleToggleFavorite(editingItem.id)}
+                rounded
+                text
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  color: editingItem && favoriteFoodItemIds.has(editingItem.id) ? '#fbbf24' : '#9ca3af',
+                }}
+                pt={{
+                  icon: { style: { fontSize: '1.25rem' } }
+                }}
+              />
+              <button
+                onClick={handleEditCancel}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  backgroundColor: '#d1d5db',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.25rem',
+                  color: '#6b7280'
+                }}
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
           {/* BASIC INFO Section */}
