@@ -1,18 +1,19 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useAuth0 } from '@auth0/auth0-react';
 import Nutrients from "./Nutrients";
-import CreateFoodItem from "./CreateFoodItem";
 import FoodItems from "./FoodItems";
 import Events from "./Events";
 import Preferences from "./Preferences";
 import Users from "./Users";
 import { Button } from 'primereact/button';
-import { Dialog } from 'primereact/dialog';
+import { CreateFoodItemDialog } from './components/food-items/CreateFoodItemDialog';
 import './Home.css';
 
 function Home() {
+  const { user } = useAuth0();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   // Detect mobile screen size
@@ -27,7 +28,6 @@ function Home() {
 
   const handleFoodItemCreated = () => {
     setRefreshTrigger(prev => prev + 1);
-    setShowCreateForm(false);
   };
 
   return (
@@ -40,48 +40,19 @@ function Home() {
               <Button
                 icon="pi pi-plus"
                 label="Create New Item"
-                onClick={() => setShowCreateForm(!showCreateForm)}
+                onClick={() => setShowCreateDialog(true)}
                 severity="secondary"
                 outlined
               />
             </div>
-            {isMobile ? (
-              <>
-                <Dialog
-                  header="Create New Item"
-                  visible={showCreateForm}
-                  className="create-food-item-dialog"
-                  style={{ width: '100vw', height: '85vh' }}
-                  onHide={() => setShowCreateForm(false)}
-                  position="bottom"
-                  modal
-                  dismissableMask
-                >
-                  <CreateFoodItem onFoodItemCreated={handleFoodItemCreated} />
-                </Dialog>
-                <FoodItems refreshTrigger={refreshTrigger} />
-              </>
-            ) : (
-              <div style={{ display: 'flex', gap: showCreateForm ? '2rem' : '0', alignItems: 'stretch', height: 'calc(100% - 4rem)', position: 'relative', overflow: 'hidden' }}>
-                <div
-                  style={{
-                    position: showCreateForm ? 'relative' : 'absolute',
-                    left: showCreateForm ? '0' : '-35%',
-                    width: '30%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    transform: showCreateForm ? 'translateX(0)' : 'translateX(-100%)',
-                    transition: 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out, left 0.3s ease-in-out',
-                    opacity: showCreateForm ? 1 : 0,
-                    zIndex: showCreateForm ? 1 : -1,
-                  }}
-                >
-                  <CreateFoodItem onFoodItemCreated={handleFoodItemCreated} />
-                </div>
-                <div style={{ flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column', marginLeft: showCreateForm ? '0' : '0', transition: 'margin-left 0.3s ease-in-out' }}>
-                  <FoodItems refreshTrigger={refreshTrigger} />
-                </div>
-              </div>
+            <FoodItems refreshTrigger={refreshTrigger} />
+            {user?.sub && (
+              <CreateFoodItemDialog
+                visible={showCreateDialog}
+                onHide={() => setShowCreateDialog(false)}
+                onCreate={handleFoodItemCreated}
+                auth0Sub={user.sub}
+              />
             )}
           </div>
         } />

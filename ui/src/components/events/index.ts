@@ -6,6 +6,7 @@ export { NutritionSummary } from './NutritionSummary';
 export { FoodItemSelectionModal } from './FoodItemSelectionModal';
 export { NutrientGoalsDialog } from './NutrientGoalsDialog';
 export { EditEventDialog } from './EditEventDialog';
+export { CreateEventDialog } from './CreateEventDialog';
 export { EventAnalyticsDialog } from './EventAnalyticsDialog';
 export { ShareEventDialog } from './ShareEventDialog';
 export { PendingEventsTable } from './PendingEventsTable';

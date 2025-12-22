@@ -6,13 +6,13 @@ import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import {
-  EventForm,
   EventsTable,
   EventTimeline,
   NutritionSummary,
   FoodItemSelectionModal,
   NutrientGoalsDialog,
   EditEventDialog,
+  CreateEventDialog,
   EventAnalyticsDialog,
   ShareEventDialog,
   PendingEventsTable,
@@ -107,7 +107,7 @@ const Events = () => {
   const [myItemsOnly, setMyItemsOnly] = useState<boolean>(true);
 
   // Form state
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   // Drag and drop state
   const [draggingInstanceId, setDraggingInstanceId] = useState<string | null>(null);
@@ -469,44 +469,13 @@ const Events = () => {
     }
   };
 
-  const handleCreateEvent = async (eventType: string, expectedDuration: number) => {
+  const handleCreateEvent = async () => {
     setError(null);
-    setSuccess(null);
+    setSuccess('Event created successfully!');
+    setTimeout(() => setSuccess(null), 3000);
 
-    try {
-      if (!user || !user.sub) {
-        throw new Error('User not authenticated');
-      }
-
-      const response = await fetch(`${API_URL}/api/events`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          auth0_sub: user.sub,
-          expected_duration: expectedDuration,
-          type: eventType
-        }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to create event');
-      }
-
-      const data = await response.json();
-      setSuccess(`Event "${data.event.type}" created successfully!`);
-
-      setShowCreateForm(false);
-
-      // Refresh events list
-      fetchEvents();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-      console.error('Error creating event:', err);
-      throw err;
-    }
+    // Refresh events list
+    await fetchEvents();
   };
 
   // Handler for opening edit event dialog
@@ -690,19 +659,12 @@ const Events = () => {
 
             <div style={{ padding: '1rem', marginBottom: '1rem' }}>
               <button
-                onClick={() => setShowCreateForm(!showCreateForm)}
+                onClick={() => setShowCreateDialog(true)}
                 className="add-nutrient-btn"
               >
-                {showCreateForm ? 'Cancel' : '+ Create New Event'}
+                + Create New Event
               </button>
             </div>
-
-            {showCreateForm && (
-              <EventForm
-                onSubmit={handleCreateEvent}
-                onCancel={() => setShowCreateForm(false)}
-              />
-            )}
 
             <EventsTable
               events={events}
@@ -959,6 +921,16 @@ const Events = () => {
             setTimeout(() => setSuccess(null), 3000);
             setGoalsRefreshTrigger(prev => prev + 1);
           }}
+        />
+      )}
+
+      {/* Create Event Dialog */}
+      {user?.sub && (
+        <CreateEventDialog
+          visible={showCreateDialog}
+          onHide={() => setShowCreateDialog(false)}
+          onCreate={handleCreateEvent}
+          auth0Sub={user.sub}
         />
       )}
 
