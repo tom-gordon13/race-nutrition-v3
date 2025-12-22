@@ -74,10 +74,12 @@ export default defineConfig({
       workbox: {
         runtimeCaching: [
           {
-            urlPattern: ({ url }) => {
-              // Only cache API calls to the same origin (production scenario)
-              // In development, API is on different port so skip caching
-              return url.pathname.startsWith('/api/') && url.origin === self.location.origin
+            urlPattern: ({ url, request }) => {
+              // Only cache GET requests to API on the same origin
+              // Don't cache POST/PUT/DELETE - let them pass through
+              return url.pathname.startsWith('/api/') &&
+                     url.origin === self.location.origin &&
+                     request.method === 'GET'
             },
             handler: 'NetworkFirst',
             options: {
