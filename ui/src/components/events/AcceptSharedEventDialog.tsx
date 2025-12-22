@@ -4,8 +4,9 @@ import { Button } from 'primereact/button';
 import { Message } from 'primereact/message';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import './AcceptSharedEventDialog.css';
+import { API_URL } from '../../config/api';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
+
 
 interface SharedEvent {
   id: string;

@@ -5,6 +5,7 @@ import { InputText } from 'primereact/inputtext';
 import { Message } from 'primereact/message';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import './EditEventDialog.css';
+import { API_URL } from '../../config/api';
 
 interface EditEventDialogProps {
   visible: boolean;
@@ -70,7 +71,7 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
     setError(null);
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      
       const response = await fetch(`${API_URL}/api/events/${event.id}`, {
         method: 'PUT',
         headers: {

@@ -9,8 +9,9 @@ import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
+import { API_URL } from './config/api';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
+
 
 interface ConnectionInfo {
   connectionId: string;

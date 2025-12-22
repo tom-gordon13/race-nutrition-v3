@@ -8,6 +8,7 @@ import { Divider } from 'primereact/divider';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Message } from 'primereact/message';
 import './NutrientGoalsDialog.css';
+import { API_URL } from '../../config/api';
 
 interface Nutrient {
   id: string;
@@ -39,7 +40,7 @@ interface NutrientGoalsDialogProps {
   onSave: () => void;
 }
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
+
 
 const UNIT_OPTIONS = [
   { label: 'g', value: 'g' },

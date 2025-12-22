@@ -3,8 +3,9 @@ import { Dialog } from 'primereact/dialog';
 import { Message } from 'primereact/message';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import './ShareEventDialog.css';
+import { API_URL } from '../../config/api';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
+
 
 interface User {
   id: string;

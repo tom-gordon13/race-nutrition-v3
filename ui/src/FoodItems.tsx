@@ -13,8 +13,7 @@ import { Dropdown } from 'primereact/dropdown';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import './FoodItems.css';
-
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
+import { API_URL } from './config/api';
 
 const FOOD_CATEGORIES = [
   'ENERGY_GEL',

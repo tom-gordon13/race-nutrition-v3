@@ -6,8 +6,9 @@ import { InputNumber } from 'primereact/inputnumber';
 import { Dropdown } from 'primereact/dropdown';
 import { Message } from 'primereact/message';
 import { ProgressSpinner } from 'primereact/progressspinner';
+import { API_URL } from '../../config/api';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
+
 
 const FOOD_CATEGORIES = [
   'ENERGY_GEL',

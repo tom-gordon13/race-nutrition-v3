@@ -8,6 +8,7 @@ import { Button } from 'primereact/button';
 import { Toast } from 'primereact/toast';
 import { useRef } from 'react';
 import './Preferences.css';
+import { API_URL } from './config/api';
 
 interface ReferenceColor {
   id: string;
@@ -32,7 +33,7 @@ interface UserColorPreference {
 export default function Preferences() {
   const { user } = useAuth0();
   const toast = useRef<Toast>(null);
-  const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
+  
 
   const [colors, setColors] = useState<ReferenceColor[]>([]);
   const [categories, setCategories] = useState<ReferenceFoodCategory[]>([]);

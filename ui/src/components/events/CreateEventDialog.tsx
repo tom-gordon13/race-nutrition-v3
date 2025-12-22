@@ -5,6 +5,7 @@ import { InputText } from 'primereact/inputtext';
 import { Message } from 'primereact/message';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import './EditEventDialog.css';
+import { API_URL } from '../../config/api';
 
 interface CreateEventDialogProps {
   visible: boolean;
@@ -65,7 +66,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
     setError(null);
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      
       const response = await fetch(`${API_URL}/api/events`, {
         method: 'POST',
         headers: {
