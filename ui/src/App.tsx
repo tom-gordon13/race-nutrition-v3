@@ -3,6 +3,9 @@ import { useAuth0 } from "@auth0/auth0-react";
 import Nav from './Nav';
 import Home from './Home';
 import { useUserSync } from './hooks/useUserSync';
+import { OfflineIndicator } from './components/OfflineIndicator';
+import { InstallPrompt } from './components/InstallPrompt';
+import { UpdatePrompt } from './components/UpdatePrompt';
 
 const App = () => {
   const { loginWithRedirect, isAuthenticated, isLoading } = useAuth0();
@@ -24,9 +27,14 @@ const App = () => {
 
   return (
     <div className="app">
+      {/* PWA Components */}
+      <OfflineIndicator />
+      <UpdatePrompt />
+
       {isAuthenticated ? (
         <>
           <Nav />
+          <InstallPrompt />
           <main className="main-content">
             <Home />
           </main>
