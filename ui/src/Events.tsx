@@ -596,6 +596,14 @@ const Events = () => {
   const calculateTimelineStyle = (event: typeof selectedEvent) => {
     if (!event) return undefined;
 
+    // On mobile, use fixed compact height for zoomed-out view
+    if (isMobile) {
+      return {
+        minHeight: '100%',
+        height: '100%'
+      };
+    }
+
     const SIX_HOURS = 6 * 3600;
     if (event.expected_duration <= SIX_HOURS) {
       return {
@@ -736,13 +744,15 @@ const Events = () => {
                 >
                   <i className="pi pi-share-alt"></i>
                 </button>
-                <button
-                  onClick={() => setIsFullscreen(true)}
-                  className="expand-btn"
-                  title="Expand fullscreen"
-                >
-                  <i className="pi pi-window-maximize"></i>
-                </button>
+                {!isMobile && (
+                  <button
+                    onClick={() => setIsFullscreen(true)}
+                    className="expand-btn"
+                    title="Expand fullscreen"
+                  >
+                    <i className="pi pi-window-maximize"></i>
+                  </button>
+                )}
                 <button
                   onClick={() => handleEditEvent(selectedEvent)}
                   className="edit-event-btn"
@@ -789,21 +799,23 @@ const Events = () => {
                   <div className="event-stat-label">sodium/hr</div>
                 </div>
               </div>
-              <button
-                onClick={() => setShowNutrientGoalsDialog(true)}
-                className="add-nutrient-btn"
-              >
-                View/Add Nutrient Goals
-              </button>
-              <button
-                onClick={() => setShowAnalyticsDialog(true)}
-                className="add-nutrient-btn"
-              >
-                View Analytics
-              </button>
+              <div className="event-action-buttons">
+                <button
+                  onClick={() => setShowNutrientGoalsDialog(true)}
+                  className="add-nutrient-btn"
+                >
+                  Nutrient Goals
+                </button>
+                <button
+                  onClick={() => setShowAnalyticsDialog(true)}
+                  className="add-nutrient-btn"
+                >
+                  Analytics
+                </button>
+              </div>
             </div>
           </div>
-          <div className="event-detail-content">
+          <div className={`event-detail-content ${isMobile && !isFullscreen ? 'mobile-condensed-view' : ''}`}>
             {isFullscreen ? (
               <div className="fullscreen-wrapper">
                 <div className="fullscreen-info-header">
@@ -837,6 +849,7 @@ const Events = () => {
                     onClickHoldCreate={handleClickHoldCreate}
                     timelineStyle={timelineStyle}
                     categoryColors={categoryColors}
+                    viewOnly={false}
                   />
 
                   <NutritionSummary
@@ -850,31 +863,70 @@ const Events = () => {
                 </div>
               </div>
             ) : (
-              <div className="event-timeline-container" ref={timelineContainerRef}>
-                <EventTimeline
-                  event={selectedEvent}
-                  foodInstances={foodInstances}
-                  loadingInstances={loadingInstances}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                  onDragStart={handleDragStart}
-                  onDragEnd={handleDragEnd}
-                  onDeleteInstance={handleDeleteInstance}
-                  onUpdateInstance={handleUpdateInstance}
-                  onClickHoldCreate={handleClickHoldCreate}
-                  timelineStyle={timelineStyle}
-                  categoryColors={categoryColors}
-                />
+              <>
+                {isMobile && (
+                  <div className="mobile-timeline-header">
+                    <div className="timeline-header-row">
+                      <h4>FUEL TIMELINE</h4>
+                      <span className="timeline-item-count">{foodInstances.length} items</span>
+                    </div>
+                    <div className="timeline-legend">
+                      {Array.from(new Set(foodInstances.map(fi => fi.foodItem.category).filter(Boolean))).map(category => {
+                        const color = categoryColors.get(category!) || '#646cff';
+                        return (
+                          <div key={category} className="legend-item">
+                            <span
+                              className="legend-color"
+                              style={{ backgroundColor: color }}
+                            ></span>
+                            <span className="legend-label">
+                              {category!.charAt(0).toUpperCase() + category!.slice(1).toLowerCase().replace(/_/g, ' ')}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                <div className="event-timeline-container" ref={timelineContainerRef}>
+                  <EventTimeline
+                    event={selectedEvent}
+                    foodInstances={foodInstances}
+                    loadingInstances={loadingInstances}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    onDeleteInstance={handleDeleteInstance}
+                    onUpdateInstance={handleUpdateInstance}
+                    onClickHoldCreate={handleClickHoldCreate}
+                    timelineStyle={timelineStyle}
+                    categoryColors={categoryColors}
+                    viewOnly={isMobile && !isFullscreen}
+                  />
 
-                <NutritionSummary
-                  event={selectedEvent}
-                  foodInstances={foodInstances}
-                  timelineStyle={timelineStyle}
-                  userId={user.sub}
-                  goalsRefreshTrigger={goalsRefreshTrigger}
-                  scrollContainerRef={timelineContainerRef}
-                />
-              </div>
+                  {!isMobile && (
+                    <NutritionSummary
+                      event={selectedEvent}
+                      foodInstances={foodInstances}
+                      timelineStyle={timelineStyle}
+                      userId={user.sub}
+                      goalsRefreshTrigger={goalsRefreshTrigger}
+                      scrollContainerRef={timelineContainerRef}
+                    />
+                  )}
+                </div>
+                {isMobile && (
+                  <div className="mobile-edit-fuel-plan-container">
+                    <button
+                      onClick={() => setIsFullscreen(true)}
+                      className="edit-fuel-plan-btn"
+                    >
+                      <i className="pi pi-pencil"></i> Edit Fuel Plan
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
