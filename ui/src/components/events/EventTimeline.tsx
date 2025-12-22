@@ -53,6 +53,7 @@ interface EventTimelineProps {
   onClickHoldCreate?: (timeInSeconds: number) => void;
   timelineStyle?: React.CSSProperties;
   categoryColors?: Map<string, string>;
+  viewOnly?: boolean;
 }
 
 const formatTimeHHMM = (seconds: number) => {
@@ -65,9 +66,9 @@ const formatTimeHHMM = (seconds: number) => {
 };
 
 // Calculate horizontal offsets for overlapping instances
-const calculateHorizontalOffsets = (instances: FoodInstance[], event: Event) => {
-  const ITEM_HEIGHT_PERCENT = 8; // Approximate height of each box as percentage of timeline
-  const ITEM_WIDTH_PX = 180; // Fixed width in pixels
+const calculateHorizontalOffsets = (instances: FoodInstance[], event: Event, viewOnly: boolean = false) => {
+  const ITEM_HEIGHT_PERCENT = viewOnly ? 2 : 8; // Much smaller in view-only mode
+  const ITEM_WIDTH_PX = viewOnly ? 95 : 180; // Narrower width in view-only mode
   const PRE_START_TIME = 0.25 * 3600; // 0.25 hours in seconds
   const POST_END_TIME = 0.25 * 3600; // 0.25 hours in seconds
   const totalTimelineDuration = event.expected_duration + PRE_START_TIME + POST_END_TIME;
@@ -131,7 +132,8 @@ export const EventTimeline = ({
   onUpdateInstance,
   onClickHoldCreate,
   timelineStyle,
-  categoryColors
+  categoryColors,
+  viewOnly = false
 }: EventTimelineProps) => {
   const [hoveredInstanceId, setHoveredInstanceId] = useState<string | null>(null);
   const [editingInstanceId, setEditingInstanceId] = useState<string | null>(null);
@@ -179,10 +181,10 @@ export const EventTimeline = ({
     return dividers;
   };
 
-  const horizontalOffsets = calculateHorizontalOffsets(foodInstances, event);
+  const horizontalOffsets = calculateHorizontalOffsets(foodInstances, event, viewOnly);
 
   // Calculate minimum width needed to show all food instances
-  const ITEM_WIDTH_PX = 180;
+  const ITEM_WIDTH_PX = viewOnly ? 95 : 180;
   const maxOffset = Math.max(0, ...Object.values(horizontalOffsets));
   const minTimelineWidth = maxOffset + ITEM_WIDTH_PX + 20; // Add 20px padding on the right
 
@@ -230,6 +232,11 @@ export const EventTimeline = ({
 
   // Handler for click on timeline (to create new food instance)
   const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Don't trigger if view-only mode
+    if (viewOnly) {
+      return;
+    }
+
     // Don't trigger if user was dragging
     if (isDragging) {
       return;
@@ -237,7 +244,7 @@ export const EventTimeline = ({
 
     // Only trigger if clicking on the timeline background (not on food instances)
     if ((e.target as HTMLElement).classList.contains('event-timeline') ||
-        (e.target as HTMLElement).classList.contains('timeline-divider')) {
+      (e.target as HTMLElement).classList.contains('timeline-divider')) {
 
       if (onClickHoldCreate) {
         // Calculate time based on click position
@@ -255,6 +262,11 @@ export const EventTimeline = ({
 
   // Handler to enter edit mode for an instance
   const handleDoubleClick = (instance: FoodInstance) => {
+    // Don't allow editing in view-only mode
+    if (viewOnly) {
+      return;
+    }
+
     setEditingInstanceId(instance.id);
     // Convert seconds to HH:MM format
     const hours = Math.floor(instance.time_elapsed_at_consumption / 3600);
@@ -290,6 +302,9 @@ export const EventTimeline = ({
 
   // Touch event handlers for mobile drag and drop
   const handleTouchStart = (e: TouchEvent<HTMLDivElement>, instanceId: string, currentTop: number) => {
+    // Don't allow dragging in view-only mode
+    if (viewOnly) return;
+
     if (editingInstanceId) return; // Don't start drag if editing
 
     const touch = e.touches[0];
@@ -301,8 +316,8 @@ export const EventTimeline = ({
     const syntheticDragEvent = {
       currentTarget: element,
       clientY: touch.clientY,
-      preventDefault: () => {},
-      stopPropagation: () => {},
+      preventDefault: () => { },
+      stopPropagation: () => { },
     } as unknown as DragEvent;
 
     onDragStart(syntheticDragEvent, instanceId, currentTop);
@@ -336,7 +351,7 @@ export const EventTimeline = ({
 
     // Create a synthetic DragEvent to reuse existing drop logic
     const syntheticEvent = {
-      preventDefault: () => {},
+      preventDefault: () => { },
       currentTarget: timeline,
       clientY: touch.clientY,
     } as unknown as DragEvent;
@@ -385,7 +400,7 @@ export const EventTimeline = ({
       >
         {loadingInstances ? (
           <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255, 255, 255, 0.6)' }}>
-            Loading food instances...
+            Loading fueling details...
           </div>
         ) : (
           <>
@@ -463,12 +478,12 @@ export const EventTimeline = ({
                 <div
                   key={instance.id}
                   className="food-instance-box"
-                  draggable={!isEditing}
-                  onDragStart={(e) => !isEditing ? onDragStart(e, instance.id, position) : undefined}
+                  draggable={!isEditing && !viewOnly}
+                  onDragStart={(e) => !isEditing && !viewOnly ? onDragStart(e, instance.id, position) : undefined}
                   onDragEnd={onDragEnd}
-                  onTouchStart={(e) => !isEditing ? handleTouchStart(e, instance.id, position) : undefined}
+                  onTouchStart={(e) => !isEditing && !viewOnly ? handleTouchStart(e, instance.id, position) : undefined}
                   onMouseEnter={() => {
-                    if (!isEditing) {
+                    if (!isEditing && !viewOnly) {
                       setHoveredInstanceId(instance.id);
                       setIsHoveringInstance(true);
                     }
@@ -477,7 +492,7 @@ export const EventTimeline = ({
                     setHoveredInstanceId(null);
                     setIsHoveringInstance(false);
                   }}
-                  onDoubleClick={() => !isEditing && handleDoubleClick(instance)}
+                  onDoubleClick={() => !isEditing && !viewOnly && handleDoubleClick(instance)}
                   style={visualStyle}
                 >
                   <div
@@ -487,7 +502,7 @@ export const EventTimeline = ({
                       borderColor
                     }}
                   >
-                    {!isEditing && (
+                    {!isEditing && !viewOnly && (
                       <button
                         className="delete-instance-btn"
                         onClick={(e) => {
@@ -541,6 +556,9 @@ export const EventTimeline = ({
                           ✓
                         </button>
                       </div>
+                    ) : viewOnly ? (
+                      // View-only mode - no text, just colored bar
+                      null
                     ) : (
                       // Normal display - show item name and timestamp
                       <div className="food-instance-name">
@@ -550,7 +568,7 @@ export const EventTimeline = ({
                     )}
                   </div>
 
-                  {isHovered && !isEditing && (
+                  {isHovered && !isEditing && !viewOnly && (
                     <div className="food-instance-tooltip">
                       <div className="tooltip-header">
                         <strong>{instance.foodItem.item_name}</strong>
@@ -584,7 +602,7 @@ export const EventTimeline = ({
             })}
 
             {/* Timeline elapsed time tooltip - show when not hovering over an instance */}
-            {timelineHoverPosition && !isHoveringInstance && (
+            {timelineHoverPosition && !isHoveringInstance && !viewOnly && (
               <div
                 className="timeline-elapsed-tooltip"
                 style={{
