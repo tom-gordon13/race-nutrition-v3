@@ -89,12 +89,14 @@ interface FoodItemsProps {
   refreshTrigger?: number;
 }
 
+type ViewMode = 'my_items' | 'all_items' | 'favorites';
+
 const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
   const { user } = useAuth0();
   const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [myItemsOnly, setMyItemsOnly] = useState(true);
+  const [viewMode, setViewMode] = useState<ViewMode>('my_items');
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<FoodItem | null>(null);
   const [editedData, setEditedData] = useState<Partial<FoodItem>>({});
@@ -105,6 +107,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isEditingCost, setIsEditingCost] = useState(false);
   const [favoriteFoodItemIds, setFavoriteFoodItemIds] = useState<Set<string>>(new Set());
+  const [favoriteFoodItems, setFavoriteFoodItems] = useState<FoodItem[]>([]);
 
   // Detect mobile screen size
   useEffect(() => {
@@ -169,7 +172,9 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
 
         const data = await response.json();
         const favoriteIds = new Set<string>(data.favorites.map((fav: any) => fav.food_item_id as string));
+        const favItems: FoodItem[] = data.favorites.map((fav: any) => fav.foodItem);
         setFavoriteFoodItemIds(favoriteIds);
+        setFavoriteFoodItems(favItems);
       } catch (err) {
         console.error('Error fetching favorites:', err);
       }
@@ -185,7 +190,15 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
         return;
       }
 
+      // If we're in favorites mode, use the favorited items instead
+      if (viewMode === 'favorites') {
+        setFoodItems(favoriteFoodItems);
+        setLoading(false);
+        return;
+      }
+
       try {
+        const myItemsOnly = viewMode === 'my_items';
         const response = await fetch(
           `${API_URL}/api/food-items?auth0_sub=${encodeURIComponent(user.sub)}&my_items_only=${myItemsOnly}`
         );
@@ -205,7 +218,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
     };
 
     fetchFoodItems();
-  }, [user, refreshTrigger, myItemsOnly]);
+  }, [user, refreshTrigger, viewMode, favoriteFoodItems]);
 
   // Template for nutrients column
   const nutrientsBodyTemplate = (rowData: FoodItem) => {
@@ -317,11 +330,23 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
       setIsEditingCost(false);
 
       // Trigger a re-fetch
-      const fetchResponse = await fetch(
-        `${API_URL}/api/food-items?auth0_sub=${encodeURIComponent(user!.sub!)}&my_items_only=${myItemsOnly}`
-      );
-      const data = await fetchResponse.json();
-      setFoodItems(data.foodItems);
+      if (viewMode === 'favorites') {
+        // Re-fetch favorites
+        const favResponse = await fetch(
+          `${API_URL}/api/favorite-food-items?auth0_sub=${encodeURIComponent(user!.sub!)}`
+        );
+        const favData = await favResponse.json();
+        const favItems: FoodItem[] = favData.favorites.map((fav: any) => fav.foodItem);
+        setFavoriteFoodItems(favItems);
+        setFoodItems(favItems);
+      } else {
+        const myItemsOnly = viewMode === 'my_items';
+        const fetchResponse = await fetch(
+          `${API_URL}/api/food-items?auth0_sub=${encodeURIComponent(user!.sub!)}&my_items_only=${myItemsOnly}`
+        );
+        const data = await fetchResponse.json();
+        setFoodItems(data.foodItems);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update food item');
       console.error('Error updating food item:', err);
@@ -450,36 +475,50 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
         <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600, color: '#000000' }}>
-          {myItemsOnly ? 'My Food Items' : 'All Food Items'}
+          {viewMode === 'my_items' ? 'My Food Items' : viewMode === 'all_items' ? 'All Food Items' : 'Favorite Food Items'}
         </h3>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button
-            onClick={() => setMyItemsOnly(true)}
+            onClick={() => setViewMode('my_items')}
             style={{
               padding: '0.5rem 1rem',
-              backgroundColor: myItemsOnly ? '#646cff' : 'rgba(0, 0, 0, 0.1)',
-              color: myItemsOnly ? 'white' : '#646cff',
+              backgroundColor: viewMode === 'my_items' ? '#646cff' : 'rgba(0, 0, 0, 0.1)',
+              color: viewMode === 'my_items' ? 'white' : '#646cff',
               border: `1px solid #646cff`,
               borderRadius: '4px',
               cursor: 'pointer',
-              fontWeight: myItemsOnly ? 600 : 400
+              fontWeight: viewMode === 'my_items' ? 600 : 400
             }}
           >
             My Items
           </button>
           <button
-            onClick={() => setMyItemsOnly(false)}
+            onClick={() => setViewMode('all_items')}
             style={{
               padding: '0.5rem 1rem',
-              backgroundColor: !myItemsOnly ? '#646cff' : 'rgba(0, 0, 0, 0.1)',
-              color: !myItemsOnly ? 'white' : '#646cff',
+              backgroundColor: viewMode === 'all_items' ? '#646cff' : 'rgba(0, 0, 0, 0.1)',
+              color: viewMode === 'all_items' ? 'white' : '#646cff',
               border: `1px solid #646cff`,
               borderRadius: '4px',
               cursor: 'pointer',
-              fontWeight: !myItemsOnly ? 600 : 400
+              fontWeight: viewMode === 'all_items' ? 600 : 400
             }}
           >
             All Items
+          </button>
+          <button
+            onClick={() => setViewMode('favorites')}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: viewMode === 'favorites' ? '#646cff' : 'rgba(0, 0, 0, 0.1)',
+              color: viewMode === 'favorites' ? 'white' : '#646cff',
+              border: `1px solid #646cff`,
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: viewMode === 'favorites' ? 600 : 400
+            }}
+          >
+            Favorites
           </button>
         </div>
       </div>

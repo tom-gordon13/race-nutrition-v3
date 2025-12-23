@@ -2288,6 +2288,18 @@ tbody tr.selected {
     max-height: 350px;
     /* Fixed compact height for zoomed-out view */
     min-height: 350px;
+    height: 350px;
+  }
+
+  /* Ensure the timeline itself has proper height for positioning */
+  .event-detail-content.mobile-condensed-view .event-timeline {
+    height: 350px !important;
+    min-height: 350px !important;
+  }
+
+  .event-detail-content.mobile-condensed-view .timeline-y-axis {
+    height: 350px !important;
+    min-height: 350px !important;
   }
 
   /* Fullscreen mode takes full screen */

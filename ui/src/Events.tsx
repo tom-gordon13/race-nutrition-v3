@@ -10,6 +10,7 @@ import {
   EventTimeline,
   NutritionSummary,
   FoodItemSelectionModal,
+  type ItemFilterMode,
   NutrientGoalsDialog,
   EditEventDialog,
   CreateEventDialog,
@@ -104,6 +105,7 @@ const Events = () => {
   const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
   const [myItemsOnly, setMyItemsOnly] = useState<boolean>(true);
+  const [itemFilterMode, setItemFilterMode] = useState<ItemFilterMode>('my_items');
 
   // Form state
   const [showCreateDialog, setShowCreateDialog] = useState(false);

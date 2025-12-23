@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+export type ItemFilterMode = 'my_items' | 'favorites';
+
 interface FoodItemNutrient {
   id: string;
   food_item_id: string;
@@ -28,10 +30,12 @@ interface FoodItemSelectionModalProps {
   timeInSeconds: number;
   categoryFilter: string;
   myItemsOnly: boolean;
+  itemFilterMode: ItemFilterMode;
   onClose: () => void;
   onSelect: (foodItemId: string, servings: number, timeInSeconds: number) => void;
   onCategoryFilterChange: (category: string) => void;
   onMyItemsOnlyChange: (myItemsOnly: boolean) => void;
+  onItemFilterModeChange: (mode: ItemFilterMode) => void;
   categoryColors?: Map<string, string>;
 }
 
@@ -55,10 +59,12 @@ export const FoodItemSelectionModal = ({
   timeInSeconds,
   categoryFilter,
   myItemsOnly,
+  itemFilterMode,
   onClose,
   onSelect,
   onCategoryFilterChange,
   onMyItemsOnlyChange,
+  onItemFilterModeChange,
   categoryColors
 }: FoodItemSelectionModalProps) => {
   const navigate = useNavigate();
@@ -155,12 +161,29 @@ export const FoodItemSelectionModal = ({
               <div className="my-items-filter">
                 <label className="checkbox-label">
                   <input
-                    type="checkbox"
+                    type="radio"
                     className="checkbox-input"
-                    checked={myItemsOnly}
-                    onChange={(e) => onMyItemsOnlyChange(e.target.checked)}
+                    name="item-filter"
+                    checked={itemFilterMode === 'my_items'}
+                    onChange={() => {
+                      onItemFilterModeChange('my_items');
+                      onMyItemsOnlyChange(true);
+                    }}
                   />
                   <span className="checkbox-text">My Items Only</span>
+                </label>
+                <label className="checkbox-label" style={{ marginLeft: '1rem' }}>
+                  <input
+                    type="radio"
+                    className="checkbox-input"
+                    name="item-filter"
+                    checked={itemFilterMode === 'favorites'}
+                    onChange={() => {
+                      onItemFilterModeChange('favorites');
+                      onMyItemsOnlyChange(false);
+                    }}
+                  />
+                  <span className="checkbox-text">Favorited Items</span>
                 </label>
               </div>
 

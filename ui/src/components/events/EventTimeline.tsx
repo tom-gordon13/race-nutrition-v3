@@ -439,9 +439,10 @@ export const EventTimeline = ({
                 position: 'absolute',
                 top: `${position}%`,
                 left: `${leftOffset}px`,
-                width: '180px',
-                cursor: isEditing ? 'default' : 'grab',
-                touchAction: isEditing ? 'auto' : 'none',
+                width: viewOnly ? '95px' : '180px',
+                cursor: isEditing ? 'default' : (viewOnly ? 'default' : 'grab'),
+                touchAction: isEditing ? 'auto' : (viewOnly ? 'auto' : 'none'),
+                zIndex: viewOnly ? 100 : undefined, // Ensure visibility in view-only mode
               };
 
               // Override position if this instance is being touch-dragged
@@ -464,15 +465,19 @@ export const EventTimeline = ({
               // Determine background and border color
               const backgroundColor = isEditing
                 ? 'rgba(255, 140, 60, 0.4)'  // Keep orange for editing
-                : categoryColor
-                  ? `${categoryColor}B3`  // Add B3 for 70% opacity (hex for 0.7 alpha)
-                  : 'rgba(100, 108, 255, 0.7)';  // Default blue if no preference
+                : viewOnly
+                  ? (categoryColor || '#646cff')  // Full opacity in view-only mode
+                  : categoryColor
+                    ? `${categoryColor}B3`
+                    : 'rgba(100, 108, 255, 0.7)';
 
               const borderColor = isEditing
                 ? '#ff8c3c'
-                : categoryColor
-                  ? categoryColor
-                  : '#646cff';
+                : viewOnly
+                  ? (categoryColor || '#646cff')
+                  : categoryColor
+                    ? categoryColor
+                    : '#646cff';
 
               return (
                 <div
@@ -499,7 +504,17 @@ export const EventTimeline = ({
                     className={`food-instance-content ${isEditing ? 'instance-editing' : ''}`}
                     style={{
                       backgroundColor,
-                      borderColor
+                      borderColor,
+                      ...(viewOnly && {
+                        minHeight: '12px',
+                        height: '12px',
+                        display: 'block',
+                        padding: 0,
+                        borderWidth: '2px',
+                        borderStyle: 'solid',
+                        boxSizing: 'border-box',
+                        opacity: 1
+                      })
                     }}
                   >
                     {!isEditing && !viewOnly && (
@@ -557,8 +572,8 @@ export const EventTimeline = ({
                         </button>
                       </div>
                     ) : viewOnly ? (
-                      // View-only mode - no text, just colored bar
-                      null
+                      // View-only mode - simple spacer to maintain dimensions
+                      ' '
                     ) : (
                       // Normal display - show item name and timestamp
                       <div className="food-instance-name">
