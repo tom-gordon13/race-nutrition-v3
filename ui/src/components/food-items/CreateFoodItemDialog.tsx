@@ -34,6 +34,26 @@ interface Nutrient {
   nutrient_abbreviation: string;
 }
 
+// Map nutrient names to their standard units
+const getNutrientUnit = (nutrientName: string): string => {
+  const name = nutrientName.toLowerCase();
+
+  // Milligram nutrients
+  if (name.includes('sodium') ||
+      name.includes('potassium') ||
+      name.includes('caffeine') ||
+      name.includes('calcium') ||
+      name.includes('iron') ||
+      name.includes('magnesium') ||
+      name.includes('zinc') ||
+      name.includes('vitamin')) {
+    return 'mg';
+  }
+
+  // Gram nutrients (default for most macros)
+  return 'g';
+};
+
 interface FoodItemNutrient {
   nutrient_id: string;
   quantity: number | string;
@@ -104,7 +124,7 @@ export const CreateFoodItemDialog: React.FC<CreateFoodItemDialogProps> = ({
   }, [visible]);
 
   const addNutrientRow = () => {
-    setNutrients([...nutrients, { nutrient_id: '', quantity: '', unit: 'g' }]);
+    setNutrients([...nutrients, { nutrient_id: '', quantity: '', unit: '' }]);
   };
 
   const removeNutrientRow = (index: number) => {
@@ -461,9 +481,11 @@ export const CreateFoodItemDialog: React.FC<CreateFoodItemDialogProps> = ({
                     value={nutrient.nutrient_id}
                     onChange={(e) => {
                       updateNutrient(index, 'nutrient_id', e.value);
-                      // Default to 'g' if unit not set
-                      if (!nutrient.unit) {
-                        updateNutrient(index, 'unit', 'g');
+                      // Auto-set unit based on nutrient type
+                      const selectedNutrient = availableNutrients.find(n => n.id === e.value);
+                      if (selectedNutrient) {
+                        const unit = getNutrientUnit(selectedNutrient.nutrient_name);
+                        updateNutrient(index, 'unit', unit);
                       }
                     }}
                     options={availableNutrients.map((n) => ({
@@ -510,29 +532,15 @@ export const CreateFoodItemDialog: React.FC<CreateFoodItemDialogProps> = ({
                       backgroundColor: 'transparent'
                     }}
                   />
-                  <Dropdown
-                    value={nutrient.unit}
-                    onChange={(e) => updateNutrient(index, 'unit', e.value)}
-                    options={[
-                      { label: 'g', value: 'g' },
-                      { label: 'mg', value: 'mg' }
-                    ]}
-                    style={{
-                      width: '60px',
-                      border: 'none',
-                      backgroundColor: 'transparent'
-                    }}
-                    pt={{
-                      input: { style: {
-                        fontSize: '0.875rem',
-                        fontWeight: 600,
-                        color: '#6b7280',
-                        padding: 0,
-                        border: 'none'
-                      }},
-                      trigger: { style: { display: 'none' } }
-                    }}
-                  />
+                  <span style={{
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: '#6b7280',
+                    minWidth: '30px',
+                    textAlign: 'left'
+                  }}>
+                    {nutrient.unit || '-'}
+                  </span>
                 </div>
 
                 {/* Delete Button */}

@@ -39,6 +39,26 @@ interface Nutrient {
   nutrient_abbreviation: string;
 }
 
+// Map nutrient names to their standard units
+const getNutrientUnit = (nutrientName: string): string => {
+  const name = nutrientName.toLowerCase();
+
+  // Milligram nutrients
+  if (name.includes('sodium') ||
+      name.includes('potassium') ||
+      name.includes('caffeine') ||
+      name.includes('calcium') ||
+      name.includes('iron') ||
+      name.includes('magnesium') ||
+      name.includes('zinc') ||
+      name.includes('vitamin')) {
+    return 'mg';
+  }
+
+  // Gram nutrients (default for most macros)
+  return 'g';
+};
+
 interface EditableFoodItemNutrient {
   id?: string;
   nutrient_id: string;
@@ -235,14 +255,14 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
     }));
 
     // If no nutrients exist, add an empty row
-    setEditedNutrients(existingNutrients.length > 0 ? existingNutrients : [{ nutrient_id: '', quantity: '', unit: 'g' }]);
+    setEditedNutrients(existingNutrients.length > 0 ? existingNutrients : [{ nutrient_id: '', quantity: '', unit: '' }]);
     setIsEditingCost(false);
     setShowEditDialog(true);
   }, []);
 
   // Nutrient management functions
   const addNutrientRow = () => {
-    setEditedNutrients([...editedNutrients, { nutrient_id: '', quantity: '', unit: 'g' }]);
+    setEditedNutrients([...editedNutrients, { nutrient_id: '', quantity: '', unit: '' }]);
   };
 
   const removeNutrientRow = (index: number) => {
@@ -837,9 +857,11 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
                       value={nutrient.nutrient_id}
                       onChange={(e) => {
                         updateNutrient(index, 'nutrient_id', e.value);
-                        // Default to 'g' if unit not set
-                        if (!nutrient.unit) {
-                          updateNutrient(index, 'unit', 'g');
+                        // Auto-set unit based on nutrient type
+                        const selectedNutrient = availableNutrients.find(n => n.id === e.value);
+                        if (selectedNutrient) {
+                          const unit = getNutrientUnit(selectedNutrient.nutrient_name);
+                          updateNutrient(index, 'unit', unit);
                         }
                       }}
                       options={availableNutrients.map((n) => ({
@@ -872,10 +894,6 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
                       value={typeof nutrient.quantity === 'string' ? parseFloat(nutrient.quantity) || undefined : nutrient.quantity}
                       onValueChange={(e) => {
                         updateNutrient(index, 'quantity', e.value || '');
-                        // Ensure unit is set
-                        if (!nutrient.unit) {
-                          updateNutrient(index, 'unit', 'g');
-                        }
                       }}
                       placeholder="0"
                       minFractionDigits={0}
@@ -893,9 +911,10 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
                     <span style={{
                       fontSize: '0.875rem',
                       fontWeight: 600,
-                      color: '#6b7280'
+                      color: '#6b7280',
+                      minWidth: '30px'
                     }}>
-                      g
+                      {nutrient.unit || '-'}
                     </span>
                   </div>
 
