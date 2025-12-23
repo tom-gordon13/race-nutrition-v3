@@ -58,7 +58,7 @@ export const FoodItemSelectionModal = ({
   foodItems,
   timeInSeconds,
   categoryFilter,
-  myItemsOnly,
+  myItemsOnly: _myItemsOnly,
   itemFilterMode,
   onClose,
   onSelect,

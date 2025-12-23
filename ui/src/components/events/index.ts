@@ -11,3 +11,5 @@ export { EventAnalyticsDialog } from './EventAnalyticsDialog';
 export { ShareEventDialog } from './ShareEventDialog';
 export { PendingEventsTable } from './PendingEventsTable';
 export { AcceptSharedEventDialog } from './AcceptSharedEventDialog';
+export { ItemListDialog } from './ItemListDialog';
+export { FoodItemDetailsDialog } from './FoodItemDetailsDialog';

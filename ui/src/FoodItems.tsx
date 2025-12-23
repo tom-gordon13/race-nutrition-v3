@@ -439,8 +439,8 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
 
   // Template for actions column
   const actionsBodyTemplate = (rowData: FoodItem) => {
-    // If we're in "My Items" mode, all items are owned by the user
-    if (!myItemsOnly && !isOwnedByUser(rowData)) {
+    // If we're not in "My Items" mode, only show edit for items owned by the user
+    if (viewMode !== 'my_items' && !isOwnedByUser(rowData)) {
       return null;
     }
 

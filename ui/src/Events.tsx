@@ -17,7 +17,9 @@ import {
   EventAnalyticsDialog,
   ShareEventDialog,
   PendingEventsTable,
-  AcceptSharedEventDialog
+  AcceptSharedEventDialog,
+  ItemListDialog,
+  FoodItemDetailsDialog
 } from './components/events';
 import { API_URL } from './config/api';
 
@@ -129,6 +131,13 @@ const Events = () => {
   // State for analytics dialog
   const [showAnalyticsDialog, setShowAnalyticsDialog] = useState(false);
 
+  // State for item list dialog
+  const [showItemListDialog, setShowItemListDialog] = useState(false);
+
+  // State for food item details dialog
+  const [showFoodItemDetailsDialog, setShowFoodItemDetailsDialog] = useState(false);
+  const [selectedFoodItem, setSelectedFoodItem] = useState<FoodItem | null>(null);
+
   // State for share event dialog
   const [showShareEventDialog, setShowShareEventDialog] = useState(false);
 
@@ -226,14 +235,29 @@ const Events = () => {
     if (!user || !user.sub) return;
 
     try {
-      const response = await fetch(`${API_URL}/api/food-items?auth0_sub=${encodeURIComponent(user.sub)}&my_items_only=${myItemsOnly}`);
+      let response;
+      if (itemFilterMode === 'favorites') {
+        // Fetch favorited food items
+        response = await fetch(`${API_URL}/api/favorite-food-items?auth0_sub=${encodeURIComponent(user.sub)}`);
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch food items');
+        if (!response.ok) {
+          throw new Error('Failed to fetch favorite food items');
+        }
+
+        const data = await response.json();
+        const favItems = data.favorites.map((fav: any) => fav.foodItem);
+        setFoodItems(favItems);
+      } else {
+        // Fetch regular food items
+        response = await fetch(`${API_URL}/api/food-items?auth0_sub=${encodeURIComponent(user.sub)}&my_items_only=${myItemsOnly}`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch food items');
+        }
+
+        const data = await response.json();
+        setFoodItems(data.foodItems);
       }
-
-      const data = await response.json();
-      setFoodItems(data.foodItems);
     } catch (err) {
       console.error('Error fetching food items:', err);
     }
@@ -243,7 +267,7 @@ const Events = () => {
     if (showFoodItemModal) {
       fetchFoodItems();
     }
-  }, [showFoodItemModal, myItemsOnly]);
+  }, [showFoodItemModal, myItemsOnly, itemFilterMode]);
 
   // Handler for selecting an event (updates state and URL)
   const handleSelectEvent = (event: Event | null) => {
@@ -775,6 +799,12 @@ const Events = () => {
                 >
                   Analytics
                 </button>
+                <button
+                  onClick={() => setShowItemListDialog(true)}
+                  className="add-nutrient-btn"
+                >
+                  View Item List
+                </button>
               </div>
             </div>
           </div>
@@ -902,10 +932,12 @@ const Events = () => {
         timeInSeconds={modalTimeInSeconds}
         categoryFilter={categoryFilter}
         myItemsOnly={myItemsOnly}
+        itemFilterMode={itemFilterMode}
         onClose={() => setShowFoodItemModal(false)}
         onSelect={handleFoodItemSelect}
         onCategoryFilterChange={setCategoryFilter}
         onMyItemsOnlyChange={setMyItemsOnly}
+        onItemFilterModeChange={setItemFilterMode}
         categoryColors={categoryColors}
       />
 
@@ -976,6 +1008,29 @@ const Events = () => {
         }}
         onAccept={handleAcceptSharedEvent}
         onDeny={handleDenySharedEvent}
+      />
+
+      {/* Item List Dialog */}
+      <ItemListDialog
+        visible={showItemListDialog}
+        foodInstances={foodInstances}
+        onHide={() => setShowItemListDialog(false)}
+        onItemClick={(foodItem) => {
+          setSelectedFoodItem(foodItem);
+          setShowFoodItemDetailsDialog(true);
+        }}
+        categoryColors={categoryColors}
+      />
+
+      {/* Food Item Details Dialog */}
+      <FoodItemDetailsDialog
+        visible={showFoodItemDetailsDialog}
+        foodItem={selectedFoodItem}
+        onHide={() => {
+          setShowFoodItemDetailsDialog(false);
+          setSelectedFoodItem(null);
+        }}
+        categoryColors={categoryColors}
       />
     </div>
   );
