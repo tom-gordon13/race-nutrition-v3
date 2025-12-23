@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Dialog } from 'primereact/dialog';
-import { Tag } from 'primereact/tag';
 import './FoodItemDetailsDialog.css';
 
 interface FoodItemNutrient {
