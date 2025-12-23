@@ -3,8 +3,7 @@
   margin: 0;
   padding: 0;
   text-align: center;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
 }
 
 .logo {
@@ -62,7 +61,7 @@
 
 /* App layout */
 .app {
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -155,8 +154,6 @@
 /* Main content - remaining 90% */
 .main-content {
   flex: 1;
-  height: 100vh;
-  overflow-y: auto;
   box-sizing: border-box;
   width: 100%;
   padding: 0;
@@ -519,7 +516,7 @@ tbody tr:last-child td {
   /* Prevent horizontal scrolling and add bottom padding for bottom nav */
   body {
     overflow-x: hidden !important;
-    padding-bottom: 60px; /* Height of bottom nav */
+    padding-bottom: 75px; /* Height of bottom nav */
   }
 
   .nav:not(.nav-mobile) {
@@ -788,27 +785,42 @@ tbody tr:last-child td {
   }
 }
 
-/* Events route container */
+/* Events route container - allow dynamic height */
 .events-route-container {
   max-width: 100%;
   margin: 0 auto;
   padding: 0.5rem;
-  height: 100vh;
-  overflow: hidden;
+  min-height: calc(100vh - 10rem);
 }
 
-/* Users route container */
+/* Users route container - dynamic height */
 .users-route-container {
   max-width: 98%;
   margin: 0 auto;
   padding: 2rem;
-  height: calc(99vh - 4rem);
+  min-height: auto;
 }
 
-/* Events split-panel layout */
+/* Users card - allow dynamic height based on content */
+.users-card {
+  height: auto;
+  min-height: 300px;
+}
+
+.users-card .p-card-body,
+.users-card .p-card-content {
+  overflow: visible;
+}
+
+.users-card .p-datatable-wrapper {
+  max-height: calc(100vh - 20rem);
+  overflow-y: auto;
+}
+
+/* Events split-panel layout - dynamic height */
 .events-container {
   width: 100%;
-  height: calc(100vh - 1rem);
+  min-height: calc(100vh - 10rem);
   display: flex;
   gap: 0.5rem;
   transition: all 0.4s ease;
@@ -819,6 +831,7 @@ tbody tr:last-child td {
   width: 100%;
   transition: all 0.4s ease;
   overflow: visible;
+  min-height: auto;
 }
 
 .events-container.split-view .events-panel {
@@ -870,11 +883,25 @@ tbody tr:last-child td {
   transform: translateY(-50%) scale(1.05);
 }
 
-/* Events table container with scrolling */
+/* Events table container - dynamic height */
 .events-table-container {
-  max-height: calc(89vh - 10rem);
-  overflow-y: auto;
   margin-top: 1rem;
+}
+
+/* Events panel card - dynamic height */
+.events-panel .p-card {
+  height: auto;
+  min-height: 300px;
+}
+
+.events-panel .p-card-body,
+.events-panel .p-card-content {
+  overflow: visible;
+}
+
+.events-panel .p-datatable-wrapper {
+  max-height: calc(100vh - 20rem);
+  overflow-y: auto;
 }
 
 /* Highlighted selected row */
@@ -2033,21 +2060,27 @@ tbody tr.selected {
     max-width: 100%;
     padding: 0.25rem;
     margin: 0;
-    height: 100vh;
-    overflow: hidden;
+    min-height: auto;
   }
 
   .users-route-container {
     max-width: 100%;
     padding: 1rem 2px 0 2px;
     margin: 0;
+    min-height: auto;
+  }
+
+  /* Allow tables to be dynamic on mobile */
+  .users-card .p-datatable-wrapper {
+    max-height: none;
+    overflow-y: visible;
   }
 
   .events-container {
     margin: 0;
     width: 100%;
     gap: 0.25rem;
-    height: calc(100vh - 0.5rem);
+    min-height: auto;
   }
 
   .events-container.split-view {

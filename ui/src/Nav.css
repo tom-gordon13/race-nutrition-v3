@@ -1,4 +1,4 @@
-/* Nav layout */
+/* Nav layout - sticky on scroll */
 .nav {
   background-color: #f3f0ff;
   border-bottom: 1px solid #e5e7eb;
@@ -6,6 +6,9 @@
   width: 100%;
   min-height: fit-content;
   height: auto;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .nav-content {
@@ -69,10 +72,12 @@
 /* Mobile responsive layout - Bottom Navigation */
 @media (max-width: 768px) {
   .nav-mobile {
-    position: static;
+    position: sticky;
+    top: 0;
     border-bottom: 1px solid #e5e7eb;
     padding: 0.75rem 1rem;
     background-color: #f3f0ff;
+    z-index: 100;
   }
 
   .nav-mobile .nav-content {
@@ -143,15 +148,15 @@
 
   /* Strava-style bottom nav buttons */
   .bottom-tabmenu .p-menuitem-link {
-    padding: 0.75rem 0.5rem !important;
+    padding: 0.875rem 0.5rem !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 0.25rem !important;
+    gap: 0.375rem !important;
     border: none !important;
     background-color: #ffffff !important;
-    min-height: 60px !important;
+    min-height: 75px !important;
   }
 
   .bottom-tabmenu .p-menuitem-icon {
