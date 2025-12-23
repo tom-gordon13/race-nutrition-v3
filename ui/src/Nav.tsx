@@ -139,46 +139,70 @@ const Nav = ({ className = "" }: NavProps) => {
     return () => clearTimeout(timeout);
   }, [isMenuOpen]);
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
-    <nav className={`nav ${className}`}>
-      <div className="nav-content">
-        <div className="nav-top-row-wrapper">
-          <div className="nav-brand">
-            <h2>RaceFuel</h2>
-          </div>
-          <div className="nav-right">
-            <div
-              ref={userDivRef}
-              className="nav-user"
-              onMouseEnter={handleUserMouseEnter}
-              onMouseLeave={handleUserMouseLeave}
-            >
-              <Avatar
-                label={user?.name?.charAt(0).toUpperCase()}
-                icon="pi pi-user"
-                style={{ backgroundColor: '#646cff', color: 'white' }}
-                shape="circle"
-              />
-              <span className="user-greeting">Hello, {user?.name}</span>
-              <i className="pi pi-chevron-down" style={{ color: '#646cff', fontSize: '0.75rem' }} />
+    <>
+      <nav className={`nav ${className} ${isMobile ? 'nav-mobile' : ''}`}>
+        <div className="nav-content">
+          <div className="nav-top-row-wrapper">
+            <div className="nav-brand">
+              <h2>RaceFuel</h2>
             </div>
-            <Menu
-              model={userMenuItems}
-              popup
-              ref={menuRef}
-              className="user-dropdown-menu"
-            />
+            <div className="nav-right">
+              <div
+                ref={userDivRef}
+                className="nav-user"
+                onMouseEnter={handleUserMouseEnter}
+                onMouseLeave={handleUserMouseLeave}
+              >
+                <Avatar
+                  label={user?.name?.charAt(0).toUpperCase()}
+                  icon="pi pi-user"
+                  style={{ backgroundColor: '#646cff', color: 'white' }}
+                  shape="circle"
+                />
+                <span className="user-greeting">Hello, {user?.name}</span>
+                <i className="pi pi-chevron-down" style={{ color: '#646cff', fontSize: '0.75rem' }} />
+              </div>
+              <Menu
+                model={userMenuItems}
+                popup
+                ref={menuRef}
+                className="user-dropdown-menu"
+              />
+            </div>
           </div>
+          {!isMobile && (
+            <div className="nav-center">
+              <TabMenu
+                model={items}
+                activeIndex={getActiveIndex()}
+                className="custom-tabmenu"
+              />
+            </div>
+          )}
         </div>
-        <div className="nav-center">
+      </nav>
+      {isMobile && (
+        <div className="bottom-nav-wrapper">
           <TabMenu
             model={items}
             activeIndex={getActiveIndex()}
-            className="custom-tabmenu"
+            className="custom-tabmenu bottom-tabmenu"
           />
         </div>
-      </div>
-    </nav>
+      )}
+    </>
   );
 }
 
