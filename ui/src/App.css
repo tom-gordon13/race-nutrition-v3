@@ -516,12 +516,13 @@ tbody tr:last-child td {
 
 @media (max-width: 768px) {
 
-  /* Prevent horizontal scrolling on mobile */
+  /* Prevent horizontal scrolling and add bottom padding for bottom nav */
   body {
     overflow-x: hidden !important;
+    padding-bottom: 60px; /* Height of bottom nav */
   }
 
-  .nav {
+  .nav:not(.nav-mobile) {
     padding: 0 1rem;
   }
 
