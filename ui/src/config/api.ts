@@ -8,26 +8,18 @@
  */
 
 export const getApiUrl = (): string => {
-  // Check if environment variable is explicitly set
-  const envApiUrl = import.meta.env.VITE_API_URL;
-
-  // If explicitly set to something other than localhost, use it
-  if (envApiUrl && !envApiUrl.includes('localhost')) {
-    return envApiUrl;
-  }
-
   // Detect if we're in production (deployed)
   const isProduction = import.meta.env.PROD;
   const hostname = window.location.hostname;
 
-  // In production (or not on localhost), use relative API path
-  // This works with Vercel's rewrite rules
+  // In production (or not on localhost), ALWAYS use same origin
+  // This prevents misconfigured env vars from breaking production
   if (isProduction || (!hostname.includes('localhost') && !hostname.includes('127.0.0.1'))) {
-    // Use same origin with /api path
     return window.location.origin;
   }
 
-  // Development: use localhost
+  // Development: check for environment variable override, otherwise use localhost
+  const envApiUrl = import.meta.env.VITE_API_URL;
   return envApiUrl || 'http://localhost:3001';
 };
 
