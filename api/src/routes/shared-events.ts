@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Event } from '@prisma/client';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -257,7 +257,7 @@ router.put('/:sharedEventId', async (req, res) => {
     }
 
     // If accepting, create a copy of the event for the receiver
-    let copiedEvent = null;
+    let copiedEvent: Event | null = null;
     if (status === 'ACCEPTED') {
       // Create a copy of the event for the receiver
       copiedEvent = await prisma.event.create({
