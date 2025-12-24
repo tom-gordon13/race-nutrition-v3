@@ -56,6 +56,28 @@ function Home() {
             )}
           </div>
         } />
+        <Route path="/food-items/:id" element={
+          <div className="food-items-page-container" style={{ maxWidth: '90%', margin: '0 auto', padding: '2rem', height: '100%', boxSizing: 'border-box' }}>
+            <div style={{ marginBottom: '1rem' }}>
+              <Button
+                icon="pi pi-plus"
+                label="Create New Item"
+                onClick={() => setShowCreateDialog(true)}
+                severity="secondary"
+                outlined
+              />
+            </div>
+            <FoodItems refreshTrigger={refreshTrigger} />
+            {user?.sub && (
+              <CreateFoodItemDialog
+                visible={showCreateDialog}
+                onHide={() => setShowCreateDialog(false)}
+                onCreate={handleFoodItemCreated}
+                auth0Sub={user.sub}
+              />
+            )}
+          </div>
+        } />
         <Route path="/events" element={<div className="events-route-container"><Events /></div>} />
         <Route path="/events/:eventId" element={<div className="events-route-container"><Events /></div>} />
         <Route path="/nutrients" element={<div style={{ maxWidth: isMobile ? '100%' : '90%', margin: '0 auto', padding: isMobile ? '0.5rem' : '2rem' }}><Nutrients /></div>} />

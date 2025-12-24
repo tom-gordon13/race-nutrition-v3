@@ -172,6 +172,66 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { auth0_sub } = req.query;
+
+    // Validate required fields
+    if (!auth0_sub || typeof auth0_sub !== 'string') {
+      return res.status(400).json({
+        error: 'Missing required query parameter: auth0_sub'
+      });
+    }
+
+    // Look up the user by their Auth0 ID
+    const user = await prisma.user.findUnique({
+      where: { auth0_sub }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'User not found. Please ensure you are logged in.'
+      });
+    }
+
+    // Fetch the specific food item
+    const foodItem = await prisma.foodItem.findUnique({
+      where: { id },
+      include: {
+        foodItemNutrients: {
+          include: {
+            nutrient: true
+          }
+        }
+      }
+    });
+
+    if (!foodItem) {
+      return res.status(404).json({
+        error: 'Food item not found'
+      });
+    }
+
+    // Convert Decimal cost to number for JSON serialization
+    const foodItemWithCost = {
+      ...foodItem,
+      cost: foodItem.cost ? Number(foodItem.cost) : null
+    };
+
+    return res.status(200).json({
+      foodItem: foodItemWithCost
+    });
+
+  } catch (error) {
+    console.error('Error fetching food item by ID:', error);
+    return res.status(500).json({
+      error: 'Failed to fetch food item',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;

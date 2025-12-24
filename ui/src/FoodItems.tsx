@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Tag } from 'primereact/tag';
@@ -93,6 +94,8 @@ type ViewMode = 'my_items' | 'all_items' | 'favorites';
 
 const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
   const { user } = useAuth0();
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -248,8 +251,8 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
     return isOwned;
   };
 
-  // Handle edit start
-  const handleEditStart = useCallback((rowData: FoodItem) => {
+  // Open edit dialog (without navigation) - internal function
+  const openEditDialog = useCallback((rowData: FoodItem) => {
     console.log('Opening edit dialog for:', rowData.item_name);
     setEditingItem(rowData);
     setEditedData({
@@ -272,6 +275,44 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
     setIsEditingCost(false);
     setShowEditDialog(true);
   }, []);
+
+  // Handle edit start (with navigation) - called from UI
+  const handleEditStart = useCallback((rowData: FoodItem) => {
+    openEditDialog(rowData);
+    // Update URL to include the food item ID
+    navigate(`/food-items/${rowData.id}`, { replace: true });
+  }, [navigate, openEditDialog]);
+
+  // Handle URL parameter for opening specific food item
+  useEffect(() => {
+    if (!id || !user || !user.sub || showEditDialog) return;
+
+    const fetchAndOpenFoodItem = async () => {
+      try {
+        // Fetch the specific food item by ID
+        const response = await fetch(
+          `${API_URL}/api/food-items/${id}?auth0_sub=${encodeURIComponent(user.sub!)}`
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          const foodItem = data.foodItem;
+
+          // Open the edit dialog for this food item (without navigating again)
+          openEditDialog(foodItem);
+        } else if (response.status === 404) {
+          // Food item not found, redirect to /food-items
+          console.log('Food item not found, redirecting...');
+          navigate('/food-items', { replace: true });
+        }
+      } catch (err) {
+        console.error('Error fetching food item by ID:', err);
+        navigate('/food-items', { replace: true });
+      }
+    };
+
+    fetchAndOpenFoodItem();
+  }, [id, user, showEditDialog, openEditDialog, navigate]);
 
   // Nutrient management functions
   const addNutrientRow = () => {
@@ -329,6 +370,9 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
       setEditedNutrients([]);
       setIsEditingCost(false);
 
+      // Navigate back to /food-items
+      navigate('/food-items', { replace: true });
+
       // Trigger a re-fetch
       if (viewMode === 'favorites') {
         // Re-fetch favorites
@@ -362,7 +406,10 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
     setEditedData({});
     setEditedNutrients([]);
     setIsEditingCost(false);
-  }, []);
+
+    // Navigate back to /food-items when closing the dialog
+    navigate('/food-items', { replace: true });
+  }, [navigate]);
 
   // Template for brand column
   const brandBodyTemplate = (rowData: FoodItem) => {
