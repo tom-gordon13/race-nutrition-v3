@@ -6,6 +6,7 @@ import { Divider } from 'primereact/divider';
 import { Panel } from 'primereact/panel';
 import { Button } from 'primereact/button';
 import { Toast } from 'primereact/toast';
+import { InputSwitch } from 'primereact/inputswitch';
 import { useRef } from 'react';
 import './Preferences.css';
 import { API_URL } from './config/api';
@@ -41,6 +42,9 @@ export default function Preferences() {
   const [dirtyFields, setDirtyFields] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+  const [darkModeLoading, setDarkModeLoading] = useState(true);
+  const [darkModeSaving, setDarkModeSaving] = useState(false);
 
   // Fetch reference data (colors and categories)
   useEffect(() => {
@@ -100,6 +104,77 @@ export default function Preferences() {
 
     fetchUserPreferences();
   }, [user?.sub, API_URL]);
+
+  // Fetch user's dark mode preference
+  useEffect(() => {
+    const fetchDarkModePreference = async () => {
+      if (!user?.sub) return;
+
+      try {
+        const response = await fetch(
+          `${API_URL}/api/user-preferences?auth0_sub=${user.sub}`
+        );
+        if (!response.ok) throw new Error('Failed to fetch dark mode preference');
+
+        const data = await response.json();
+        setDarkMode(data.preferences.dark_mode);
+      } catch (error) {
+        console.error('Error fetching dark mode preference:', error);
+        toast.current?.show({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to load dark mode preference',
+          life: 3000
+        });
+      } finally {
+        setDarkModeLoading(false);
+      }
+    };
+
+    fetchDarkModePreference();
+  }, [user?.sub, API_URL]);
+
+  // Handle dark mode toggle
+  const handleDarkModeToggle = async (value: boolean) => {
+    if (!user?.sub) return;
+
+    setDarkMode(value);
+    setDarkModeSaving(true);
+
+    try {
+      const response = await fetch(`${API_URL}/api/user-preferences`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          auth0_sub: user.sub,
+          dark_mode: value
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to update dark mode preference');
+
+      toast.current?.show({
+        severity: 'success',
+        summary: 'Success',
+        detail: `Dark mode ${value ? 'enabled' : 'disabled'}`,
+        life: 3000
+      });
+    } catch (error) {
+      console.error('Error updating dark mode preference:', error);
+      // Revert the toggle on error
+      setDarkMode(!value);
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to update dark mode preference',
+        life: 3000
+      });
+    } finally {
+      setDarkModeSaving(false);
+    }
+  };
 
   // Handle color selection
   const handleColorSelect = (categoryId: string, colorId: string) => {
@@ -200,6 +275,27 @@ export default function Preferences() {
 
         <Card title="App Settings" className="preferences-card">
           <div className="preference-section">
+            <h3 className="settings-section-title">Display Settings</h3>
+            <p className="settings-description">
+              Customize how the app looks and feels.
+            </p>
+
+            <div className="preference-row" style={{ marginBottom: '2rem', alignItems: 'center' }}>
+              <div>
+                <label style={{ fontWeight: 600, fontSize: '1rem' }}>Dark Mode</label>
+                <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.875rem', color: '#6b7280' }}>
+                  Coming soon - toggle between light and dark themes
+                </p>
+              </div>
+              <InputSwitch
+                checked={darkMode}
+                onChange={(e) => handleDarkModeToggle(e.value)}
+                disabled={darkModeLoading || darkModeSaving}
+              />
+            </div>
+
+            <Divider />
+
             <h3 className="settings-section-title">Category Color Preferences</h3>
             <p className="settings-description">
               Choose a color for each food category to customize how they appear in your events.

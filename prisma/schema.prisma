@@ -56,6 +56,7 @@ model User {
   receivedEvents          SharedEvent[]           @relation("ReceiverUser")
   preferenceUserColors    PreferenceUserColor[]
   favoriteFoodItems       FavoriteFoodItem[]
+  userPreferences         UserPreferences?
 }
 
 model FoodItem {
@@ -224,4 +225,13 @@ model FavoriteFoodItem {
   foodItem      FoodItem @relation(fields: [food_item_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, food_item_id])
+}
+
+model UserPreferences {
+  id         String   @id @default(uuid())
+  user_id    String   @unique
+  dark_mode  Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
