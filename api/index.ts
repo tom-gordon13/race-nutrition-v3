@@ -1,17 +1,17 @@
 // Vercel serverless function entry point
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import authRoutes from './src/routes/auth.js';
-import nutrientsRoutes from './src/routes/nutrients.js';
-import foodItemsRoutes from './src/routes/food-items.js';
-import eventsRoutes from './src/routes/events.js';
-import foodInstancesRoutes from './src/routes/food-instances.js';
-import eventGoalsRoutes from './src/routes/event-goals.js';
-import userConnectionsRoutes from './src/routes/user-connections.js';
-import sharedEventsRoutes from './src/routes/shared-events.js';
-import preferencesRoutes from './src/routes/preferences.js';
-import favoriteFoodItemsRoutes from './src/routes/favorite-food-items.js';
-import userPreferencesRoutes from './src/routes/user-preferences.js';
+import authRoutes from '../src/routes/auth.js';
+import nutrientsRoutes from '../src/routes/nutrients.js';
+import foodItemsRoutes from '../src/routes/food-items.js';
+import eventsRoutes from '../src/routes/events.js';
+import foodInstancesRoutes from '../src/routes/food-instances.js';
+import eventGoalsRoutes from '../src/routes/event-goals.js';
+import userConnectionsRoutes from '../src/routes/user-connections.js';
+import sharedEventsRoutes from '../src/routes/shared-events.js';
+import preferencesRoutes from '../src/routes/preferences.js';
+import favoriteFoodItemsRoutes from '../src/routes/favorite-food-items.js';
+import userPreferencesRoutes from '../src/routes/user-preferences.js';
 
 const app = express();
 

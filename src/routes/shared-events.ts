@@ -276,7 +276,7 @@ router.put('/:sharedEventId', async (req, res) => {
       if (originalFoodInstances.length > 0) {
         await prisma.foodInstance.createMany({
           data: originalFoodInstances.map(instance => ({
-            event_id: copiedEvent.id,
+            event_id: copiedEvent!.id,
             food_item_id: instance.food_item_id,
             time_elapsed_at_consumption: instance.time_elapsed_at_consumption,
             servings: instance.servings
@@ -293,7 +293,7 @@ router.put('/:sharedEventId', async (req, res) => {
         await prisma.eventGoalsBase.createMany({
           data: originalGoalsBase.map(goal => ({
             user_id: sharedEvent.receiver_id,
-            event_id: copiedEvent.id,
+            event_id: copiedEvent!.id,
             nutrient_id: goal.nutrient_id,
             quantity: goal.quantity,
             unit: goal.unit
@@ -310,7 +310,7 @@ router.put('/:sharedEventId', async (req, res) => {
         await prisma.eventGoalsHourly.createMany({
           data: originalGoalsHourly.map(goal => ({
             user_id: sharedEvent.receiver_id,
-            event_id: copiedEvent.id,
+            event_id: copiedEvent!.id,
             nutrient_id: goal.nutrient_id,
             hour: goal.hour,
             quantity: goal.quantity,
