@@ -144,7 +144,7 @@ export const ItemListDialog = ({
       pt={{
         root: { style: { borderRadius: '20px', overflow: 'hidden' } },
         header: { style: { padding: 0, border: 'none' } },
-        content: { style: { padding: '1rem 1.5rem', borderRadius: '20px', maxHeight: '70vh', overflowY: 'auto' } }
+        content: { style: { padding: '1rem 1.5rem', maxHeight: '70vh', overflowY: 'auto' } }
       }}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
