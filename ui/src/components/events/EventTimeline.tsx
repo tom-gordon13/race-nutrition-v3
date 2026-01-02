@@ -443,6 +443,10 @@ export const EventTimeline = ({
                 cursor: isEditing ? 'default' : (viewOnly ? 'default' : 'grab'),
                 touchAction: isEditing ? 'auto' : (viewOnly ? 'auto' : 'none'),
                 zIndex: viewOnly ? 100 : undefined, // Ensure visibility in view-only mode
+                paddingTop: 0, // Remove top padding so the top edge aligns exactly with consumption time
+                paddingBottom: '0.75rem', // Keep bottom padding for spacing
+                paddingLeft: '0.75rem', // Keep left padding for spacing
+                paddingRight: '0.75rem', // Keep right padding for spacing
               };
 
               // Override position if this instance is being touch-dragged
