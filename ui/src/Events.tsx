@@ -851,7 +851,6 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
                     onDrop={handleDrop}
                     onDragStart={handleDragStart}
                     onDragEnd={handleDragEnd}
-                    onDeleteInstance={handleDeleteInstance}
                     onUpdateInstance={handleUpdateInstance}
                     onClickHoldCreate={handleClickHoldCreate}
                     onInstanceClick={handleInstanceClick}
@@ -906,7 +905,6 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
                     onDrop={handleDrop}
                     onDragStart={handleDragStart}
                     onDragEnd={handleDragEnd}
-                    onDeleteInstance={handleDeleteInstance}
                     onUpdateInstance={handleUpdateInstance}
                     onClickHoldCreate={handleClickHoldCreate}
                     onInstanceClick={handleInstanceClick}
