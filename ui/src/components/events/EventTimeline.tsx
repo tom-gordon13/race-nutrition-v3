@@ -48,7 +48,6 @@ interface EventTimelineProps {
   onDrop: (e: DragEvent) => void;
   onDragStart: (e: DragEvent, instanceId: string, currentTop: number) => void;
   onDragEnd: () => void;
-  onDeleteInstance: (instanceId: string) => void;
   onUpdateInstance: (instanceId: string, time: number, servings: number) => Promise<void>;
   onClickHoldCreate?: (timeInSeconds: number) => void;
   onInstanceClick?: (instance: FoodInstance) => void;
@@ -130,7 +129,6 @@ export const EventTimeline = ({
   onDrop,
   onDragStart,
   onDragEnd,
-  onDeleteInstance,
   onUpdateInstance,
   onClickHoldCreate,
   onInstanceClick,
@@ -262,21 +260,6 @@ export const EventTimeline = ({
         onClickHoldCreate(timeInSeconds);
       }
     }
-  };
-
-  // Handler to enter edit mode for an instance
-  const handleDoubleClick = (instance: FoodInstance) => {
-    // Don't allow editing in view-only mode
-    if (viewOnly) {
-      return;
-    }
-
-    setEditingInstanceId(instance.id);
-    // Convert seconds to HH:MM format
-    const hours = Math.floor(instance.time_elapsed_at_consumption / 3600);
-    const minutes = Math.floor((instance.time_elapsed_at_consumption % 3600) / 60);
-    setEditTime(`${hours}:${minutes.toString().padStart(2, '0')}`);
-    setEditServings(instance.servings.toString());
   };
 
   // Handler to save changes
