@@ -132,12 +132,6 @@ export const CreateFoodItemDialog: React.FC<CreateFoodItemDialogProps> = ({
     setNutrients(updated);
   };
 
-  const updateNutrient = (index: number, field: keyof FoodItemNutrient, value: string | number) => {
-    const updated = [...nutrients];
-    updated[index] = { ...updated[index], [field]: value };
-    setNutrients(updated);
-  };
-
   const handleCreate = async () => {
     if (!itemName.trim()) {
       setError('Food item name is required');
