@@ -21,10 +21,10 @@ COPY prisma.config.ts ./
 RUN npm ci
 
 # Copy API source files
-COPY api ./api
+COPY src ./src
 
 # Expose the API port
 EXPOSE 3001
 
 # Start the API server
-CMD ["npx", "tsx", "watch", "api/src/server.ts"]
+CMD ["npx", "tsx", "watch", "src/server.ts"]

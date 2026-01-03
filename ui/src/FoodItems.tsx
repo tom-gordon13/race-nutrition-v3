@@ -324,11 +324,6 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
     setEditedNutrients(updated);
   };
 
-  const updateNutrient = (index: number, field: keyof EditableFoodItemNutrient, value: string | number) => {
-    const updated = [...editedNutrients];
-    updated[index] = { ...updated[index], [field]: value };
-    setEditedNutrients(updated);
-  };
 
   // Handle edit save
   const handleEditSave = async () => {
@@ -893,7 +888,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
           <div style={{
             backgroundColor: 'white',
             borderRadius: '8px',
-            padding: '0.875rem',
+            padding: '0.5rem',
             display: 'flex',
             flexDirection: 'column',
             gap: '0.5rem'
@@ -931,41 +926,32 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.75rem',
-                    padding: '0.75rem',
+                    gap: '0.5rem',
+                    padding: '0.5rem',
                     backgroundColor: '#f9fafb',
                     borderRadius: '8px'
                   }}
                 >
                   {/* Nutrient Info */}
-                  <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
+                  <div style={{ flex: 2, minWidth: 0, display: 'flex', alignItems: 'center' }}>
                     <Dropdown
-                      value={nutrient.nutrient_id}
+                      value={availableNutrients.find(n => n.id === nutrient.nutrient_id) || null}
                       onChange={(e) => {
-                        updateNutrient(index, 'nutrient_id', e.value);
-                        // Auto-set unit based on nutrient type
-                        const selectedNutrient = availableNutrients.find(n => n.id === e.value);
-                        if (selectedNutrient) {
-                          const unit = getNutrientUnit(selectedNutrient.nutrient_name);
-                          updateNutrient(index, 'unit', unit);
+                        if (e.value && e.value.id) {
+                          const unit = getNutrientUnit(e.value.nutrient_name);
+                          const updated = [...editedNutrients];
+                          updated[index] = {
+                            ...updated[index],
+                            nutrient_id: e.value.id,
+                            unit: unit
+                          };
+                          setEditedNutrients(updated);
                         }
                       }}
-                      options={availableNutrients.map((n) => ({
-                        label: n.nutrient_name,
-                        value: n.id
-                      }))}
+                      options={availableNutrients}
+                      optionLabel="nutrient_name"
                       placeholder="Select nutrient"
                       style={{ width: '100%', border: 'none', backgroundColor: 'transparent' }}
-                      pt={{
-                        input: { style: {
-                          fontSize: '0.875rem',
-                          fontWeight: 600,
-                          color: '#000',
-                          padding: 0,
-                          border: 'none'
-                        }},
-                        trigger: { style: { display: 'none' } }
-                      }}
                     />
                   </div>
 
@@ -974,22 +960,29 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.25rem',
-                    flexShrink: 0
+                    flex: 1,
+                    justifyContent: 'flex-end'
                   }}>
                     <InputNumber
-                      value={typeof nutrient.quantity === 'string' ? parseFloat(nutrient.quantity) || undefined : nutrient.quantity}
+                      value={typeof nutrient.quantity === 'string' ? parseFloat(nutrient.quantity) || null : (nutrient.quantity || null)}
                       onValueChange={(e) => {
-                        updateNutrient(index, 'quantity', e.value || '');
+                        const updated = [...editedNutrients];
+                        updated[index] = {
+                          ...updated[index],
+                          quantity: e.value ?? ''
+                        };
+                        setEditedNutrients(updated);
                       }}
                       placeholder="0"
                       minFractionDigits={0}
                       maxFractionDigits={2}
+                      min={0}
                       inputStyle={{
-                        width: '50px',
+                        width: '45px',
                         fontSize: '1rem',
                         fontWeight: 600,
                         textAlign: 'right',
-                        padding: '0.4rem',
+                        padding: '0.25rem',
                         border: '1px solid #e5e7eb',
                         borderRadius: '6px'
                       }}
@@ -1005,28 +998,26 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
                   </div>
 
                   {/* Delete Button */}
-                  {editedNutrients.length > 1 && (
-                    <Button
-                      icon="pi pi-trash"
-                      onClick={() => removeNutrientRow(index)}
-                      text
-                      rounded
-                      severity="danger"
-                      style={{
-                        color: '#ef4444',
-                        flexShrink: 0,
-                        padding: '0.25rem',
-                        margin: 0,
-                        minWidth: 'auto',
-                        width: '1.5rem',
-                        height: '1.5rem'
-                      }}
-                      pt={{
-                        root: { style: { padding: 0, margin: 0 } },
-                        icon: { style: { fontSize: '0.875rem' } }
-                      }}
-                    />
-                  )}
+                  <Button
+                    icon="pi pi-trash"
+                    onClick={() => removeNutrientRow(index)}
+                    text
+                    rounded
+                    severity="danger"
+                    style={{
+                      color: '#ef4444',
+                      flexShrink: 0,
+                      padding: 0,
+                      margin: 0,
+                      minWidth: 'auto',
+                      width: '1.5rem',
+                      height: '1.5rem'
+                    }}
+                    pt={{
+                      root: { style: { padding: 0, margin: 0 } },
+                      icon: { style: { fontSize: '0.875rem' } }
+                    }}
+                  />
                 </div>
               );
             })}

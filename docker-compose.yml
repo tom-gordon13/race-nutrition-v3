@@ -9,7 +9,7 @@ services:
       - "3001:3001"
     volumes:
       # Mount source code for hot reloading
-      - ./api/src:/app/api/src
+      - ./src:/app/src
       # Mount prisma directory for migrations
       - ./prisma:/app/prisma
       # Mount prisma config
@@ -20,7 +20,7 @@ services:
     stdin_open: true
     tty: true
     restart: unless-stopped
-    command: sh -c "echo 'Generating Prisma client...' && npx prisma generate --schema=./prisma/schema.prisma && echo 'Running migrations...' && npx prisma migrate deploy && echo 'Starting server...' && npx tsx watch api/src/server.ts"
+    command: sh -c "echo 'Generating Prisma client...' && npx prisma generate --schema=./prisma/schema.prisma && echo 'Running migrations...' && npx prisma migrate deploy && echo 'Starting server...' && npx tsx watch src/server.ts"
 
   ui:
     build:

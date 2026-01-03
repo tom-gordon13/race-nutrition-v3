@@ -431,7 +431,7 @@ export const CreateFoodItemDialog: React.FC<CreateFoodItemDialogProps> = ({
         <div style={{
           backgroundColor: 'white',
           borderRadius: '8px',
-          padding: '0.875rem',
+          padding: '0.5rem',
           display: 'flex',
           flexDirection: 'column',
           gap: '0.5rem'
@@ -469,41 +469,32 @@ export const CreateFoodItemDialog: React.FC<CreateFoodItemDialogProps> = ({
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.75rem',
-                  padding: '0.75rem',
+                  gap: '0.5rem',
+                  padding: '0.5rem',
                   backgroundColor: '#f9fafb',
                   borderRadius: '8px'
                 }}
               >
                 {/* Nutrient Info */}
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
+                <div style={{ flex: 2, minWidth: 0, display: 'flex', alignItems: 'center' }}>
                   <Dropdown
-                    value={nutrient.nutrient_id}
+                    value={availableNutrients.find(n => n.id === nutrient.nutrient_id) || null}
                     onChange={(e) => {
-                      updateNutrient(index, 'nutrient_id', e.value);
-                      // Auto-set unit based on nutrient type
-                      const selectedNutrient = availableNutrients.find(n => n.id === e.value);
-                      if (selectedNutrient) {
-                        const unit = getNutrientUnit(selectedNutrient.nutrient_name);
-                        updateNutrient(index, 'unit', unit);
+                      if (e.value && e.value.id) {
+                        const unit = getNutrientUnit(e.value.nutrient_name);
+                        const updated = [...nutrients];
+                        updated[index] = {
+                          ...updated[index],
+                          nutrient_id: e.value.id,
+                          unit: unit
+                        };
+                        setNutrients(updated);
                       }
                     }}
-                    options={availableNutrients.map((n) => ({
-                      label: n.nutrient_name,
-                      value: n.id
-                    }))}
+                    options={availableNutrients}
+                    optionLabel="nutrient_name"
                     placeholder="Select nutrient"
                     style={{ width: '100%', border: 'none', backgroundColor: 'transparent' }}
-                    pt={{
-                      input: { style: {
-                        fontSize: '0.875rem',
-                        fontWeight: 600,
-                        color: '#000',
-                        padding: 0,
-                        border: 'none'
-                      }},
-                      trigger: { style: { display: 'none' } }
-                    }}
                   />
                 </div>
 
@@ -512,23 +503,32 @@ export const CreateFoodItemDialog: React.FC<CreateFoodItemDialogProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.25rem',
-                  minWidth: '120px'
+                  flex: 1,
+                  justifyContent: 'flex-end'
                 }}>
                   <InputNumber
-                    value={typeof nutrient.quantity === 'string' ? parseFloat(nutrient.quantity) || undefined : nutrient.quantity}
-                    onValueChange={(e) => updateNutrient(index, 'quantity', e.value || '')}
+                    value={typeof nutrient.quantity === 'string' ? parseFloat(nutrient.quantity) || null : (nutrient.quantity || null)}
+                    onValueChange={(e) => {
+                      const updated = [...nutrients];
+                      updated[index] = {
+                        ...updated[index],
+                        quantity: e.value ?? ''
+                      };
+                      setNutrients(updated);
+                    }}
                     placeholder="0"
                     minFractionDigits={0}
                     maxFractionDigits={2}
+                    min={0}
                     inputStyle={{
-                      width: '60px',
+                      width: '45px',
                       textAlign: 'right',
-                      fontSize: '1.125rem',
-                      fontWeight: 700,
+                      fontSize: '1rem',
+                      fontWeight: 600,
                       border: 'none',
                       borderBottom: '1px solid #e5e7eb',
                       borderRadius: 0,
-                      padding: '0.25rem 0.5rem',
+                      padding: '0.25rem 0.25rem',
                       backgroundColor: 'transparent'
                     }}
                   />
@@ -547,13 +547,21 @@ export const CreateFoodItemDialog: React.FC<CreateFoodItemDialogProps> = ({
                 <Button
                   icon="pi pi-trash"
                   onClick={() => removeNutrientRow(index)}
-                  rounded
                   text
+                  rounded
                   severity="danger"
                   style={{
-                    width: '32px',
-                    height: '32px',
-                    color: '#ef4444'
+                    color: '#ef4444',
+                    flexShrink: 0,
+                    padding: 0,
+                    margin: 0,
+                    minWidth: 'auto',
+                    width: '1.5rem',
+                    height: '1.5rem'
+                  }}
+                  pt={{
+                    root: { style: { padding: 0, margin: 0 } },
+                    icon: { style: { fontSize: '0.875rem' } }
                   }}
                 />
               </div>
