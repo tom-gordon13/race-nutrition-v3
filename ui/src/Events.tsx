@@ -13,6 +13,7 @@ import {
   type ItemFilterMode,
   NutrientGoalsDialog,
   EditEventDialog,
+  EditFoodInstanceDialog,
   CreateEventDialog,
   EventAnalyticsDialog,
   ShareEventDialog,
@@ -142,6 +143,10 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
 
   // State for share event dialog
   const [showShareEventDialog, setShowShareEventDialog] = useState(false);
+
+  // State for edit food instance dialog
+  const [showEditFoodInstanceDialog, setShowEditFoodInstanceDialog] = useState(false);
+  const [instanceToEdit, setInstanceToEdit] = useState<FoodInstance | null>(null);
 
   // State for accept shared event dialog
   const [showAcceptSharedEventDialog, setShowAcceptSharedEventDialog] = useState(false);
@@ -471,6 +476,12 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
   const handleClickHoldCreate = (timeInSeconds: number) => {
     setModalTimeInSeconds(timeInSeconds);
     setShowFoodItemModal(true);
+  };
+
+  // Handler for clicking on a food instance to edit it
+  const handleInstanceClick = (instance: FoodInstance) => {
+    setInstanceToEdit(instance);
+    setShowEditFoodInstanceDialog(true);
   };
 
   // Handler for food item selection from modal
@@ -843,9 +854,11 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
                     onDeleteInstance={handleDeleteInstance}
                     onUpdateInstance={handleUpdateInstance}
                     onClickHoldCreate={handleClickHoldCreate}
+                    onInstanceClick={handleInstanceClick}
                     timelineStyle={timelineStyle}
                     categoryColors={categoryColors}
                     viewOnly={false}
+                    isMobile={isMobile}
                   />
 
                   <NutritionSummary
@@ -896,9 +909,11 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
                     onDeleteInstance={handleDeleteInstance}
                     onUpdateInstance={handleUpdateInstance}
                     onClickHoldCreate={handleClickHoldCreate}
+                    onInstanceClick={handleInstanceClick}
                     timelineStyle={timelineStyle}
                     categoryColors={categoryColors}
                     viewOnly={isMobile && !isFullscreen}
+                    isMobile={isMobile}
                   />
 
                   {!isMobile && (
@@ -983,6 +998,21 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
         }}
         onSave={handleSaveEditedEvent}
       />
+
+      {/* Edit Food Instance Dialog */}
+      {selectedEvent && (
+        <EditFoodInstanceDialog
+          visible={showEditFoodInstanceDialog}
+          foodInstance={instanceToEdit}
+          eventDuration={selectedEvent.expected_duration}
+          onHide={() => {
+            setShowEditFoodInstanceDialog(false);
+            setInstanceToEdit(null);
+          }}
+          onSave={handleUpdateInstance}
+          onDelete={handleDeleteInstance}
+        />
+      )}
 
       {/* Analytics Dialog */}
       <EventAnalyticsDialog

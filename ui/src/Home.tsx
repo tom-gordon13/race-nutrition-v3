@@ -93,7 +93,6 @@ function Home() {
             <Events
               showCreateDialog={showCreateEventDialog}
               onHideCreateDialog={() => setShowCreateEventDialog(false)}
-              onShowCreateDialog={() => setShowCreateEventDialog(true)}
             />
           </div>
         } />
@@ -111,7 +110,6 @@ function Home() {
             <Events
               showCreateDialog={showCreateEventDialog}
               onHideCreateDialog={() => setShowCreateEventDialog(false)}
-              onShowCreateDialog={() => setShowCreateEventDialog(true)}
             />
           </div>
         } />

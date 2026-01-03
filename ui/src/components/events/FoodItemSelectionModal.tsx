@@ -253,8 +253,8 @@ export const FoodItemSelectionModal = ({
                   setServings(e.target.value);
                   setError(null); // Clear error when user edits
                 }}
-                step="0.5"
-                min="0.5"
+                step="0.1"
+                min="0.1"
               />
             </div>
           </div>

@@ -51,9 +51,11 @@ interface EventTimelineProps {
   onDeleteInstance: (instanceId: string) => void;
   onUpdateInstance: (instanceId: string, time: number, servings: number) => Promise<void>;
   onClickHoldCreate?: (timeInSeconds: number) => void;
+  onInstanceClick?: (instance: FoodInstance) => void;
   timelineStyle?: React.CSSProperties;
   categoryColors?: Map<string, string>;
   viewOnly?: boolean;
+  isMobile?: boolean;
 }
 
 const formatTimeHHMM = (seconds: number) => {
@@ -131,9 +133,11 @@ export const EventTimeline = ({
   onDeleteInstance,
   onUpdateInstance,
   onClickHoldCreate,
+  onInstanceClick,
   timelineStyle,
   categoryColors,
-  viewOnly = false
+  viewOnly = false,
+  isMobile = false
 }: EventTimelineProps) => {
   const [hoveredInstanceId, setHoveredInstanceId] = useState<string | null>(null);
   const [editingInstanceId, setEditingInstanceId] = useState<string | null>(null);
@@ -501,8 +505,11 @@ export const EventTimeline = ({
                     setHoveredInstanceId(null);
                     setIsHoveringInstance(false);
                   }}
-                  onDoubleClick={() => !isEditing && !viewOnly && handleDoubleClick(instance)}
-                  style={visualStyle}
+                  onClick={() => !isEditing && !viewOnly && onInstanceClick && onInstanceClick(instance)}
+                  style={{
+                    ...visualStyle,
+                    cursor: !isEditing && !viewOnly && onInstanceClick ? 'pointer' : visualStyle.cursor
+                  }}
                 >
                   <div
                     className={`food-instance-content ${isEditing ? 'instance-editing' : ''}`}
@@ -521,19 +528,6 @@ export const EventTimeline = ({
                       })
                     }}
                   >
-                    {!isEditing && !viewOnly && (
-                      <button
-                        className="delete-instance-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDeleteInstance(instance.id);
-                        }}
-                        title="Delete food instance"
-                      >
-                        ✕
-                      </button>
-                    )}
-
                     {isEditing ? (
                       // Edit mode UI
                       <div className="instance-edit-form">
@@ -558,8 +552,8 @@ export const EventTimeline = ({
                               onChange={(e) => setEditServings(e.target.value)}
                               placeholder="0"
                               className="servings-input"
-                              step="0.5"
-                              min="0.5"
+                              step="0.1"
+                              min="0.1"
                               onClick={(e) => e.stopPropagation()}
                             />
                           </div>
@@ -587,7 +581,7 @@ export const EventTimeline = ({
                     )}
                   </div>
 
-                  {isHovered && !isEditing && !viewOnly && (
+                  {isHovered && !isEditing && !viewOnly && !isMobile && (
                     <div className="food-instance-tooltip">
                       <div className="tooltip-header">
                         <strong>{instance.foodItem.item_name}</strong>
