@@ -322,7 +322,7 @@ export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, 
                     {window.nutrientTotals.map((nutrient, nIndex) => {
                       const rowColor = getRowColor(nutrient.total, nutrient.goal);
                       return (
-                        <tr key={nIndex} style={{ backgroundColor: rowColor ? `${rowColor}33` : 'transparent' }}>
+                        <tr key={nIndex} style={{ backgroundColor: rowColor ? `${rowColor}66` : 'transparent' }}>
                           <td className="nutrient-summary-name">{nutrient.name}</td>
                           <td className="nutrient-summary-goal">
                             {nutrient.goal

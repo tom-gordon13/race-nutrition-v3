@@ -81,7 +81,10 @@ export const EventsTable = ({ events, selectedEvent, onEventSelect, onEditEvent,
         onSelectionChange={(e) => onEventSelect(e.value as Event)}
         dataKey="id"
         stripedRows
+        tableStyle={{ minWidth: '50rem' }}
         emptyMessage="No events found."
+        scrollable
+        scrollHeight="flex"
       >
         <Column field="type" header="Event Type" sortable />
         <Column

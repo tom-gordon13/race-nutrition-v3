@@ -84,7 +84,13 @@ interface SharedEvent {
   };
 }
 
-const Events = () => {
+interface EventsProps {
+  showCreateDialog?: boolean;
+  onHideCreateDialog?: () => void;
+  onShowCreateDialog?: () => void;
+}
+
+const Events = ({ showCreateDialog = false, onHideCreateDialog, onShowCreateDialog }: EventsProps = {}) => {
   const { user } = useAuth0();
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
@@ -108,9 +114,6 @@ const Events = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
   const [myItemsOnly, setMyItemsOnly] = useState<boolean>(true);
   const [itemFilterMode, setItemFilterMode] = useState<ItemFilterMode>('my_items');
-
-  // Form state
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   // Drag and drop state
   const [draggingInstanceId, setDraggingInstanceId] = useState<string | null>(null);
@@ -676,20 +679,11 @@ const Events = () => {
             pt={{
               title: { style: { textAlign: 'left', color: '#000000', padding: '1rem 1.5rem', margin: 0, fontSize: '1.5rem', fontWeight: 600, backgroundColor: '#f3f4f6', borderBottom: '1px solid #d1d5db' } },
               body: { style: { flex: 1, overflow: 'auto', padding: 0, backgroundColor: 'white' } },
-              content: { style: { padding: 0 } }
+              content: { style: { padding: '0 1.5rem 1.5rem 1.5rem' } }
             }}
           >
             {error && <div className="error-message">{error}</div>}
             {success && <div className="success-message">{success}</div>}
-
-            <div style={{ padding: '1rem', marginBottom: '1rem' }}>
-              <button
-                onClick={() => setShowCreateDialog(true)}
-                className="add-nutrient-btn"
-              >
-                + Create New Event
-              </button>
-            </div>
 
             <EventsTable
               events={events}
@@ -731,7 +725,7 @@ const Events = () => {
                 >
                   <i className="pi pi-share-alt"></i>
                 </button>
-                {!isMobile && (
+                {isMobile && (
                   <button
                     onClick={() => setIsFullscreen(true)}
                     className="expand-btn"
@@ -961,7 +955,7 @@ const Events = () => {
       {user?.sub && (
         <CreateEventDialog
           visible={showCreateDialog}
-          onHide={() => setShowCreateDialog(false)}
+          onHide={() => onHideCreateDialog?.()}
           onCreate={handleCreateEvent}
           auth0Sub={user.sub}
         />

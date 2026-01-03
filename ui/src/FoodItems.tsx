@@ -243,17 +243,14 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
   // Check if user owns this food item
   const isOwnedByUser = (rowData: FoodItem) => {
     if (!currentUserId) {
-      console.log('No currentUserId');
       return false;
     }
     const isOwned = String(currentUserId) === String(rowData.created_by);
-    console.log('Ownership check:', { currentUserId, created_by: rowData.created_by, isOwned });
     return isOwned;
   };
 
   // Open edit dialog (without navigation) - internal function
   const openEditDialog = useCallback((rowData: FoodItem) => {
-    console.log('Opening edit dialog for:', rowData.item_name);
     setEditingItem(rowData);
     setEditedData({
       item_name: rowData.item_name,
@@ -302,7 +299,6 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
           openEditDialog(foodItem);
         } else if (response.status === 404) {
           // Food item not found, redirect to /food-items
-          console.log('Food item not found, redirecting...');
           navigate('/food-items', { replace: true });
         }
       } catch (err) {
@@ -312,7 +308,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
     };
 
     fetchAndOpenFoodItem();
-  }, [id, user, showEditDialog, openEditDialog, navigate]);
+  }, [id, user, openEditDialog, navigate]);
 
   // Nutrient management functions
   const addNutrientRow = () => {

@@ -14,6 +14,7 @@ function Home() {
   const { user } = useAuth0();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showCreateEventDialog, setShowCreateEventDialog] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   // Detect mobile screen size
@@ -78,8 +79,42 @@ function Home() {
             )}
           </div>
         } />
-        <Route path="/events" element={<div className="events-route-container"><Events /></div>} />
-        <Route path="/events/:eventId" element={<div className="events-route-container"><Events /></div>} />
+        <Route path="/events" element={
+          <div className="events-route-container" style={{ maxWidth: '90%', margin: '0 auto', padding: '2rem', height: '100%', boxSizing: 'border-box' }}>
+            <div style={{ marginBottom: '1rem' }}>
+              <Button
+                icon="pi pi-plus"
+                label="Create New Event"
+                onClick={() => setShowCreateEventDialog(true)}
+                severity="secondary"
+                outlined
+              />
+            </div>
+            <Events
+              showCreateDialog={showCreateEventDialog}
+              onHideCreateDialog={() => setShowCreateEventDialog(false)}
+              onShowCreateDialog={() => setShowCreateEventDialog(true)}
+            />
+          </div>
+        } />
+        <Route path="/events/:eventId" element={
+          <div className="events-route-container" style={{ maxWidth: '90%', margin: '0 auto', padding: '2rem', height: '100%', boxSizing: 'border-box' }}>
+            <div style={{ marginBottom: '1rem' }}>
+              <Button
+                icon="pi pi-plus"
+                label="Create New Event"
+                onClick={() => setShowCreateEventDialog(true)}
+                severity="secondary"
+                outlined
+              />
+            </div>
+            <Events
+              showCreateDialog={showCreateEventDialog}
+              onHideCreateDialog={() => setShowCreateEventDialog(false)}
+              onShowCreateDialog={() => setShowCreateEventDialog(true)}
+            />
+          </div>
+        } />
         <Route path="/nutrients" element={<div style={{ maxWidth: isMobile ? '100%' : '90%', margin: '0 auto', padding: isMobile ? '0.5rem' : '2rem' }}><Nutrients /></div>} />
         <Route path="/preferences" element={<div className="preferences-wrapper"><Preferences /></div>} />
         <Route path="/users" element={<div className="users-route-container"><Users /></div>} />
