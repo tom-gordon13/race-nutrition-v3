@@ -106,6 +106,19 @@ router.post('/', async (req, res) => {
       });
     }
 
+    // Validate time is within event bounds
+    if (time_elapsed_at_consumption < 0) {
+      return res.status(400).json({
+        error: 'time_elapsed_at_consumption cannot be negative'
+      });
+    }
+
+    if (time_elapsed_at_consumption > event.expected_duration) {
+      return res.status(400).json({
+        error: `time_elapsed_at_consumption (${time_elapsed_at_consumption}s) cannot exceed event duration (${event.expected_duration}s)`
+      });
+    }
+
     // Create the food instance
     const newInstance = await prisma.foodInstance.create({
       data: {
@@ -188,13 +201,29 @@ router.put('/:instanceId', async (req, res) => {
 
     // Verify the food instance exists
     const existingInstance = await prisma.foodInstance.findUnique({
-      where: { id: instanceId }
+      where: { id: instanceId },
+      include: { event: true }
     });
 
     if (!existingInstance) {
       return res.status(404).json({
         error: 'Food instance not found'
       });
+    }
+
+    // Validate time is within event bounds if time is being updated
+    if (time_elapsed_at_consumption !== undefined) {
+      if (time_elapsed_at_consumption < 0) {
+        return res.status(400).json({
+          error: 'time_elapsed_at_consumption cannot be negative'
+        });
+      }
+
+      if (time_elapsed_at_consumption > existingInstance.event.expected_duration) {
+        return res.status(400).json({
+          error: `time_elapsed_at_consumption (${time_elapsed_at_consumption}s) cannot exceed event duration (${existingInstance.event.expected_duration}s)`
+        });
+      }
     }
 
     // Update the food instance

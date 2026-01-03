@@ -28,6 +28,7 @@ interface FoodItemSelectionModalProps {
   isOpen: boolean;
   foodItems: FoodItem[];
   timeInSeconds: number;
+  eventDuration: number;
   categoryFilter: string;
   myItemsOnly: boolean;
   itemFilterMode: ItemFilterMode;
@@ -57,6 +58,7 @@ export const FoodItemSelectionModal = ({
   isOpen,
   foodItems,
   timeInSeconds,
+  eventDuration,
   categoryFilter,
   myItemsOnly: _myItemsOnly,
   itemFilterMode,
@@ -71,11 +73,13 @@ export const FoodItemSelectionModal = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [servings, setServings] = useState('1');
   const [editedTime, setEditedTime] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   // Initialize editedTime when modal opens or timeInSeconds changes
   useEffect(() => {
     if (isOpen) {
       setEditedTime(formatTimeHHMM(timeInSeconds));
+      setError(null);
     }
   }, [isOpen, timeInSeconds]);
 
@@ -85,6 +89,7 @@ export const FoodItemSelectionModal = ({
       setSearchTerm('');
       setServings('1');
       setEditedTime('');
+      setError(null);
     }
   }, [isOpen]);
 
@@ -105,19 +110,35 @@ export const FoodItemSelectionModal = ({
   });
 
   const handleSelect = (foodItemId: string) => {
+    // Clear any previous errors
+    setError(null);
+
     const servingsNum = parseFloat(servings);
     if (isNaN(servingsNum) || servingsNum <= 0) {
-      alert('Please enter valid servings');
+      setError('Please enter valid servings');
       return;
     }
 
     const timeSeconds = parseTimeHHMM(editedTime);
     if (isNaN(timeSeconds)) {
-      alert('Please enter valid time in HH:MM format');
+      setError('Please enter valid time in HH:MM format');
+      return;
+    }
+
+    // Validate time is within event bounds
+    if (timeSeconds < 0) {
+      setError('Time cannot be negative. Please enter a time of 0:00 or later.');
+      return;
+    }
+
+    if (timeSeconds > eventDuration) {
+      const maxTime = formatTimeHHMM(eventDuration);
+      setError(`Time cannot exceed event duration of ${maxTime}. Please enter a time between 0:00 and ${maxTime}.`);
       return;
     }
 
     onSelect(foodItemId, servingsNum, timeSeconds);
+    setError(null);
   };
 
   const handleCreateNewFoodItem = () => {
@@ -142,10 +163,28 @@ export const FoodItemSelectionModal = ({
                 type="text"
                 className="modal-time-input"
                 value={editedTime}
-                onChange={(e) => setEditedTime(e.target.value)}
+                onChange={(e) => {
+                  setEditedTime(e.target.value);
+                  setError(null); // Clear error when user edits
+                }}
                 placeholder="HH:MM"
               />
             </div>
+
+            {/* Error message display */}
+            {error && (
+              <div style={{
+                backgroundColor: '#fee',
+                border: '1px solid #fcc',
+                borderRadius: '4px',
+                padding: '0.75rem',
+                marginBottom: '1rem',
+                color: '#c00',
+                fontSize: '0.9rem'
+              }}>
+                {error}
+              </div>
+            )}
 
             <input
               type="text"
@@ -210,7 +249,10 @@ export const FoodItemSelectionModal = ({
                 type="number"
                 className="modal-servings-input"
                 value={servings}
-                onChange={(e) => setServings(e.target.value)}
+                onChange={(e) => {
+                  setServings(e.target.value);
+                  setError(null); // Clear error when user edits
+                }}
                 step="0.5"
                 min="0.5"
               />

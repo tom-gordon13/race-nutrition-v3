@@ -87,10 +87,9 @@ interface SharedEvent {
 interface EventsProps {
   showCreateDialog?: boolean;
   onHideCreateDialog?: () => void;
-  onShowCreateDialog?: () => void;
 }
 
-const Events = ({ showCreateDialog = false, onHideCreateDialog, onShowCreateDialog }: EventsProps = {}) => {
+const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = {}) => {
   const { user } = useAuth0();
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
@@ -359,7 +358,10 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onShowCreateDial
     const POST_END_TIME = 0.25 * 3600; // 0.25 hours in seconds
     const totalTimelineDuration = selectedEvent.expected_duration + PRE_START_TIME + POST_END_TIME;
     const percentage = dropY / rect.height;
-    const newTime = Math.round((percentage * totalTimelineDuration) - PRE_START_TIME);
+    let newTime = Math.round((percentage * totalTimelineDuration) - PRE_START_TIME);
+
+    // Clamp time to valid range [0, event duration]
+    newTime = Math.max(0, Math.min(newTime, selectedEvent.expected_duration));
 
     // Handle dragging existing instance - optimistic update
     if (draggingInstanceId) {
@@ -430,6 +432,13 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onShowCreateDial
 
   const handleUpdateInstance = async (instanceId: string, time: number, servings: number) => {
     if (!selectedEvent) return;
+
+    // Validate time is within event bounds
+    if (time < 0 || time > selectedEvent.expected_duration) {
+      setError(`Time must be between 0:00 and ${Math.floor(selectedEvent.expected_duration / 3600)}:${Math.floor((selectedEvent.expected_duration % 3600) / 60).toString().padStart(2, '0')}`);
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
 
     try {
       const response = await fetch(`${API_URL}/api/food-instances/${instanceId}`, {
@@ -920,20 +929,23 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onShowCreateDial
       )}
 
       {/* Food Item Selection Modal */}
-      <FoodItemSelectionModal
-        isOpen={showFoodItemModal}
-        foodItems={foodItems}
-        timeInSeconds={modalTimeInSeconds}
-        categoryFilter={categoryFilter}
-        myItemsOnly={myItemsOnly}
-        itemFilterMode={itemFilterMode}
-        onClose={() => setShowFoodItemModal(false)}
-        onSelect={handleFoodItemSelect}
-        onCategoryFilterChange={setCategoryFilter}
-        onMyItemsOnlyChange={setMyItemsOnly}
-        onItemFilterModeChange={setItemFilterMode}
-        categoryColors={categoryColors}
-      />
+      {selectedEvent && (
+        <FoodItemSelectionModal
+          isOpen={showFoodItemModal}
+          foodItems={foodItems}
+          timeInSeconds={modalTimeInSeconds}
+          eventDuration={selectedEvent.expected_duration}
+          categoryFilter={categoryFilter}
+          myItemsOnly={myItemsOnly}
+          itemFilterMode={itemFilterMode}
+          onClose={() => setShowFoodItemModal(false)}
+          onSelect={handleFoodItemSelect}
+          onCategoryFilterChange={setCategoryFilter}
+          onMyItemsOnlyChange={setMyItemsOnly}
+          onItemFilterModeChange={setItemFilterMode}
+          categoryColors={categoryColors}
+        />
+      )}
 
       {/* Nutrient Goals Dialog */}
       {selectedEvent && user?.sub && (
