@@ -80,14 +80,13 @@ function Home() {
           </div>
         } />
         <Route path="/events" element={
-          <div className="events-route-container" style={{ maxWidth: '90%', margin: '0 auto', padding: '2rem', height: '100%', boxSizing: 'border-box' }}>
-            <div style={{ marginBottom: '1rem' }}>
+          <div className="events-route-container" style={{ width: '100%', margin: '0', padding: '0', height: '100%', boxSizing: 'border-box' }}>
+            <div style={{ marginBottom: '0', padding: '1rem 2rem', display: 'flex', justifyContent: 'flex-end', backgroundColor: 'white' }}>
               <Button
                 icon="pi pi-plus"
                 label="Create New Event"
                 onClick={() => setShowCreateEventDialog(true)}
-                severity="secondary"
-                outlined
+                style={{ backgroundColor: '#6366F1', borderColor: '#6366F1', color: 'white' }}
               />
             </div>
             <Events
@@ -97,16 +96,7 @@ function Home() {
           </div>
         } />
         <Route path="/events/:eventId" element={
-          <div className="events-route-container" style={{ maxWidth: '90%', margin: '0 auto', padding: '2rem', height: '100%', boxSizing: 'border-box' }}>
-            <div style={{ marginBottom: '1rem' }}>
-              <Button
-                icon="pi pi-plus"
-                label="Create New Event"
-                onClick={() => setShowCreateEventDialog(true)}
-                severity="secondary"
-                outlined
-              />
-            </div>
+          <div className="events-route-container" style={{ width: '100%', margin: '0', padding: '0', height: '100%', boxSizing: 'border-box' }}>
             <Events
               showCreateDialog={showCreateEventDialog}
               onHideCreateDialog={() => setShowCreateEventDialog(false)}
