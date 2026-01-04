@@ -52,6 +52,59 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET a single event by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { auth0_sub } = req.query;
+
+    // Fetch the event with owner information
+    const event = await prisma.event.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: {
+            auth0_sub: true
+          }
+        }
+      }
+    });
+
+    if (!event) {
+      return res.status(404).json({
+        error: 'Event not found'
+      });
+    }
+
+    // If auth0_sub is provided, check if this user owns the event
+    let isOwner = false;
+    if (auth0_sub && typeof auth0_sub === 'string') {
+      const user = await prisma.user.findUnique({
+        where: { auth0_sub }
+      });
+
+      if (user) {
+        isOwner = user.id === event.event_user_id;
+      }
+    }
+
+    console.log(`Fetched event ${event.id}, isOwner: ${isOwner}, private: ${event.private}`);
+
+    return res.status(200).json({
+      event,
+      isOwner,
+      ownerAuth0Sub: event.user.auth0_sub
+    });
+
+  } catch (error) {
+    console.error('Error fetching event:', error);
+    return res.status(500).json({
+      error: 'Failed to fetch event',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // POST create a new event
 router.post('/', async (req, res) => {
   try {
@@ -106,14 +159,14 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { type, expected_duration } = req.body;
+    const { type, expected_duration, private: isPrivate } = req.body;
 
-    console.log('Received event update request:', { id, type, expected_duration });
+    console.log('Received event update request:', { id, type, expected_duration, private: isPrivate });
 
     // Validate required fields
-    if (!type && !expected_duration) {
+    if (!type && !expected_duration && isPrivate === undefined) {
       return res.status(400).json({
-        error: 'At least one field (type or expected_duration) must be provided'
+        error: 'At least one field (type, expected_duration, or private) must be provided'
       });
     }
 
@@ -133,11 +186,12 @@ router.put('/:id', async (req, res) => {
       where: { id },
       data: {
         ...(type && { type }),
-        ...(expected_duration && { expected_duration: parseInt(expected_duration) })
+        ...(expected_duration && { expected_duration: parseInt(expected_duration) }),
+        ...(isPrivate !== undefined && { private: isPrivate })
       }
     });
 
-    console.log('Event updated:', updatedEvent.id, 'Type:', updatedEvent.type);
+    console.log('Event updated:', updatedEvent.id, 'Type:', updatedEvent.type, 'Private:', updatedEvent.private);
 
     return res.status(200).json({
       message: 'Event updated successfully',

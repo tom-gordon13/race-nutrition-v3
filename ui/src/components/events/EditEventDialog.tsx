@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Dialog } from 'primereact/dialog';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
+import { InputSwitch } from 'primereact/inputswitch';
 import { Message } from 'primereact/message';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import './EditEventDialog.css';
@@ -13,6 +14,7 @@ interface EditEventDialogProps {
     id: string;
     type: string;
     expected_duration: number;
+    private: boolean;
   } | null;
   onHide: () => void;
   onSave: () => void;
@@ -28,6 +30,7 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
   const [seconds, setSeconds] = useState(0);
+  const [isPrivate, setIsPrivate] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -49,6 +52,7 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
       setHours(Math.floor(totalSeconds / 3600));
       setMinutes(Math.floor((totalSeconds % 3600) / 60));
       setSeconds(totalSeconds % 60);
+      setIsPrivate(event.private);
     }
   }, [event]);
 
@@ -80,6 +84,7 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
         body: JSON.stringify({
           type: eventName,
           expected_duration: totalSeconds,
+          private: isPrivate,
         }),
       });
 
@@ -210,6 +215,53 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
               outline: 'none'
             }}
           />
+        </div>
+
+        {/* Private Toggle Section */}
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '8px',
+          padding: '0.875rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.75rem'
+        }}>
+          <div style={{
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            color: '#9ca3af',
+            letterSpacing: '0.1em'
+          }}>
+            PRIVACY
+          </div>
+
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <div>
+              <div style={{
+                fontSize: '1rem',
+                fontWeight: 600,
+                color: '#1f2937',
+                marginBottom: '0.25rem'
+              }}>
+                Private
+              </div>
+              <div style={{
+                fontSize: '0.875rem',
+                color: '#6b7280'
+              }}>
+                {isPrivate ? 'Only you can see this event' : 'Event can be shared with others'}
+              </div>
+            </div>
+            <InputSwitch
+              checked={isPrivate}
+              onChange={(e) => setIsPrivate(e.value)}
+              disabled={loading}
+            />
+          </div>
         </div>
 
         {/* Duration Section */}

@@ -31,6 +31,7 @@ interface Event {
   type: string;
   created_at: string;
   updated_at: string;
+  private: boolean;
 }
 
 interface FoodItemNutrient {
@@ -157,6 +158,10 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
 
   // State for category color preferences
   const [categoryColors, setCategoryColors] = useState<Map<string, string>>(new Map());
+
+  // State for view-only mode (when viewing someone else's non-private event)
+  const [isViewOnly, setIsViewOnly] = useState(false);
+  const [eventOwnerAuth0Sub, setEventOwnerAuth0Sub] = useState<string | null>(null);
 
   // Detect mobile screen size
   useEffect(() => {
@@ -288,16 +293,73 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
 
   // Auto-select event if eventId is in URL, or clear selection if no eventId
   useEffect(() => {
-    if (eventId && events.length > 0) {
-      const eventToSelect = events.find(e => e.id === eventId);
-      if (eventToSelect && selectedEvent?.id !== eventId) {
-        setSelectedEvent(eventToSelect);
+    const handleEventSelection = async () => {
+      if (eventId && !loading && user?.sub) {
+        // Check if this event is in the user's events list (meaning they own it)
+        const ownedEvent = events.find(e => e.id === eventId);
+
+        if (ownedEvent) {
+          // User owns this event, show it normally
+          if (selectedEvent?.id !== eventId) {
+            setSelectedEvent(ownedEvent);
+            setIsViewOnly(false);
+          }
+        } else {
+          // Event not in user's list, fetch it from API to check access
+          try {
+            const response = await fetch(`${API_URL}/api/events/${eventId}?auth0_sub=${encodeURIComponent(user.sub)}`);
+
+            if (!response.ok) {
+              throw new Error('Event not found');
+            }
+
+            const data = await response.json();
+            const fetchedEvent = data.event;
+            const isOwner = data.isOwner;
+            const ownerAuth0Sub = data.ownerAuth0Sub;
+
+            console.log('Fetched event:', fetchedEvent.id, 'isOwner:', isOwner, 'private:', fetchedEvent.private);
+
+            // If user is the owner but event wasn't in the events list, add it and show normally
+            if (isOwner) {
+              if (selectedEvent?.id !== eventId) {
+                setSelectedEvent(fetchedEvent);
+                setIsViewOnly(false);
+                setEventOwnerAuth0Sub(null);
+              }
+            } else {
+              // User is not the owner - check if event is private
+              if (fetchedEvent.private) {
+                // Private event that user doesn't own - redirect to /events
+                console.log('Cannot access private event');
+                navigate('/events');
+                setError('This event is private and cannot be accessed.');
+                setTimeout(() => setError(null), 3000);
+              } else {
+                // Public event that user doesn't own - show in view-only mode
+                console.log('Showing public event in view-only mode');
+                setSelectedEvent(fetchedEvent);
+                setIsViewOnly(true);
+                setEventOwnerAuth0Sub(ownerAuth0Sub);
+              }
+            }
+          } catch (err) {
+            console.error('Error fetching event:', err);
+            navigate('/events');
+            setError('Event not found or you do not have access to view it.');
+            setTimeout(() => setError(null), 3000);
+          }
+        }
+      } else if (!eventId && selectedEvent) {
+        // Clear selection when navigating back to /events
+        setSelectedEvent(null);
+        setIsViewOnly(false);
+        setEventOwnerAuth0Sub(null);
       }
-    } else if (!eventId && selectedEvent) {
-      // Clear selection when navigating back to /events
-      setSelectedEvent(null);
-    }
-  }, [eventId, events]);
+    };
+
+    handleEventSelection();
+  }, [eventId, events, loading, user]);
 
   const fetchFoodInstances = async (eventId: string) => {
     setLoadingInstances(true);
@@ -736,16 +798,18 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
         <div className="event-detail-container">
           <div className="event-detail-header">
             <div className="event-header-top-row">
-              <h3>{selectedEvent.type}</h3>
+              <h3>{selectedEvent.type}{isViewOnly && <span style={{ fontSize: '0.875rem', fontWeight: 'normal', color: '#6b7280', marginLeft: '0.5rem' }}>(View Only)</span>}</h3>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button
-                  onClick={() => setShowShareEventDialog(true)}
-                  className="share-event-btn"
-                  title="Share event"
-                >
-                  <i className="pi pi-share-alt"></i>
-                </button>
-                {isMobile && (
+                {!isViewOnly && (
+                  <button
+                    onClick={() => setShowShareEventDialog(true)}
+                    className="share-event-btn"
+                    title="Share event"
+                  >
+                    <i className="pi pi-share-alt"></i>
+                  </button>
+                )}
+                {isMobile && !isViewOnly && (
                   <button
                     onClick={() => setIsFullscreen(true)}
                     className="expand-btn"
@@ -754,13 +818,15 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
                     <i className="pi pi-window-maximize"></i>
                   </button>
                 )}
-                <button
-                  onClick={() => handleEditEvent(selectedEvent)}
-                  className="edit-event-btn"
-                >
-                  <span className="edit-event-text">Edit Event</span>
-                  <span className="edit-event-icon">✎</span>
-                </button>
+                {!isViewOnly && (
+                  <button
+                    onClick={() => handleEditEvent(selectedEvent)}
+                    className="edit-event-btn"
+                  >
+                    <span className="edit-event-text">Edit Event</span>
+                    <span className="edit-event-icon">✎</span>
+                  </button>
+                )}
                 <button
                   onClick={() => handleSelectEvent(null)}
                   className="close-btn"
@@ -800,26 +866,28 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
                   <div className="event-stat-label">sodium/hr</div>
                 </div>
               </div>
-              <div className="event-action-buttons">
-                <button
-                  onClick={() => setShowNutrientGoalsDialog(true)}
-                  className="add-nutrient-btn"
-                >
-                  Nutrient Goals
-                </button>
-                <button
-                  onClick={() => setShowAnalyticsDialog(true)}
-                  className="add-nutrient-btn"
-                >
-                  Analytics
-                </button>
-                <button
-                  onClick={() => setShowItemListDialog(true)}
-                  className="add-nutrient-btn"
-                >
-                  View Item List
-                </button>
-              </div>
+              {!isViewOnly && (
+                <div className="event-action-buttons">
+                  <button
+                    onClick={() => setShowNutrientGoalsDialog(true)}
+                    className="add-nutrient-btn"
+                  >
+                    Nutrient Goals
+                  </button>
+                  <button
+                    onClick={() => setShowAnalyticsDialog(true)}
+                    className="add-nutrient-btn"
+                  >
+                    Analytics
+                  </button>
+                  <button
+                    onClick={() => setShowItemListDialog(true)}
+                    className="add-nutrient-btn"
+                  >
+                    View Item List
+                  </button>
+                </div>
+              )}
             </div>
           </div>
           <div className={`event-detail-content ${isMobile && !isFullscreen ? 'mobile-condensed-view' : ''}`}>
@@ -856,7 +924,7 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
                     onInstanceClick={handleInstanceClick}
                     timelineStyle={timelineStyle}
                     categoryColors={categoryColors}
-                    viewOnly={false}
+                    viewOnly={isViewOnly}
                     isMobile={isMobile}
                   />
 
@@ -864,7 +932,7 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
                     event={selectedEvent}
                     foodInstances={foodInstances}
                     timelineStyle={timelineStyle}
-                    userId={user.sub}
+                    userId={isViewOnly && eventOwnerAuth0Sub ? eventOwnerAuth0Sub : user.sub}
                     goalsRefreshTrigger={goalsRefreshTrigger}
                     scrollContainerRef={timelineContainerRef}
                   />
@@ -910,7 +978,7 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
                     onInstanceClick={handleInstanceClick}
                     timelineStyle={timelineStyle}
                     categoryColors={categoryColors}
-                    viewOnly={isMobile && !isFullscreen}
+                    viewOnly={isViewOnly || (isMobile && !isFullscreen)}
                     isMobile={isMobile}
                   />
 
@@ -919,13 +987,13 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
                       event={selectedEvent}
                       foodInstances={foodInstances}
                       timelineStyle={timelineStyle}
-                      userId={user.sub}
+                      userId={isViewOnly && eventOwnerAuth0Sub ? eventOwnerAuth0Sub : user.sub}
                       goalsRefreshTrigger={goalsRefreshTrigger}
                       scrollContainerRef={timelineContainerRef}
                     />
                   )}
                 </div>
-                {isMobile && (
+                {isMobile && !isViewOnly && (
                   <div className="mobile-edit-fuel-plan-container">
                     <button
                       onClick={() => setIsFullscreen(true)}
@@ -1009,6 +1077,7 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
           }}
           onSave={handleUpdateInstance}
           onDelete={handleDeleteInstance}
+          viewOnly={isViewOnly}
         />
       )}
 

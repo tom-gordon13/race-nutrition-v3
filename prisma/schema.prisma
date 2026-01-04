@@ -81,6 +81,7 @@ model Event {
   updated_at        DateTime           @updatedAt
   expected_duration Int
   type              String
+  private           Boolean            @default(true)
   user              User               @relation(fields: [event_user_id], references: [id])
   foodInstances     FoodInstance[]
   eventGoalsBase    EventGoalsBase[]

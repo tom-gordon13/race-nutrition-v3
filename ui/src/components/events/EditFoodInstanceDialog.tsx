@@ -6,11 +6,25 @@ import { InputNumber } from 'primereact/inputnumber';
 import { Message } from 'primereact/message';
 import { ProgressSpinner } from 'primereact/progressspinner';
 
+interface FoodItemNutrient {
+  id: string;
+  food_item_id: string;
+  nutrient_id: string;
+  quantity: number;
+  unit: string;
+  nutrient: {
+    id: string;
+    nutrient_name: string;
+    nutrient_abbreviation: string;
+  };
+}
+
 interface FoodItem {
   id: string;
   item_name: string;
   brand?: string;
   category?: string;
+  foodItemNutrients?: FoodItemNutrient[];
 }
 
 interface FoodInstance {
@@ -29,6 +43,7 @@ interface EditFoodInstanceDialogProps {
   onHide: () => void;
   onSave: (instanceId: string, time: number, servings: number) => Promise<void>;
   onDelete: (instanceId: string) => void;
+  viewOnly?: boolean;
 }
 
 const formatTimeHHMM = (seconds: number) => {
@@ -52,6 +67,7 @@ export const EditFoodInstanceDialog: React.FC<EditFoodInstanceDialogProps> = ({
   onHide,
   onSave,
   onDelete,
+  viewOnly = false,
 }) => {
   const [timeInput, setTimeInput] = useState('');
   const [servings, setServings] = useState<number>(1);
@@ -167,7 +183,7 @@ export const EditFoodInstanceDialog: React.FC<EditFoodInstanceDialogProps> = ({
               letterSpacing: '0.1em',
               marginBottom: '0.5rem'
             }}>
-              EDITING FOOD ITEM
+              {viewOnly ? 'VIEWING FOOD ITEM' : 'EDITING FOOD ITEM'}
             </div>
             <div style={{
               fontSize: '1.5rem',
@@ -233,6 +249,8 @@ export const EditFoodInstanceDialog: React.FC<EditFoodInstanceDialogProps> = ({
               setError(null);
             }}
             placeholder="0:00"
+            disabled={viewOnly}
+            readOnly={viewOnly}
             style={{
               width: '100%',
               padding: '0.75rem',
@@ -274,7 +292,9 @@ export const EditFoodInstanceDialog: React.FC<EditFoodInstanceDialogProps> = ({
             maxFractionDigits={2}
             min={0.1}
             step={0.1}
-            showButtons
+            showButtons={!viewOnly}
+            disabled={viewOnly}
+            readOnly={viewOnly}
             style={{ width: '100%' }}
             inputStyle={{
               padding: '0.75rem',
@@ -284,41 +304,114 @@ export const EditFoodInstanceDialog: React.FC<EditFoodInstanceDialogProps> = ({
           />
         </div>
 
+        {/* Nutrition Information Section */}
+        {foodInstance.foodItem.foodItemNutrients && foodInstance.foodItem.foodItemNutrients.length > 0 && (
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '1rem'
+          }}>
+            <div style={{
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              color: '#374151',
+              marginBottom: '0.75rem'
+            }}>
+              Nutrition Information {servings !== 1 && `(${servings} ${servings === 1 ? 'serving' : 'servings'})`}
+            </div>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.5rem'
+            }}>
+              {foodInstance.foodItem.foodItemNutrients.map((nutrient) => {
+                const totalQuantity = nutrient.quantity * servings;
+                return (
+                  <div
+                    key={nutrient.id}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '0.5rem',
+                      backgroundColor: '#f9fafb',
+                      borderRadius: '6px'
+                    }}
+                  >
+                    <span style={{
+                      fontSize: '0.875rem',
+                      color: '#374151',
+                      fontWeight: 500
+                    }}>
+                      {nutrient.nutrient.nutrient_name}
+                    </span>
+                    <span style={{
+                      fontSize: '0.875rem',
+                      color: '#111827',
+                      fontWeight: 600
+                    }}>
+                      {totalQuantity.toFixed(1)} {nutrient.unit}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Action Buttons */}
-        <div style={{
-          display: 'flex',
-          gap: '0.5rem',
-          marginTop: '0.5rem'
-        }}>
-          <Button
-            label="Delete"
-            severity="danger"
-            outlined
-            onClick={handleDelete}
-            disabled={loading}
-            style={{
-              flex: 1,
-              padding: '0.75rem',
-              fontSize: '1rem',
-              fontWeight: 600,
-              borderRadius: '12px'
-            }}
-          />
-          <Button
-            label={loading ? 'Saving...' : 'Save Changes'}
-            onClick={handleSave}
-            disabled={loading}
-            style={{
-              flex: 2,
-              padding: '0.75rem',
-              fontSize: '1rem',
-              fontWeight: 600,
-              borderRadius: '12px',
-              backgroundColor: '#646cff',
-              border: 'none'
-            }}
-          />
-        </div>
+        {viewOnly ? (
+          <div style={{ marginTop: '0.5rem' }}>
+            <Button
+              label="Close"
+              onClick={onHide}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                fontSize: '1rem',
+                fontWeight: 600,
+                borderRadius: '12px',
+                backgroundColor: '#646cff',
+                border: 'none'
+              }}
+            />
+          </div>
+        ) : (
+          <div style={{
+            display: 'flex',
+            gap: '0.5rem',
+            marginTop: '0.5rem'
+          }}>
+            <Button
+              label="Delete"
+              severity="danger"
+              outlined
+              onClick={handleDelete}
+              disabled={loading}
+              style={{
+                flex: 1,
+                padding: '0.75rem',
+                fontSize: '1rem',
+                fontWeight: 600,
+                borderRadius: '12px'
+              }}
+            />
+            <Button
+              label={loading ? 'Saving...' : 'Save Changes'}
+              onClick={handleSave}
+              disabled={loading}
+              style={{
+                flex: 2,
+                padding: '0.75rem',
+                fontSize: '1rem',
+                fontWeight: 600,
+                borderRadius: '12px',
+                backgroundColor: '#646cff',
+                border: 'none'
+              }}
+            />
+          </div>
+        )}
 
         {loading && (
           <div style={{

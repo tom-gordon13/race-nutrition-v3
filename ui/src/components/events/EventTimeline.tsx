@@ -38,6 +38,7 @@ interface Event {
   type: string;
   created_at: string;
   updated_at: string;
+  private: boolean;
 }
 
 interface EventTimelineProps {
@@ -67,9 +68,10 @@ const formatTimeHHMM = (seconds: number) => {
 };
 
 // Calculate horizontal offsets for overlapping instances
-const calculateHorizontalOffsets = (instances: FoodInstance[], event: Event, viewOnly: boolean = false) => {
-  const ITEM_HEIGHT_PERCENT = viewOnly ? 2 : 8; // Much smaller in view-only mode
-  const ITEM_WIDTH_PX = viewOnly ? 95 : 180; // Narrower width in view-only mode
+const calculateHorizontalOffsets = (instances: FoodInstance[], event: Event, viewOnly: boolean = false, isMobile: boolean = false) => {
+  // Desktop view-only: larger pills to show item names, Mobile view-only: condensed, Edit mode: normal
+  const ITEM_HEIGHT_PERCENT = viewOnly ? (isMobile ? 2 : 8) : 8;
+  const ITEM_WIDTH_PX = viewOnly ? (isMobile ? 95 : 250) : 180;
   const PRE_START_TIME = 0.25 * 3600; // 0.25 hours in seconds
   const POST_END_TIME = 0.25 * 3600; // 0.25 hours in seconds
   const totalTimelineDuration = event.expected_duration + PRE_START_TIME + POST_END_TIME;
@@ -183,10 +185,10 @@ export const EventTimeline = ({
     return dividers;
   };
 
-  const horizontalOffsets = calculateHorizontalOffsets(foodInstances, event, viewOnly);
+  const horizontalOffsets = calculateHorizontalOffsets(foodInstances, event, viewOnly, isMobile);
 
   // Calculate minimum width needed to show all food instances
-  const ITEM_WIDTH_PX = viewOnly ? 95 : 180;
+  const ITEM_WIDTH_PX = viewOnly ? (isMobile ? 95 : 250) : 180;
   const maxOffset = Math.max(0, ...Object.values(horizontalOffsets));
   const minTimelineWidth = maxOffset + ITEM_WIDTH_PX + 20; // Add 20px padding on the right
 
@@ -426,8 +428,8 @@ export const EventTimeline = ({
                 position: 'absolute',
                 top: `${position}%`,
                 left: `${leftOffset}px`,
-                width: viewOnly ? '95px' : '180px',
-                cursor: isEditing ? 'default' : (viewOnly ? 'default' : 'grab'),
+                width: viewOnly ? (isMobile ? '95px' : '250px') : '180px',
+                cursor: isEditing ? 'default' : (viewOnly ? 'pointer' : 'grab'),
                 touchAction: isEditing ? 'auto' : (viewOnly ? 'auto' : 'none'),
                 zIndex: viewOnly ? 100 : undefined, // Ensure visibility in view-only mode
                 paddingTop: 0, // Remove top padding so the top edge aligns exactly with consumption time
@@ -488,10 +490,10 @@ export const EventTimeline = ({
                     setHoveredInstanceId(null);
                     setIsHoveringInstance(false);
                   }}
-                  onClick={() => !isEditing && !viewOnly && onInstanceClick && onInstanceClick(instance)}
+                  onClick={() => !isEditing && onInstanceClick && onInstanceClick(instance)}
                   style={{
                     ...visualStyle,
-                    cursor: !isEditing && !viewOnly && onInstanceClick ? 'pointer' : visualStyle.cursor
+                    cursor: !isEditing && onInstanceClick ? 'pointer' : visualStyle.cursor
                   }}
                 >
                   <div
@@ -499,7 +501,7 @@ export const EventTimeline = ({
                     style={{
                       backgroundColor,
                       borderColor,
-                      ...(viewOnly && {
+                      ...(viewOnly && isMobile && {
                         minHeight: '12px',
                         height: '12px',
                         display: 'block',
@@ -552,11 +554,11 @@ export const EventTimeline = ({
                           ✓
                         </button>
                       </div>
-                    ) : viewOnly ? (
-                      // View-only mode - simple spacer to maintain dimensions
+                    ) : viewOnly && isMobile ? (
+                      // Mobile view-only mode - simple spacer to maintain dimensions
                       ' '
                     ) : (
-                      // Normal display - show item name and timestamp
+                      // Normal display (including desktop view-only) - show item name and timestamp
                       <div className="food-instance-name">
                         <div className="instance-item-name">{instance.foodItem.item_name}</div>
                         <div className="instance-timestamp">{formatTimeHHMM(instance.time_elapsed_at_consumption)}</div>

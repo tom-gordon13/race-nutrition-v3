@@ -46,6 +46,7 @@ interface Event {
   type: string;
   created_at: string;
   updated_at: string;
+  private: boolean;
 }
 
 interface EventGoalBase {
