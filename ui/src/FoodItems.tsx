@@ -475,22 +475,10 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
     }
   };
 
-  // Template for actions column
-  const actionsBodyTemplate = (rowData: FoodItem) => {
-    // If we're not in "My Items" mode, only show edit for items owned by the user
-    if (viewMode !== 'my_items' && !isOwnedByUser(rowData)) {
-      return null;
-    }
-
-    return (
-      <Button
-        label="Edit"
-        icon="pi pi-pencil"
-        onClick={() => handleEditStart(rowData)}
-        size="small"
-        style={{ backgroundColor: '#646cff', borderColor: '#646cff' }}
-      />
-    );
+  // Handle row click to open edit dialog
+  const handleRowClick = (e: any) => {
+    const rowData = e.data as FoodItem;
+    handleEditStart(rowData);
   };
 
   if (loading) {
@@ -586,6 +574,9 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
           emptyMessage="No food items found."
           scrollable
           scrollHeight="flex"
+          onRowClick={handleRowClick}
+          selectionMode="single"
+          style={{ cursor: 'pointer' }}
         >
           <Column
             header="Food Item"
@@ -619,11 +610,6 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
             header="Nutrients"
             body={nutrientsBodyTemplate}
             style={{ minWidth: '300px' }}
-          />
-          <Column
-            header="Actions"
-            body={actionsBodyTemplate}
-            style={{ minWidth: '150px' }}
           />
         </DataTable>
       )}
@@ -673,7 +659,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
                 letterSpacing: '0.1em',
                 marginBottom: '0.5rem'
               }}>
-                EDITING
+                {editingItem && isOwnedByUser(editingItem) ? 'EDITING' : 'VIEWING'}
               </div>
               <div style={{
                 fontSize: '1.5rem',
@@ -742,6 +728,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
             <InputText
               value={editedData.item_name || ''}
               onChange={(e) => setEditedData({ ...editedData, item_name: e.target.value })}
+              disabled={!editingItem || !isOwnedByUser(editingItem)}
               style={{
                 width: '100%',
                 fontSize: '1.125rem',
@@ -773,6 +760,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
                     value: cat
                   }))}
                   placeholder="Select category"
+                  disabled={!editingItem || !isOwnedByUser(editingItem)}
                   style={{
                     width: '100%',
                     backgroundColor: '#f3f4f6',
@@ -799,6 +787,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
                   value={editedData.brand || ''}
                   onChange={(e) => setEditedData({ ...editedData, brand: e.target.value })}
                   placeholder="Add brand"
+                  disabled={!editingItem || !isOwnedByUser(editingItem)}
                   style={{
                     width: '100%',
                     backgroundColor: '#f3f4f6',
@@ -864,19 +853,21 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
                   }}
                 />
               )}
-              <Button
-                label="Edit"
-                onClick={() => setIsEditingCost(true)}
-                style={{
-                  backgroundColor: '#f3f4f6',
-                  border: 'none',
-                  color: '#6b7280',
-                  fontWeight: 600,
-                  padding: '0.5rem 1rem',
-                  borderRadius: '6px',
-                  fontSize: '0.875rem'
-                }}
-              />
+              {editingItem && isOwnedByUser(editingItem) && (
+                <Button
+                  label="Edit"
+                  onClick={() => setIsEditingCost(true)}
+                  style={{
+                    backgroundColor: '#f3f4f6',
+                    border: 'none',
+                    color: '#6b7280',
+                    fontWeight: 600,
+                    padding: '0.5rem 1rem',
+                    borderRadius: '6px',
+                    fontSize: '0.875rem'
+                  }}
+                />
+              )}
             </div>
           </div>
 
@@ -898,20 +889,22 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
               }}>
                 NUTRIENTS
               </div>
-              <Button
-                label="Add"
-                icon="pi pi-plus"
-                onClick={addNutrientRow}
-                style={{
-                  backgroundColor: '#6366f1',
-                  border: 'none',
-                  color: 'white',
-                  fontWeight: 600,
-                  padding: '0.5rem 0.875rem',
-                  borderRadius: '6px',
-                  fontSize: '0.875rem'
-                }}
-              />
+              {editingItem && isOwnedByUser(editingItem) && (
+                <Button
+                  label="Add"
+                  icon="pi pi-plus"
+                  onClick={addNutrientRow}
+                  style={{
+                    backgroundColor: '#6366f1',
+                    border: 'none',
+                    color: 'white',
+                    fontWeight: 600,
+                    padding: '0.5rem 0.875rem',
+                    borderRadius: '6px',
+                    fontSize: '0.875rem'
+                  }}
+                />
+              )}
             </div>
 
             {/* Nutrient List */}
@@ -947,6 +940,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
                       options={availableNutrients}
                       optionLabel="nutrient_name"
                       placeholder="Select nutrient"
+                      disabled={!editingItem || !isOwnedByUser(editingItem)}
                       style={{ width: '100%', border: 'none', backgroundColor: 'transparent' }}
                     />
                   </div>
@@ -973,6 +967,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
                       minFractionDigits={0}
                       maxFractionDigits={2}
                       min={0}
+                      disabled={!editingItem || !isOwnedByUser(editingItem)}
                       inputStyle={{
                         width: '45px',
                         fontSize: '1rem',
@@ -994,26 +989,28 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
                   </div>
 
                   {/* Delete Button */}
-                  <Button
-                    icon="pi pi-trash"
-                    onClick={() => removeNutrientRow(index)}
-                    text
-                    rounded
-                    severity="danger"
-                    style={{
-                      color: '#ef4444',
-                      flexShrink: 0,
-                      padding: 0,
-                      margin: 0,
-                      minWidth: 'auto',
-                      width: '1.5rem',
-                      height: '1.5rem'
-                    }}
-                    pt={{
-                      root: { style: { padding: 0, margin: 0 } },
-                      icon: { style: { fontSize: '0.875rem' } }
-                    }}
-                  />
+                  {editingItem && isOwnedByUser(editingItem) && (
+                    <Button
+                      icon="pi pi-trash"
+                      onClick={() => removeNutrientRow(index)}
+                      text
+                      rounded
+                      severity="danger"
+                      style={{
+                        color: '#ef4444',
+                        flexShrink: 0,
+                        padding: 0,
+                        margin: 0,
+                        minWidth: 'auto',
+                        width: '1.5rem',
+                        height: '1.5rem'
+                      }}
+                      pt={{
+                        root: { style: { padding: 0, margin: 0 } },
+                        icon: { style: { fontSize: '0.875rem' } }
+                      }}
+                    />
+                  )}
                 </div>
               );
             })}
@@ -1021,36 +1018,55 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
 
           {/* Footer Buttons */}
           <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0' }}>
-            <Button
-              label="Cancel"
-              onClick={handleEditCancel}
-              style={{
-                flex: 1,
-                backgroundColor: '#d1d5db',
-                border: 'none',
-                color: '#6b7280',
-                fontWeight: 600,
-                padding: '0.75rem',
-                borderRadius: '8px',
-                fontSize: '0.9375rem'
-              }}
-            />
-            <Button
-              label="Save Changes"
-              onClick={handleEditSave}
-              loading={saving}
-              disabled={!editedData.item_name}
-              style={{
-                flex: 1,
-                backgroundColor: '#1f2937',
-                border: 'none',
-                color: 'white',
-                fontWeight: 600,
-                padding: '0.75rem',
-                borderRadius: '8px',
-                fontSize: '0.9375rem'
-              }}
-            />
+            {editingItem && isOwnedByUser(editingItem) ? (
+              <>
+                <Button
+                  label="Cancel"
+                  onClick={handleEditCancel}
+                  style={{
+                    flex: 1,
+                    backgroundColor: '#d1d5db',
+                    border: 'none',
+                    color: '#6b7280',
+                    fontWeight: 600,
+                    padding: '0.75rem',
+                    borderRadius: '8px',
+                    fontSize: '0.9375rem'
+                  }}
+                />
+                <Button
+                  label="Save Changes"
+                  onClick={handleEditSave}
+                  loading={saving}
+                  disabled={!editedData.item_name}
+                  style={{
+                    flex: 1,
+                    backgroundColor: '#1f2937',
+                    border: 'none',
+                    color: 'white',
+                    fontWeight: 600,
+                    padding: '0.75rem',
+                    borderRadius: '8px',
+                    fontSize: '0.9375rem'
+                  }}
+                />
+              </>
+            ) : (
+              <Button
+                label="Close"
+                onClick={handleEditCancel}
+                style={{
+                  flex: 1,
+                  backgroundColor: '#1f2937',
+                  border: 'none',
+                  color: 'white',
+                  fontWeight: 600,
+                  padding: '0.75rem',
+                  borderRadius: '8px',
+                  fontSize: '0.9375rem'
+                }}
+              />
+            )}
           </div>
         </div>
       </Dialog>
