@@ -14,6 +14,11 @@ interface User {
   email: string | null;
 }
 
+interface Event {
+  id: string;
+  private: boolean;
+}
+
 interface ShareEventDialogProps {
   visible: boolean;
   eventId: string | null;
@@ -36,6 +41,8 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [event, setEvent] = useState<Event | null>(null);
+  const [privateEventAlert, setPrivateEventAlert] = useState<boolean>(false);
 
   // Detect mobile screen size
   useEffect(() => {
@@ -47,17 +54,20 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Fetch connected users when dialog opens
+  // Fetch connected users and event details when dialog opens
   useEffect(() => {
-    if (visible && userId) {
+    if (visible && userId && eventId) {
       fetchConnectedUsers();
+      fetchEventDetails();
     } else {
       // Reset state when dialog closes
       setConnectedUsers([]);
       setError(null);
       setSuccess(null);
+      setEvent(null);
+      setPrivateEventAlert(false);
     }
-  }, [visible, userId]);
+  }, [visible, userId, eventId]);
 
   const fetchConnectedUsers = async () => {
     if (!userId) return;
@@ -85,6 +95,54 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
       console.error('Error fetching connected users:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchEventDetails = async () => {
+    if (!eventId) return;
+
+    try {
+      const response = await fetch(`${API_URL}/api/events/${eventId}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch event details');
+      }
+
+      const data = await response.json();
+      setEvent(data.event);
+    } catch (err) {
+      console.error('Error fetching event details:', err);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (!eventId) return;
+
+    const eventUrl = `${window.location.origin}/events/${eventId}`;
+
+    try {
+      await navigator.clipboard.writeText(eventUrl);
+      setSuccess('Link copied to clipboard!');
+
+      // Check if event is private and show warning
+      if (event?.private) {
+        setPrivateEventAlert(true);
+        // Hide the alert after 5 seconds
+        setTimeout(() => {
+          setPrivateEventAlert(false);
+        }, 5000);
+      }
+
+      // Hide success message after 3 seconds
+      setTimeout(() => {
+        setSuccess(null);
+      }, 3000);
+    } catch (err) {
+      setError('Failed to copy link to clipboard');
+      console.error('Error copying to clipboard:', err);
+      setTimeout(() => {
+        setError(null);
+      }, 3000);
     }
   };
 
@@ -217,6 +275,41 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
         {success && (
           <Message severity="success" text={success} style={{ width: '100%', marginBottom: '0.5rem' }} />
         )}
+
+        {/* Private Event Alert */}
+        {privateEventAlert && (
+          <Message
+            severity="warn"
+            text="This event is private. Other users will not be able to see it unless you mark it as public."
+            style={{ width: '100%', marginBottom: '0.5rem' }}
+          />
+        )}
+
+        {/* Copy Link Button */}
+        <button
+          onClick={handleCopyLink}
+          style={{
+            width: '100%',
+            padding: '0.875rem',
+            backgroundColor: '#3b82f6',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '1rem',
+            fontWeight: 600,
+            transition: 'background-color 0.2s',
+            marginBottom: '0.5rem'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#2563eb';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#3b82f6';
+          }}
+        >
+          Copy Link
+        </button>
 
         {/* Content Section */}
         <div style={{
