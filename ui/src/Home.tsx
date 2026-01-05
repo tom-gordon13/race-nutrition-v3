@@ -36,14 +36,13 @@ function Home() {
       <Routes>
         <Route path="/" element={<Navigate to="/food-items" replace />} />
         <Route path="/food-items" element={
-          <div className="food-items-page-container" style={{ maxWidth: '90%', margin: '0 auto', padding: '2rem', height: '100%', boxSizing: 'border-box' }}>
-            <div style={{ marginBottom: '1rem' }}>
+          <div className="food-items-page-container" style={{ width: '100%', margin: '0', padding: '0', height: '100%', boxSizing: 'border-box' }}>
+            <div style={{ marginBottom: '0', padding: '1rem 2rem', display: 'flex', justifyContent: 'center', backgroundColor: '#f3f4f6' }}>
               <Button
                 icon="pi pi-plus"
                 label="Create New Item"
                 onClick={() => setShowCreateDialog(true)}
-                severity="secondary"
-                outlined
+                style={{ backgroundColor: '#6366F1', borderColor: '#6366F1', color: 'white', fontSize: '1rem', padding: '0.75rem 1.5rem' }}
               />
             </div>
             <FoodItems refreshTrigger={refreshTrigger} />
@@ -58,14 +57,13 @@ function Home() {
           </div>
         } />
         <Route path="/food-items/:id" element={
-          <div className="food-items-page-container" style={{ maxWidth: '90%', margin: '0 auto', padding: '2rem', height: '100%', boxSizing: 'border-box' }}>
-            <div style={{ marginBottom: '1rem' }}>
+          <div className="food-items-page-container" style={{ width: '100%', margin: '0', padding: '0', height: '100%', boxSizing: 'border-box' }}>
+            <div style={{ marginBottom: '0', padding: '1rem 2rem', display: 'flex', justifyContent: 'center', backgroundColor: '#f3f4f6' }}>
               <Button
                 icon="pi pi-plus"
                 label="Create New Item"
                 onClick={() => setShowCreateDialog(true)}
-                severity="secondary"
-                outlined
+                style={{ backgroundColor: '#6366F1', borderColor: '#6366F1', color: 'white', fontSize: '1rem', padding: '0.75rem 1.5rem' }}
               />
             </div>
             <FoodItems refreshTrigger={refreshTrigger} />
@@ -80,14 +78,13 @@ function Home() {
           </div>
         } />
         <Route path="/events" element={
-          <div className="events-route-container" style={{ maxWidth: '90%', margin: '0 auto', padding: '2rem', height: '100%', boxSizing: 'border-box' }}>
-            <div style={{ marginBottom: '1rem' }}>
+          <div className="events-route-container" style={{ width: '100%', margin: '0', padding: '0', height: '100%', boxSizing: 'border-box' }}>
+            <div style={{ marginBottom: '0', padding: '1rem 2rem', display: 'flex', justifyContent: 'center', backgroundColor: '#f3f4f6' }}>
               <Button
                 icon="pi pi-plus"
                 label="Create New Event"
                 onClick={() => setShowCreateEventDialog(true)}
-                severity="secondary"
-                outlined
+                style={{ backgroundColor: '#6366F1', borderColor: '#6366F1', color: 'white', fontSize: '1rem', padding: '0.75rem 1.5rem' }}
               />
             </div>
             <Events
@@ -97,16 +94,7 @@ function Home() {
           </div>
         } />
         <Route path="/events/:eventId" element={
-          <div className="events-route-container" style={{ maxWidth: '90%', margin: '0 auto', padding: '2rem', height: '100%', boxSizing: 'border-box' }}>
-            <div style={{ marginBottom: '1rem' }}>
-              <Button
-                icon="pi pi-plus"
-                label="Create New Event"
-                onClick={() => setShowCreateEventDialog(true)}
-                severity="secondary"
-                outlined
-              />
-            </div>
+          <div className="events-route-container" style={{ width: '100%', margin: '0', padding: '0', height: '100%', boxSizing: 'border-box' }}>
             <Events
               showCreateDialog={showCreateEventDialog}
               onHideCreateDialog={() => setShowCreateEventDialog(false)}
@@ -115,7 +103,11 @@ function Home() {
         } />
         <Route path="/nutrients" element={<div style={{ maxWidth: isMobile ? '100%' : '90%', margin: '0 auto', padding: isMobile ? '0.5rem' : '2rem' }}><Nutrients /></div>} />
         <Route path="/preferences" element={<div className="preferences-wrapper"><Preferences /></div>} />
-        <Route path="/users" element={<div className="users-route-container"><Users /></div>} />
+        <Route path="/users" element={
+          <div className="users-route-container" style={{ width: '100%', margin: '0', padding: '0', height: '100%', boxSizing: 'border-box' }}>
+            <Users />
+          </div>
+        } />
       </Routes>
     </div>
   );

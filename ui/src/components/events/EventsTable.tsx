@@ -82,17 +82,23 @@ export const EventsTable = ({ events, selectedEvent, onEventSelect, onEditEvent,
         onSelectionChange={(e) => onEventSelect(e.value as Event)}
         dataKey="id"
         stripedRows
-        tableStyle={{ minWidth: '50rem' }}
+        tableStyle={isMobile ? { minWidth: '100%', width: '100%' } : { minWidth: '50rem' }}
         emptyMessage="No events found."
         scrollable
         scrollHeight="flex"
       >
-        <Column field="type" header="Event Type" sortable />
         <Column
-          header="Expected Duration"
+          field="type"
+          header="Event Type"
+          sortable
+          style={isMobile ? { width: '50%', minWidth: 'auto' } : undefined}
+        />
+        <Column
+          header={isMobile ? "Duration" : "Expected Duration"}
           body={durationBodyTemplate}
           sortable
           sortField="expected_duration"
+          style={isMobile ? { width: '30%', minWidth: 'auto' } : undefined}
         />
         {!isMobile && (
           <Column
@@ -105,10 +111,10 @@ export const EventsTable = ({ events, selectedEvent, onEventSelect, onEditEvent,
         <Column
           header="Actions"
           body={actionsBodyTemplate}
-          style={{ width: '7rem', textAlign: 'center' }}
+          style={isMobile ? { width: '20%', minWidth: 'auto', textAlign: 'center' } : { width: '7rem', textAlign: 'center' }}
         />
       </DataTable>
-      <div style={{ display: 'flex', justifyContent: 'flex-start', padding: '1rem 0' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-start', padding: '1rem 0', width: '100%', boxSizing: 'border-box' }}>
         <Tag value={`Total Events: ${events.length}`} severity="info" />
       </div>
     </>

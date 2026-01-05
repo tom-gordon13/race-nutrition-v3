@@ -757,9 +757,9 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
         <div className="events-panel">
           <Card
             title="My Events"
-            style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #d1d5db' }}
+            style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'white', borderRadius: '0', border: 'none' }}
             pt={{
-              title: { style: { textAlign: 'left', color: '#000000', padding: '1rem 1.5rem', margin: 0, fontSize: '1.5rem', fontWeight: 600, backgroundColor: '#f3f4f6', borderBottom: '1px solid #d1d5db' } },
+              title: { style: { textAlign: 'left', color: '#000000', padding: '1rem 1.5rem', margin: 0, fontSize: '1.5rem', fontWeight: 600, backgroundColor: '#ffffff', borderBottom: '1px solid #e5e7eb' } },
               body: { style: { flex: 1, overflow: 'auto', padding: 0, backgroundColor: 'white' } },
               content: { style: { padding: '0 1.5rem 1.5rem 1.5rem' } }
             }}

@@ -1,8 +1,8 @@
 /* Nav layout - sticky on scroll */
 .nav {
-  background-color: #f3f0ff;
+  background-color: #ffffff;
   border-bottom: 1px solid #e5e7eb;
-  padding: 0.75rem 2rem;
+  padding: 1rem 2rem;
   width: 100%;
   min-height: fit-content;
   height: auto;
@@ -33,10 +33,13 @@
 
 .nav-brand h2 {
   margin: 0;
-  color: #646cff;
+  color: #1f2937;
   font-size: 1.5rem;
   font-weight: 700;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .nav-center {
@@ -59,14 +62,19 @@
   align-items: center;
   gap: 0.75rem;
   cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 8px;
-  transition: background-color 0.2s;
+  padding: 0;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.nav-user:hover {
+  transform: scale(1.05);
 }
 
 .user-greeting {
   color: #646cff;
   font-weight: 500;
+  display: none;
 }
 
 /* Mobile responsive layout - Bottom Navigation */
@@ -268,7 +276,7 @@
   }
 }
 
-/* Custom TabMenu styling - force white backgrounds everywhere */
+/* Custom TabMenu styling - clean minimal design */
 .custom-tabmenu,
 .custom-tabmenu * {
   border: none !important;
@@ -284,8 +292,8 @@ nav .custom-tabmenu .p-tabmenuitem,
 nav .custom-tabmenu .p-menuitem,
 .nav .custom-tabmenu .p-tabmenuitem,
 .nav .custom-tabmenu .p-menuitem {
-  background: white !important;
-  background-color: white !important;
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 nav .custom-tabmenu .p-tabmenuitem .p-menuitem-link,
@@ -294,12 +302,14 @@ nav .custom-tabmenu .p-menuitem-link,
 .nav .custom-tabmenu .p-tabmenuitem .p-menuitem-link,
 .nav .custom-tabmenu .p-menuitem .p-menuitem-link,
 .nav .custom-tabmenu .p-menuitem-link {
-  border-bottom: 3px solid transparent !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 0.5rem 1rem !important;
   transition: all 0.2s !important;
-  color: #64748b !important;
-  font-weight: 400 !important;
-  background: white !important;
-  background-color: white !important;
+  color: #6b7280 !important;
+  font-weight: 500 !important;
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 nav .custom-tabmenu .p-tabmenuitem.p-highlight,
@@ -308,8 +318,8 @@ nav .custom-tabmenu li.p-highlight,
 .nav .custom-tabmenu .p-tabmenuitem.p-highlight,
 .nav .custom-tabmenu .p-menuitem.p-highlight,
 .nav .custom-tabmenu li.p-highlight {
-  background: white !important;
-  background-color: white !important;
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 nav .custom-tabmenu .p-tabmenuitem.p-highlight .p-menuitem-link,
@@ -318,11 +328,10 @@ nav .custom-tabmenu li.p-highlight .p-menuitem-link,
 .nav .custom-tabmenu .p-tabmenuitem.p-highlight .p-menuitem-link,
 .nav .custom-tabmenu .p-menuitem.p-highlight .p-menuitem-link,
 .nav .custom-tabmenu li.p-highlight .p-menuitem-link {
-  border-bottom: 6px solid #646cff !important;
-  color: #646cff !important;
+  background: #EEF2FF !important;
+  background-color: #EEF2FF !important;
+  color: #6366F1 !important;
   font-weight: 600 !important;
-  background: white !important;
-  background-color: white !important;
 }
 
 nav .custom-tabmenu .p-tabmenuitem .p-menuitem-link:hover,
@@ -331,8 +340,8 @@ nav .custom-tabmenu .p-menuitem-link:hover,
 .nav .custom-tabmenu .p-tabmenuitem .p-menuitem-link:hover,
 .nav .custom-tabmenu .p-menuitem .p-menuitem-link:hover,
 .nav .custom-tabmenu .p-menuitem-link:hover {
-  background: white !important;
-  background-color: white !important;
+  background: #F3F4F6 !important;
+  background-color: #F3F4F6 !important;
 }
 
 nav .custom-tabmenu .p-tabmenuitem .p-menuitem-link:focus,
@@ -342,14 +351,11 @@ nav .custom-tabmenu .p-menuitem-link:focus,
 .nav .custom-tabmenu .p-menuitem .p-menuitem-link:focus,
 .nav .custom-tabmenu .p-menuitem-link:focus {
   box-shadow: none !important;
-  background: white !important;
-  background-color: white !important;
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
-/* User dropdown menu styling */
-.nav-user:hover {
-  background-color: rgba(100, 108, 255, 0.1) !important;
-}
+/* User dropdown menu styling - removed as handled by nav-user hover */
 
 .user-dropdown-menu {
   margin-top: 0.5rem;

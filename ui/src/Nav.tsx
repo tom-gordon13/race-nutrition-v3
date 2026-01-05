@@ -168,7 +168,7 @@ const Nav = ({ className = "" }: NavProps) => {
                 <Avatar
                   label={user?.name?.charAt(0).toUpperCase()}
                   icon="pi pi-user"
-                  style={{ backgroundColor: '#646cff', color: 'white' }}
+                  style={{ backgroundColor: '#F97316', color: 'white', width: '2.5rem', height: '2.5rem' }}
                   shape="circle"
                 />
                 <span className="user-greeting">Hello, {user?.name}</span>
