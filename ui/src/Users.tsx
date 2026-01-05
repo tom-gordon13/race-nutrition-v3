@@ -235,21 +235,21 @@ const Users = () => {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: 'white',
-        borderRadius: '4px',
-        border: '1px solid #d1d5db'
+        backgroundColor: 'transparent',
+        borderRadius: '0',
+        border: 'none'
       }}
       pt={{
         title: {
           style: {
             textAlign: 'left',
             color: '#000000',
-            padding: '1rem 1.5rem',
+            padding: '1rem 2rem',
             margin: 0,
             fontSize: '1.5rem',
             fontWeight: 600,
-            backgroundColor: '#f3f4f6',
-            borderBottom: '1px solid #d1d5db'
+            backgroundColor: 'transparent',
+            borderBottom: 'none'
           }
         },
         body: {
@@ -262,7 +262,7 @@ const Users = () => {
         },
         content: {
           style: {
-            padding: 0
+            padding: '0 2rem 2rem 2rem'
           }
         }
       }}

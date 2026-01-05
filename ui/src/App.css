@@ -798,10 +798,11 @@ tbody tr:last-child td {
 
 /* Users route container - dynamic height */
 .users-route-container {
-  max-width: 98%;
-  margin: 0 auto;
-  padding: 2rem;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
   min-height: auto;
+  background-color: #f3f4f6;
 }
 
 /* Users card - allow dynamic height based on content */
@@ -2015,6 +2016,56 @@ tbody tr.selected {
   .users-card .p-datatable-wrapper {
     max-height: none;
     overflow-y: visible;
+  }
+
+  /* Events table mobile - prevent horizontal scrolling */
+  .events-panel {
+    overflow-x: hidden !important;
+  }
+
+  .events-panel .p-card {
+    overflow-x: hidden !important;
+  }
+
+  .events-panel .p-card-body,
+  .events-panel .p-card-content {
+    overflow-x: hidden !important;
+  }
+
+  .events-panel .p-datatable {
+    min-width: 100% !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  .events-panel .p-datatable table {
+    min-width: 100% !important;
+    width: 100% !important;
+    table-layout: fixed !important;
+  }
+
+  .events-panel .p-datatable-wrapper {
+    overflow-x: hidden !important;
+    max-height: none;
+  }
+
+  .events-panel .p-datatable-scrollable-body,
+  .events-panel .p-datatable-scrollable-header {
+    overflow-x: hidden !important;
+  }
+
+  .events-panel .p-datatable-thead > tr > th,
+  .events-panel .p-datatable-tbody > tr > td {
+    min-width: auto !important;
+    padding: 0.5rem 0.35rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Truncate event type with ellipsis on mobile if needed */
+  .events-panel .p-datatable-tbody > tr > td:nth-child(1) {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
 
   .events-container {

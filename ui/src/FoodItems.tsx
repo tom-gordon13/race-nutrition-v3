@@ -567,11 +567,11 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
     <Card
       header={headerContent}
       className="food-items-card"
-      style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #d1d5db' }}
+      style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'transparent', borderRadius: '0', border: 'none' }}
       pt={{
-        header: { style: { textAlign: 'left', padding: '1rem 1.5rem', backgroundColor: '#f3f4f6', borderBottom: '1px solid #d1d5db' } },
+        header: { style: { textAlign: 'left', padding: '1rem 2rem', backgroundColor: 'transparent', borderBottom: 'none' } },
         body: { style: { flex: 1, overflow: 'auto', padding: 0, backgroundColor: 'white' } },
-        content: { style: { padding: '0 1.5rem 1.5rem 1.5rem' } }
+        content: { style: { padding: '0 2rem 2rem 2rem' } }
       }}
     >
       {foodItems.length === 0 ? (
