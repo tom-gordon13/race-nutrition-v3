@@ -1,10 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { Tag } from 'primereact/tag';
-import { Card } from 'primereact/card';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Dialog } from 'primereact/dialog';
 import { InputText } from 'primereact/inputtext';
@@ -86,6 +82,22 @@ interface FoodItem {
   foodItemNutrients: FoodItemNutrient[];
 }
 
+interface UserColorPreference {
+  id: string;
+  user_id: string;
+  food_category: string;
+  color_id: string;
+  color: {
+    id: string;
+    hex: string;
+    color_name: string;
+  };
+  foodCategory: {
+    id: string;
+    category_name: string;
+  };
+}
+
 interface FoodItemsProps {
   refreshTrigger?: number;
 }
@@ -111,6 +123,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
   const [isEditingCost, setIsEditingCost] = useState(false);
   const [favoriteFoodItemIds, setFavoriteFoodItemIds] = useState<Set<string>>(new Set());
   const [favoriteFoodItems, setFavoriteFoodItems] = useState<FoodItem[]>([]);
+  const [colorPreferences, setColorPreferences] = useState<Map<string, string>>(new Map());
 
   // Detect mobile screen size
   useEffect(() => {
@@ -157,6 +170,36 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
     };
 
     fetchCurrentUser();
+  }, [user]);
+
+  // Fetch user color preferences
+  useEffect(() => {
+    const fetchColorPreferences = async () => {
+      if (!user || !user.sub) return;
+
+      try {
+        const response = await fetch(
+          `${API_URL}/api/preferences/user-colors?auth0_sub=${encodeURIComponent(user.sub)}`
+        );
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const prefsMap = new Map<string, string>();
+
+        // Map category names to colors (not IDs)
+        data.preferences.forEach((pref: UserColorPreference) => {
+          if (pref.foodCategory && pref.foodCategory.category_name) {
+            prefsMap.set(pref.foodCategory.category_name, pref.color.hex);
+          }
+        });
+
+        setColorPreferences(prefsMap);
+      } catch (err) {
+        console.error('Error fetching color preferences:', err);
+      }
+    };
+
+    fetchColorPreferences();
   }, [user]);
 
   // Fetch favorite food items
@@ -223,21 +266,11 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
     fetchFoodItems();
   }, [user, refreshTrigger, viewMode, favoriteFoodItems]);
 
-  // Template for nutrients column
-  const nutrientsBodyTemplate = (rowData: FoodItem) => {
-    if (rowData.foodItemNutrients.length === 0) {
-      return <Tag severity="secondary" value="No nutrients" />;
-    }
-
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-        {rowData.foodItemNutrients.map((fin) => (
-          <div key={fin.id} style={{ fontSize: '0.9rem' }}>
-            <strong>{fin.nutrient.nutrient_name}</strong>: {fin.quantity} {fin.unit}
-          </div>
-        ))}
-      </div>
-    );
+  // Get category color from user preferences
+  const getCategoryColor = (categoryName: string | null | undefined): string => {
+    if (!categoryName) return '#9ca3af'; // Default gray
+    const color = colorPreferences.get(categoryName);
+    return color || '#9ca3af'; // Return user preference or default gray
   };
 
   // Check if user owns this food item
@@ -402,30 +435,6 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
     navigate('/food-items', { replace: true });
   }, [navigate]);
 
-  // Template for brand column
-  const brandBodyTemplate = (rowData: FoodItem) => {
-    return rowData.brand || <Tag severity="secondary" value="N/A" />;
-  };
-
-  // Template for category column
-  const categoryBodyTemplate = (rowData: FoodItem) => {
-    if (!rowData.category) {
-      return <Tag severity="secondary" value="N/A" />;
-    }
-    const displayName = CATEGORY_DISPLAY_NAMES[rowData.category] || rowData.category;
-    return displayName;
-  };
-
-  // Template for cost column
-  const costBodyTemplate = (rowData: FoodItem) => {
-    if (rowData.cost === null || rowData.cost === undefined) {
-      return <Tag severity="secondary" value="N/A" />;
-    }
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(rowData.cost);
-  };
 
   // Toggle favorite status
   const handleToggleFavorite = async (foodItemId: string) => {
@@ -475,10 +484,17 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
     }
   };
 
-  // Handle row click to open edit dialog
-  const handleRowClick = (e: any) => {
-    const rowData = e.data as FoodItem;
-    handleEditStart(rowData);
+  // Handle card click to open edit dialog
+  const handleCardClick = (foodItem: FoodItem) => {
+    handleEditStart(foodItem);
+  };
+
+  // Get nutrient value helper
+  const getNutrientValue = (foodItem: FoodItem, nutrientName: string): string => {
+    const nutrient = foodItem.foodItemNutrients.find(
+      n => n.nutrient.nutrient_name.toLowerCase() === nutrientName.toLowerCase()
+    );
+    return nutrient ? `${nutrient.quantity}${nutrient.unit}` : '0mg';
   };
 
   if (loading) {
@@ -497,126 +513,147 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
     return <div>Please log in to view your food items.</div>;
   }
 
-  const headerContent = (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600, color: '#000000' }}>
-          {viewMode === 'my_items' ? 'My Food Items' : viewMode === 'all_items' ? 'All Food Items' : 'Favorite Food Items'}
-        </h3>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button
-            onClick={() => setViewMode('my_items')}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: viewMode === 'my_items' ? '#646cff' : 'rgba(0, 0, 0, 0.1)',
-              color: viewMode === 'my_items' ? 'white' : '#646cff',
-              border: `1px solid #646cff`,
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: viewMode === 'my_items' ? 600 : 400
-            }}
-          >
-            My Items
-          </button>
-          <button
-            onClick={() => setViewMode('all_items')}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: viewMode === 'all_items' ? '#646cff' : 'rgba(0, 0, 0, 0.1)',
-              color: viewMode === 'all_items' ? 'white' : '#646cff',
-              border: `1px solid #646cff`,
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: viewMode === 'all_items' ? 600 : 400
-            }}
-          >
-            All Items
-          </button>
-          <button
-            onClick={() => setViewMode('favorites')}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: viewMode === 'favorites' ? '#646cff' : 'rgba(0, 0, 0, 0.1)',
-              color: viewMode === 'favorites' ? 'white' : '#646cff',
-              border: `1px solid #646cff`,
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: viewMode === 'favorites' ? 600 : 400
-            }}
-          >
-            Favorites
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
-    <Card
-      header={headerContent}
-      className="food-items-card"
-      style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'transparent', borderRadius: '0', border: 'none' }}
-      pt={{
-        header: { style: { textAlign: 'left', padding: '1rem 2rem', backgroundColor: 'transparent', borderBottom: 'none' } },
-        body: { style: { flex: 1, overflow: 'auto', padding: 0, backgroundColor: 'white' } },
-        content: { style: { padding: '0 2rem 2rem 2rem' } }
-      }}
-    >
+    <div className="food-items-page">
+      {/* Header */}
+      <div className="food-items-header">
+        <div className="food-items-title-section">
+          <h1 className="food-items-title">Food Items</h1>
+          <span className="food-items-count">{foodItems.length} items</span>
+        </div>
+        <Button
+          label="Add Item"
+          icon="pi pi-plus"
+          className="add-item-button"
+          onClick={() => navigate('/create-food-item')}
+        />
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="food-items-tabs">
+        <button
+          onClick={() => setViewMode('my_items')}
+          className={`tab-button ${viewMode === 'my_items' ? 'active' : ''}`}
+        >
+          My Items
+        </button>
+        <button
+          onClick={() => setViewMode('all_items')}
+          className={`tab-button ${viewMode === 'all_items' ? 'active' : ''}`}
+        >
+          All Items
+        </button>
+        <button
+          onClick={() => setViewMode('favorites')}
+          className={`tab-button ${viewMode === 'favorites' ? 'active' : ''}`}
+        >
+          Favorites
+        </button>
+      </div>
+
+      {/* Desktop: Table Header (hidden on mobile) */}
+      {!isMobile && foodItems.length > 0 && (
+        <div className="food-items-table-header">
+          <div className="table-header-cell food-item-col">FOOD ITEM</div>
+          <div className="table-header-cell category-col">CATEGORY</div>
+          <div className="table-header-cell carbs-col">CARBS</div>
+          <div className="table-header-cell sodium-col">SODIUM</div>
+          <div className="table-header-cell caffeine-col">CAFFEINE</div>
+          <div className="table-header-cell cost-col">COST</div>
+          <div className="table-header-cell actions-col"></div>
+        </div>
+      )}
+
+      {/* Food Items List */}
       {foodItems.length === 0 ? (
         <p style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.6)', padding: '2rem' }}>
           No food items found. Create your first food item above!
         </p>
       ) : (
-        <DataTable
-          value={foodItems}
-          stripedRows
-          tableStyle={{ minWidth: '50rem' }}
-          emptyMessage="No food items found."
-          scrollable
-          scrollHeight="flex"
-          onRowClick={handleRowClick}
-          selectionMode="single"
-          style={{ cursor: 'pointer' }}
-        >
-          <Column
-            header="Food Item"
-            field="item_name"
-            sortable
-            sortField="item_name"
-            style={{ minWidth: '200px' }}
-          />
-          <Column
-            header="Brand"
-            body={brandBodyTemplate}
-            sortable
-            sortField="brand"
-            style={{ minWidth: '150px' }}
-          />
-          <Column
-            header="Category"
-            body={categoryBodyTemplate}
-            sortable
-            sortField="category"
-            style={{ minWidth: '150px' }}
-          />
-          <Column
-            header="Cost"
-            body={costBodyTemplate}
-            sortable
-            sortField="cost"
-            style={{ minWidth: '100px' }}
-          />
-          <Column
-            header="Nutrients"
-            body={nutrientsBodyTemplate}
-            style={{ minWidth: '300px' }}
-          />
-        </DataTable>
-      )}
+        <div className="food-items-list">
+          {foodItems.map((item) => {
+            const categoryColor = getCategoryColor(item.category);
+            const categoryName = item.category ? CATEGORY_DISPLAY_NAMES[item.category] : 'N/A';
 
-      {foodItems.length > 0 && (
-        <div style={{ display: 'flex', justifyContent: 'flex-start', padding: '1rem 0' }}>
-          <Tag value={`Total: ${foodItems.length}`} severity="info" />
+            if (isMobile) {
+              // Mobile: Card layout
+              return (
+                <div
+                  key={item.id}
+                  className="food-item-card-mobile"
+                  onClick={() => handleCardClick(item)}
+                >
+                  <div className="food-item-card-header">
+                    <h3 className="food-item-name">{item.item_name}</h3>
+                    <span className="food-item-cost">
+                      {item.cost !== null && item.cost !== undefined
+                        ? new Intl.NumberFormat('en-US', {
+                            style: 'currency',
+                            currency: 'USD',
+                          }).format(item.cost)
+                        : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="food-item-category">
+                    <span
+                      className="category-dot"
+                      style={{ backgroundColor: categoryColor }}
+                    ></span>
+                    <span className="category-name">{categoryName}</span>
+                  </div>
+                </div>
+              );
+            } else {
+              // Desktop: Table row layout
+              return (
+                <div
+                  key={item.id}
+                  className="food-item-row"
+                  onClick={() => handleCardClick(item)}
+                >
+                  <div className="table-cell food-item-col">
+                    <span className="food-item-name-desktop">{item.item_name}</span>
+                  </div>
+                  <div className="table-cell category-col">
+                    <span
+                      className="category-dot"
+                      style={{ backgroundColor: categoryColor }}
+                    ></span>
+                    <span className="category-name">{categoryName}</span>
+                  </div>
+                  <div className="table-cell carbs-col">
+                    {getNutrientValue(item, 'Carbohydrates')}
+                  </div>
+                  <div className="table-cell sodium-col">
+                    {getNutrientValue(item, 'Sodium')}
+                  </div>
+                  <div className="table-cell caffeine-col">
+                    {getNutrientValue(item, 'Caffeine')}
+                  </div>
+                  <div className="table-cell cost-col">
+                    {item.cost !== null && item.cost !== undefined
+                      ? new Intl.NumberFormat('en-US', {
+                          style: 'currency',
+                          currency: 'USD',
+                        }).format(item.cost)
+                      : 'N/A'}
+                  </div>
+                  <div className="table-cell actions-col">
+                    <Button
+                      icon="pi pi-ellipsis-v"
+                      text
+                      rounded
+                      className="row-menu-button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCardClick(item);
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            }
+          })}
         </div>
       )}
 
@@ -1070,7 +1107,7 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
           </div>
         </div>
       </Dialog>
-    </Card>
+    </div>
   );
 };
 
