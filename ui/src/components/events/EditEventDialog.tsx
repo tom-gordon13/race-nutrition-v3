@@ -69,7 +69,7 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
 
   // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleClickOutside = () => {
       if (showEventTypeDropdown) {
         setShowEventTypeDropdown(false);
       }

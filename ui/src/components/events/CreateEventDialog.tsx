@@ -61,7 +61,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
 
   // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleClickOutside = () => {
       if (showEventTypeDropdown) {
         setShowEventTypeDropdown(false);
       }
