@@ -37,15 +37,10 @@ function Home() {
         <Route path="/" element={<Navigate to="/food-items" replace />} />
         <Route path="/food-items" element={
           <div className="food-items-page-container" style={{ width: '100%', margin: '0', padding: '0', height: '100%', boxSizing: 'border-box' }}>
-            <div style={{ marginBottom: '0', padding: '1rem 2rem', display: 'flex', justifyContent: 'center', backgroundColor: '#f3f4f6' }}>
-              <Button
-                icon="pi pi-plus"
-                label="Create New Item"
-                onClick={() => setShowCreateDialog(true)}
-                style={{ backgroundColor: '#6366F1', borderColor: '#6366F1', color: 'white', fontSize: '1rem', padding: '0.75rem 1.5rem' }}
-              />
-            </div>
-            <FoodItems refreshTrigger={refreshTrigger} />
+            <FoodItems
+              refreshTrigger={refreshTrigger}
+              onCreateClick={() => setShowCreateDialog(true)}
+            />
             {user?.sub && (
               <CreateFoodItemDialog
                 visible={showCreateDialog}
@@ -58,15 +53,10 @@ function Home() {
         } />
         <Route path="/food-items/:id" element={
           <div className="food-items-page-container" style={{ width: '100%', margin: '0', padding: '0', height: '100%', boxSizing: 'border-box' }}>
-            <div style={{ marginBottom: '0', padding: '1rem 2rem', display: 'flex', justifyContent: 'center', backgroundColor: '#f3f4f6' }}>
-              <Button
-                icon="pi pi-plus"
-                label="Create New Item"
-                onClick={() => setShowCreateDialog(true)}
-                style={{ backgroundColor: '#6366F1', borderColor: '#6366F1', color: 'white', fontSize: '1rem', padding: '0.75rem 1.5rem' }}
-              />
-            </div>
-            <FoodItems refreshTrigger={refreshTrigger} />
+            <FoodItems
+              refreshTrigger={refreshTrigger}
+              onCreateClick={() => setShowCreateDialog(true)}
+            />
             {user?.sub && (
               <CreateFoodItemDialog
                 visible={showCreateDialog}

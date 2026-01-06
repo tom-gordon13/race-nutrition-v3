@@ -100,11 +100,12 @@ interface UserColorPreference {
 
 interface FoodItemsProps {
   refreshTrigger?: number;
+  onCreateClick?: () => void;
 }
 
 type ViewMode = 'my_items' | 'all_items' | 'favorites';
 
-const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
+const FoodItems = ({ refreshTrigger, onCreateClick }: FoodItemsProps) => {
   const { user } = useAuth0();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -522,10 +523,10 @@ const FoodItems = ({ refreshTrigger }: FoodItemsProps) => {
           <span className="food-items-count">{foodItems.length} items</span>
         </div>
         <Button
-          label="Add Item"
+          label="Create New Item"
           icon="pi pi-plus"
           className="add-item-button"
-          onClick={() => navigate('/create-food-item')}
+          onClick={onCreateClick}
         />
       </div>
 

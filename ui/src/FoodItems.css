@@ -36,17 +36,18 @@
 }
 
 .add-item-button {
-  background-color: #000000;
-  border: none;
-  color: white;
+  background-color: #6366F1 !important;
+  border-color: #6366F1 !important;
+  color: white !important;
   font-weight: 600;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
-  font-size: 0.9375rem;
+  font-size: 1rem;
 }
 
 .add-item-button:hover {
-  background-color: #1f2937;
+  background-color: #5558e3 !important;
+  border-color: #5558e3 !important;
 }
 
 /* Tab Navigation */
@@ -99,6 +100,13 @@
   color: #9ca3af;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+.table-header-cell.carbs-col,
+.table-header-cell.sodium-col,
+.table-header-cell.caffeine-col,
+.table-header-cell.cost-col {
+  text-align: right;
 }
 
 /* Food Items List */
@@ -163,6 +171,8 @@
 .cost-col {
   font-weight: 500;
   color: #000000;
+  justify-content: flex-end;
+  text-align: right;
 }
 
 .actions-col {
