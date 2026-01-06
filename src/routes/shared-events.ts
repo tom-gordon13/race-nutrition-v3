@@ -36,7 +36,8 @@ router.get('/pending/:auth0_sub', async (req, res) => {
         event: {
           select: {
             id: true,
-            type: true,
+            name: true,
+            event_type: true,
             expected_duration: true,
             created_at: true
           }
@@ -264,7 +265,8 @@ router.put('/:sharedEventId', async (req, res) => {
         data: {
           event_user_id: sharedEvent.receiver_id,
           expected_duration: sharedEvent.event.expected_duration,
-          type: `${sharedEvent.event.type} (shared)`
+          name: `${sharedEvent.event.name} (shared)`,
+          event_type: sharedEvent.event.event_type
         }
       });
 

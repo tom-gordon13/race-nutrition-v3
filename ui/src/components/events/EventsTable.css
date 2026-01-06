@@ -1,7 +1,7 @@
 /* Events Table Header (Desktop Only) */
 .events-table-header {
   display: grid;
-  grid-template-columns: 2.5fr 1.5fr 1.5fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr 1.5fr 1.5fr 1fr 1fr;
   gap: 1rem;
   padding: 0.75rem 1.5rem;
   background-color: transparent;
@@ -15,6 +15,11 @@
   color: #9ca3af;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+.events-table-header .name-col,
+.events-table-header .type-col {
+  text-align: left;
 }
 
 .events-table-header .duration-col,
@@ -39,7 +44,7 @@
 /* Desktop: Table Row */
 .event-row {
   display: grid;
-  grid-template-columns: 2.5fr 1.5fr 1.5fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr 1.5fr 1.5fr 1fr 1fr;
   gap: 1rem;
   padding: 1.25rem 1.5rem;
   background-color: #f9fafb;
@@ -69,6 +74,16 @@
   color: #000000;
 }
 
+.table-cell.name-col {
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+
+.table-cell.type-col {
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+
 .table-cell.duration-col,
 .table-cell.created-col {
   justify-content: flex-end !important;
@@ -84,10 +99,43 @@
   gap: 0.25rem;
 }
 
-.event-type-desktop {
+.event-name-desktop {
   font-weight: 700;
   color: #1f2937;
   font-size: 1rem;
+  text-align: left;
+  width: 100%;
+}
+
+/* Event Type Badges */
+.event-type-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0.05em;
+}
+
+.event-type-badge.triathlon {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.event-type-badge.run {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.event-type-badge.bike {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.event-type-badge.other {
+  background-color: #e5e7eb;
+  color: #374151;
 }
 
 .event-duration-desktop {

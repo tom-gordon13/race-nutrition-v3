@@ -108,14 +108,14 @@ router.get('/:id', async (req, res) => {
 // POST create a new event
 router.post('/', async (req, res) => {
   try {
-    const { auth0_sub, expected_duration, type } = req.body;
+    const { auth0_sub, expected_duration, name, event_type } = req.body;
 
     console.log('Received event creation request:', req.body);
 
     // Validate required fields
-    if (!auth0_sub || !expected_duration || !type) {
+    if (!auth0_sub || !expected_duration || !name || !event_type) {
       return res.status(400).json({
-        error: 'Missing required fields: auth0_sub, expected_duration, and type are required'
+        error: 'Missing required fields: auth0_sub, expected_duration, name, and event_type are required'
       });
     }
 
@@ -135,11 +135,12 @@ router.post('/', async (req, res) => {
       data: {
         event_user_id: user.id,
         expected_duration: parseInt(expected_duration),
-        type
+        name,
+        event_type
       }
     });
 
-    console.log('Event created:', event.id, 'Type:', event.type);
+    console.log('Event created:', event.id, 'Name:', event.name, 'Type:', event.event_type);
 
     return res.status(201).json({
       message: 'Event created successfully',
@@ -159,14 +160,14 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { type, expected_duration, private: isPrivate } = req.body;
+    const { name, event_type, expected_duration, private: isPrivate } = req.body;
 
-    console.log('Received event update request:', { id, type, expected_duration, private: isPrivate });
+    console.log('Received event update request:', { id, name, event_type, expected_duration, private: isPrivate });
 
     // Validate required fields
-    if (!type && !expected_duration && isPrivate === undefined) {
+    if (!name && !event_type && !expected_duration && isPrivate === undefined) {
       return res.status(400).json({
-        error: 'At least one field (type, expected_duration, or private) must be provided'
+        error: 'At least one field (name, event_type, expected_duration, or private) must be provided'
       });
     }
 
@@ -185,13 +186,14 @@ router.put('/:id', async (req, res) => {
     const updatedEvent = await prisma.event.update({
       where: { id },
       data: {
-        ...(type && { type }),
+        ...(name && { name }),
+        ...(event_type && { event_type }),
         ...(expected_duration && { expected_duration: parseInt(expected_duration) }),
         ...(isPrivate !== undefined && { private: isPrivate })
       }
     });
 
-    console.log('Event updated:', updatedEvent.id, 'Type:', updatedEvent.type, 'Private:', updatedEvent.private);
+    console.log('Event updated:', updatedEvent.id, 'Name:', updatedEvent.name, 'Type:', updatedEvent.event_type, 'Private:', updatedEvent.private);
 
     return res.status(200).json({
       message: 'Event updated successfully',
@@ -235,7 +237,8 @@ router.post('/:id/duplicate', async (req, res) => {
       data: {
         event_user_id: originalEvent.event_user_id,
         expected_duration: originalEvent.expected_duration,
-        type: `${originalEvent.type} - copy`
+        name: `${originalEvent.name} - copy`,
+        event_type: originalEvent.event_type
       }
     });
 
@@ -254,8 +257,10 @@ router.post('/:id/duplicate', async (req, res) => {
     console.log(
       'Event duplicated:',
       newEvent.id,
+      'Name:',
+      newEvent.name,
       'Type:',
-      newEvent.type,
+      newEvent.event_type,
       'Food instances copied:',
       originalFoodInstances.length
     );
