@@ -28,7 +28,8 @@ interface Event {
   id: string;
   event_user_id: string;
   expected_duration: number;
-  type: string;
+  name: string;
+  event_type: string;
   created_at: string;
   updated_at: string;
   private: boolean;
@@ -74,7 +75,8 @@ interface SharedEvent {
   created_at: string;
   event: {
     id: string;
-    type: string;
+    name: string;
+    event_type: string;
     expected_duration: number;
     created_at: string;
   };
@@ -605,15 +607,13 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
   };
 
   // Handler for saving edited event
-  const handleSaveEditedEvent = async () => {
-    await fetchEvents();
-    // If the edited event is currently selected, update it
-    if (selectedEvent && eventToEdit && selectedEvent.id === eventToEdit.id) {
-      const updatedEvent = events.find(e => e.id === eventToEdit.id);
-      if (updatedEvent) {
-        setSelectedEvent(updatedEvent);
-      }
+  const handleSaveEditedEvent = async (updatedEvent: Event) => {
+    // Update the selectedEvent immediately with the fresh data from the API
+    if (selectedEvent && selectedEvent.id === updatedEvent.id) {
+      setSelectedEvent(updatedEvent);
     }
+    // Also refresh the events list in the background
+    await fetchEvents();
   };
 
   // Handler for duplicating an event
@@ -808,7 +808,7 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
         <div className="event-detail-container">
           <div className="event-detail-header">
             <div className="event-header-top-row">
-              <h3>{selectedEvent.type}{isViewOnly && <span style={{ fontSize: '0.875rem', fontWeight: 'normal', color: '#6b7280', marginLeft: '0.5rem' }}>(View Only)</span>}</h3>
+              <h3>{selectedEvent.name}{isViewOnly && <span style={{ fontSize: '0.875rem', fontWeight: 'normal', color: '#6b7280', marginLeft: '0.5rem' }}>(View Only)</span>}</h3>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 {!isViewOnly && (
                   <button

@@ -7,7 +7,8 @@ interface Event {
   id: string;
   event_user_id: string;
   expected_duration: number;
-  type: string;
+  name: string;
+  event_type: string;
   created_at: string;
   updated_at: string;
   private: boolean;
@@ -28,6 +29,16 @@ const formatDuration = (seconds: number) => {
   return `${hours}h ${minutes}m`;
 };
 
+const formatEventType = (eventType: string) => {
+  const typeMap: { [key: string]: string } = {
+    'TRIATHLON': 'Triathlon',
+    'RUN': 'Run',
+    'BIKE': 'Bike',
+    'OTHER': 'Other'
+  };
+  return typeMap[eventType] || 'Other';
+};
+
 export const EventsTable = ({ events, selectedEvent, onEventSelect, onEditEvent, onDuplicateEvent, isMobile }: EventsTableProps) => {
   if (events.length === 0) {
     return <p style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.6)', padding: '2rem' }}>No events found. Create your first event above!</p>;
@@ -38,6 +49,7 @@ export const EventsTable = ({ events, selectedEvent, onEventSelect, onEditEvent,
       {/* Desktop: Table Header (hidden on mobile) */}
       {!isMobile && (
         <div className="events-table-header">
+          <div className="table-header-cell name-col">EVENT NAME</div>
           <div className="table-header-cell type-col">EVENT TYPE</div>
           <div className="table-header-cell duration-col">DURATION</div>
           <div className="table-header-cell created-col">CREATED</div>
@@ -63,8 +75,13 @@ export const EventsTable = ({ events, selectedEvent, onEventSelect, onEditEvent,
               >
                 <div className="event-card-header">
                   <div>
-                    <h3 className="event-type">{event.type}</h3>
-                    <span className="event-duration">{duration}</span>
+                    <h3 className="event-type">{event.name}</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem' }}>
+                      <span className={`event-type-badge ${event.event_type.toLowerCase()}`}>
+                        {formatEventType(event.event_type)}
+                      </span>
+                      <span className="event-duration">{duration}</span>
+                    </div>
                   </div>
                   <div className="event-card-actions-mobile">
                     <Button
@@ -97,8 +114,13 @@ export const EventsTable = ({ events, selectedEvent, onEventSelect, onEditEvent,
                 className={`event-row ${isSelected ? 'selected' : ''}`}
                 onClick={() => onEventSelect(event)}
               >
+                <div className="table-cell name-col">
+                  <span className="event-name-desktop">{event.name}</span>
+                </div>
                 <div className="table-cell type-col">
-                  <span className="event-type-desktop">{event.type}</span>
+                  <span className={`event-type-badge ${event.event_type.toLowerCase()}`}>
+                    {formatEventType(event.event_type)}
+                  </span>
                 </div>
                 <div className="table-cell duration-col">
                   <span className="event-duration-desktop">{duration}</span>

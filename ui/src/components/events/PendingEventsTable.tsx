@@ -13,7 +13,8 @@ interface SharedEvent {
   created_at: string;
   event: {
     id: string;
-    type: string;
+    name: string;
+    event_type: string;
     expected_duration: number;
     created_at: string;
   };
@@ -46,7 +47,7 @@ export const PendingEventsTable = ({
   const eventNameBodyTemplate = (rowData: SharedEvent) => {
     return (
       <div>
-        <div style={{ fontWeight: 500 }}>{rowData.event.type}</div>
+        <div style={{ fontWeight: 500 }}>{rowData.event.name}</div>
         {!isMobile && (
           <div style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.25rem' }}>
             {formatDuration(rowData.event.expected_duration)}

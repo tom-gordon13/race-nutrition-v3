@@ -35,7 +35,8 @@ interface Event {
   id: string;
   event_user_id: string;
   expected_duration: number;
-  type: string;
+  name: string;
+  event_type: string;
   created_at: string;
   updated_at: string;
   private: boolean;

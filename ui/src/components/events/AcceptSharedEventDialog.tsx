@@ -17,7 +17,8 @@ interface SharedEvent {
   created_at: string;
   event: {
     id: string;
-    type: string;
+    name: string;
+    event_type: string;
     expected_duration: number;
     created_at: string;
   };
@@ -177,7 +178,7 @@ export const AcceptSharedEventDialog: React.FC<AcceptSharedEventDialogProps> = (
               color: '#000',
               lineHeight: 1.2
             }}>
-              {sharedEvent.event.type}
+              {sharedEvent.event.name}
             </div>
           </div>
           <button

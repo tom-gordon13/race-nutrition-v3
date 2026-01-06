@@ -12,13 +12,21 @@ interface EditEventDialogProps {
   visible: boolean;
   event: {
     id: string;
-    type: string;
+    name: string;
+    event_type: string;
     expected_duration: number;
     private: boolean;
   } | null;
   onHide: () => void;
-  onSave: () => void;
+  onSave: (updatedEvent: any) => void;
 }
+
+const eventTypeOptions = [
+  { label: 'Triathlon', value: 'TRIATHLON' },
+  { label: 'Run', value: 'RUN' },
+  { label: 'Bike', value: 'BIKE' },
+  { label: 'Other', value: 'OTHER' }
+];
 
 export const EditEventDialog: React.FC<EditEventDialogProps> = ({
   visible,
@@ -27,6 +35,8 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
   onSave,
 }) => {
   const [eventName, setEventName] = useState('');
+  const [eventType, setEventType] = useState('OTHER');
+  const [showEventTypeDropdown, setShowEventTypeDropdown] = useState(false);
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
   const [seconds, setSeconds] = useState(0);
@@ -47,7 +57,8 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
 
   useEffect(() => {
     if (event) {
-      setEventName(event.type);
+      setEventName(event.name);
+      setEventType(event.event_type);
       const totalSeconds = event.expected_duration;
       setHours(Math.floor(totalSeconds / 3600));
       setMinutes(Math.floor((totalSeconds % 3600) / 60));
@@ -55,6 +66,23 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
       setIsPrivate(event.private);
     }
   }, [event]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (showEventTypeDropdown) {
+        setShowEventTypeDropdown(false);
+      }
+    };
+
+    if (showEventTypeDropdown) {
+      document.addEventListener('click', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [showEventTypeDropdown]);
 
   const handleSave = async () => {
     if (!event) return;
@@ -82,7 +110,8 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          type: eventName,
+          name: eventName,
+          event_type: eventType,
           expected_duration: totalSeconds,
           private: isPrivate,
         }),
@@ -92,7 +121,10 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
         throw new Error('Failed to update event');
       }
 
-      onSave();
+      const data = await response.json();
+      const updatedEvent = data.event;
+
+      onSave(updatedEvent);
       onHide();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -136,25 +168,14 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
         borderRadius: '20px'
       }}>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <div style={{
-              fontSize: '0.75rem',
-              fontWeight: 500,
-              color: '#9ca3af',
-              letterSpacing: '0.1em',
-              marginBottom: '0.5rem'
-            }}>
-              EDITING
-            </div>
-            <div style={{
-              fontSize: '1.5rem',
-              fontWeight: 700,
-              color: '#000',
-              lineHeight: 1.2
-            }}>
-              {eventName || 'Event'}
-            </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{
+            fontSize: '0.75rem',
+            fontWeight: 500,
+            color: '#9ca3af',
+            letterSpacing: '0.1em'
+          }}>
+            EDITING
           </div>
           <button
             onClick={onHide}
@@ -215,6 +236,102 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
               outline: 'none'
             }}
           />
+        </div>
+
+        {/* Event Type Section */}
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '8px',
+          padding: '0.875rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.75rem'
+        }}>
+          <div style={{
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            color: '#9ca3af',
+            letterSpacing: '0.1em'
+          }}>
+            EVENT TYPE
+          </div>
+
+          <div style={{ position: 'relative' }}>
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!loading) setShowEventTypeDropdown(!showEventTypeDropdown);
+              }}
+              style={{
+                width: '100%',
+                fontSize: '1.125rem',
+                fontWeight: 700,
+                border: 'none',
+                borderBottom: '2px solid #e5e7eb',
+                borderRadius: 0,
+                padding: '0.375rem 0',
+                outline: 'none',
+                backgroundColor: 'white',
+                cursor: loading ? 'default' : 'pointer',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}
+            >
+              <span>{eventTypeOptions.find(o => o.value === eventType)?.label || 'Other'}</span>
+              <span style={{ fontSize: '0.875rem', color: '#9ca3af' }}>▼</span>
+            </div>
+
+            {showEventTypeDropdown && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                backgroundColor: 'white',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                marginTop: '0.25rem',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                zIndex: 1000,
+                overflow: 'hidden'
+              }}>
+                {eventTypeOptions.map(option => (
+                  <div
+                    key={option.value}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEventType(option.value);
+                      setShowEventTypeDropdown(false);
+                    }}
+                    style={{
+                      padding: '0.75rem 1rem',
+                      cursor: 'pointer',
+                      fontSize: '1rem',
+                      fontWeight: eventType === option.value ? 700 : 400,
+                      backgroundColor: eventType === option.value ? '#f3f4f6' : 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (eventType !== option.value) {
+                        e.currentTarget.style.backgroundColor = '#f9fafb';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (eventType !== option.value) {
+                        e.currentTarget.style.backgroundColor = 'white';
+                      }
+                    }}
+                  >
+                    {eventType === option.value && <span style={{ color: '#646cff' }}>✓</span>}
+                    <span>{option.label}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Private Toggle Section */}
