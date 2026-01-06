@@ -113,6 +113,8 @@ const FoodItems = ({ refreshTrigger, onCreateClick }: FoodItemsProps) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('my_items');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<FoodItem | null>(null);
   const [editedData, setEditedData] = useState<Partial<FoodItem>>({});
@@ -515,6 +517,17 @@ const FoodItems = ({ refreshTrigger, onCreateClick }: FoodItemsProps) => {
     return nutrient ? `${nutrient.quantity}${nutrient.unit}` : '0mg';
   };
 
+  // Filter food items based on search term and category
+  const filteredFoodItems = foodItems.filter(item => {
+    const matchesSearch = item.item_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.category?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesCategory = categoryFilter === 'ALL' || item.category === categoryFilter;
+
+    return matchesSearch && matchesCategory;
+  });
+
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2rem' }}>
@@ -537,7 +550,9 @@ const FoodItems = ({ refreshTrigger, onCreateClick }: FoodItemsProps) => {
       <div className="food-items-header">
         <div className="food-items-title-section">
           <h1 className="food-items-title">Food Items</h1>
-          <span className="food-items-count">{foodItems.length} items</span>
+          <span className="food-items-count">
+            {filteredFoodItems.length}{filteredFoodItems.length !== foodItems.length && ` of ${foodItems.length}`} items
+          </span>
         </div>
         <Button
           label="Create New Item"
@@ -569,8 +584,92 @@ const FoodItems = ({ refreshTrigger, onCreateClick }: FoodItemsProps) => {
         </button>
       </div>
 
+      {/* Search and Filter Controls */}
+      <div style={{
+        display: 'flex',
+        gap: '1rem',
+        padding: '1rem 1.5rem',
+        backgroundColor: 'white',
+        flexDirection: isMobile ? 'column' : 'row'
+      }}>
+        <div style={{ flex: 1 }}>
+          <InputText
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search food items..."
+            icon="pi pi-search"
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              fontSize: '0.9375rem',
+              borderRadius: '8px',
+              border: '1px solid #e5e7eb'
+            }}
+          />
+        </div>
+        <div style={{ width: isMobile ? '100%' : '200px' }}>
+          <Dropdown
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.value)}
+            options={[
+              { label: 'All Categories', value: 'ALL' },
+              ...FOOD_CATEGORIES.map((cat) => ({
+                label: CATEGORY_DISPLAY_NAMES[cat] || cat,
+                value: cat
+              }))
+            ]}
+            placeholder="Category"
+            style={{
+              width: '100%',
+              borderRadius: '8px',
+              border: '1px solid #e5e7eb'
+            }}
+            pt={{
+              input: { style: { fontSize: '0.9375rem', padding: '0.75rem' } }
+            }}
+            valueTemplate={(option) => {
+              if (!option) return 'Category';
+              if (option.value === 'ALL') return option.label;
+              const color = getCategoryColor(option.value);
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span
+                    style={{
+                      width: '12px',
+                      height: '12px',
+                      borderRadius: '50%',
+                      backgroundColor: color,
+                      flexShrink: 0
+                    }}
+                  />
+                  <span>{option.label}</span>
+                </div>
+              );
+            }}
+            itemTemplate={(option) => {
+              if (option.value === 'ALL') return option.label;
+              const color = getCategoryColor(option.value);
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span
+                    style={{
+                      width: '12px',
+                      height: '12px',
+                      borderRadius: '50%',
+                      backgroundColor: color,
+                      flexShrink: 0
+                    }}
+                  />
+                  <span>{option.label}</span>
+                </div>
+              );
+            }}
+          />
+        </div>
+      </div>
+
       {/* Desktop: Table Header (hidden on mobile) */}
-      {!isMobile && foodItems.length > 0 && (
+      {!isMobile && filteredFoodItems.length > 0 && (
         <div className="food-items-table-header">
           <div className="table-header-cell food-item-col">FOOD ITEM</div>
           <div className="table-header-cell category-col">CATEGORY</div>
@@ -583,13 +682,13 @@ const FoodItems = ({ refreshTrigger, onCreateClick }: FoodItemsProps) => {
       )}
 
       {/* Food Items List */}
-      {foodItems.length === 0 ? (
+      {filteredFoodItems.length === 0 ? (
         <p style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.6)', padding: '2rem' }}>
-          No food items found. Create your first food item above!
+          {foodItems.length === 0 ? 'No food items found. Create your first food item above!' : 'No items match your search criteria.'}
         </p>
       ) : (
         <div className="food-items-list">
-          {foodItems.map((item) => {
+          {filteredFoodItems.map((item) => {
             const categoryColor = getCategoryColor(item.category);
             const categoryName = item.category ? CATEGORY_DISPLAY_NAMES[item.category] : 'N/A';
 
