@@ -62,7 +62,7 @@ const Nav = ({ className = "" }: NavProps) => {
       }
     },
     {
-      label: 'Preferences',
+      label: 'Settings',
       icon: 'pi pi-cog',
       command: () => {
         navigate('/preferences');

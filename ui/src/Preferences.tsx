@@ -1,13 +1,10 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import { useState, useEffect } from 'react';
-import { Card } from 'primereact/card';
 import { Avatar } from 'primereact/avatar';
-import { Divider } from 'primereact/divider';
-import { Panel } from 'primereact/panel';
 import { Button } from 'primereact/button';
 import { Toast } from 'primereact/toast';
-import { InputSwitch } from 'primereact/inputswitch';
 import { useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Preferences.css';
 import { API_URL } from './config/api';
 
@@ -31,20 +28,35 @@ interface UserColorPreference {
   foodCategory: ReferenceFoodCategory;
 }
 
+const CATEGORY_DISPLAY_NAMES: Record<string, string> = {
+  'ENERGY_GEL': 'Energy Gel',
+  'ENERGY_BAR': 'Energy Bar',
+  'SPORTS_DRINK': 'Sports Drink',
+  'FRUIT': 'Fruit',
+  'SNACK': 'Snack',
+  'OTHER': 'Other'
+};
+
 export default function Preferences() {
-  const { user } = useAuth0();
+  const { user, logout } = useAuth0();
+  const navigate = useNavigate();
   const toast = useRef<Toast>(null);
-  
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   const [colors, setColors] = useState<ReferenceColor[]>([]);
   const [categories, setCategories] = useState<ReferenceFoodCategory[]>([]);
   const [userPreferences, setUserPreferences] = useState<Map<string, string>>(new Map());
-  const [dirtyFields, setDirtyFields] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
-  const [darkModeLoading, setDarkModeLoading] = useState(true);
-  const [darkModeSaving, setDarkModeSaving] = useState(false);
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Fetch reference data (colors and categories)
   useEffect(() => {
@@ -68,7 +80,7 @@ export default function Preferences() {
     };
 
     fetchReferenceData();
-  }, [API_URL]);
+  }, []);
 
   // Fetch user's existing color preferences
   useEffect(() => {
@@ -103,104 +115,18 @@ export default function Preferences() {
     };
 
     fetchUserPreferences();
-  }, [user?.sub, API_URL]);
+  }, [user?.sub]);
 
-  // Fetch user's dark mode preference
-  useEffect(() => {
-    const fetchDarkModePreference = async () => {
-      if (!user?.sub) return;
-
-      try {
-        const response = await fetch(
-          `${API_URL}/api/user-preferences?auth0_sub=${user.sub}`
-        );
-        if (!response.ok) throw new Error('Failed to fetch dark mode preference');
-
-        const data = await response.json();
-        setDarkMode(data.preferences.dark_mode);
-      } catch (error) {
-        console.error('Error fetching dark mode preference:', error);
-        toast.current?.show({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to load dark mode preference',
-          life: 3000
-        });
-      } finally {
-        setDarkModeLoading(false);
-      }
-    };
-
-    fetchDarkModePreference();
-  }, [user?.sub, API_URL]);
-
-  // Handle dark mode toggle
-  const handleDarkModeToggle = async (value: boolean) => {
+  // Handle color selection - auto-save
+  const handleColorSelect = async (categoryId: string, colorId: string) => {
     if (!user?.sub) return;
 
-    setDarkMode(value);
-    setDarkModeSaving(true);
-
-    try {
-      const response = await fetch(`${API_URL}/api/user-preferences`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          auth0_sub: user.sub,
-          dark_mode: value
-        })
-      });
-
-      if (!response.ok) throw new Error('Failed to update dark mode preference');
-
-      toast.current?.show({
-        severity: 'success',
-        summary: 'Success',
-        detail: `Dark mode ${value ? 'enabled' : 'disabled'}`,
-        life: 3000
-      });
-    } catch (error) {
-      console.error('Error updating dark mode preference:', error);
-      // Revert the toggle on error
-      setDarkMode(!value);
-      toast.current?.show({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'Failed to update dark mode preference',
-        life: 3000
-      });
-    } finally {
-      setDarkModeSaving(false);
-    }
-  };
-
-  // Handle color selection
-  const handleColorSelect = (categoryId: string, colorId: string) => {
+    // Optimistic update
     const newPreferences = new Map(userPreferences);
     newPreferences.set(categoryId, colorId);
     setUserPreferences(newPreferences);
 
-    // Mark this category as dirty
-    const newDirtyFields = new Set(dirtyFields);
-    newDirtyFields.add(categoryId);
-    setDirtyFields(newDirtyFields);
-  };
-
-  // Save preferences
-  const handleSavePreferences = async () => {
-    if (!user?.sub || dirtyFields.size === 0) return;
-
-    setSaving(true);
-
     try {
-      // Only save the dirty fields
-      const preferencesToSave = Array.from(dirtyFields).map(categoryId => ({
-        food_category_id: categoryId,
-        color_id: userPreferences.get(categoryId)!
-      }));
-
       const response = await fetch(`${API_URL}/api/preferences/user-colors`, {
         method: 'PUT',
         headers: {
@@ -208,171 +134,173 @@ export default function Preferences() {
         },
         body: JSON.stringify({
           auth0_sub: user.sub,
-          preferences: preferencesToSave
+          preferences: [{
+            food_category_id: categoryId,
+            color_id: colorId
+          }]
         })
       });
 
-      if (!response.ok) throw new Error('Failed to save preferences');
-
-      // Clear dirty fields on success
-      setDirtyFields(new Set());
-
-      toast.current?.show({
-        severity: 'success',
-        summary: 'Success',
-        detail: `${preferencesToSave.length} preference(s) saved successfully`,
-        life: 3000
-      });
+      if (!response.ok) throw new Error('Failed to save preference');
     } catch (error) {
-      console.error('Error saving preferences:', error);
+      console.error('Error saving preference:', error);
+      // Revert on error
+      const revertedPreferences = new Map(userPreferences);
+      revertedPreferences.delete(categoryId);
+      setUserPreferences(revertedPreferences);
+
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
-        detail: 'Failed to save preferences',
+        detail: 'Failed to save color preference',
         life: 3000
       });
-    } finally {
-      setSaving(false);
     }
   };
 
-  const userProfileTemplate = (
-    <div className="preference-header-content">
-      <Avatar
-        label={user?.name?.charAt(0).toUpperCase()}
-        icon="pi pi-user"
-        style={{ backgroundColor: '#646cff', color: 'white' }}
-        shape="circle"
-        size="large"
-      />
-      <span className="preference-title">User Profile</span>
-    </div>
-  );
+  const handleSignOut = () => {
+    logout({ logoutParams: { returnTo: window.location.origin } });
+  };
+
+  const handleBack = () => {
+    navigate(-1);
+  };
+
+  // Get the color hex for a category
+  const getSelectedColorHex = (categoryId: string): string => {
+    const selectedColorId = userPreferences.get(categoryId);
+    const selectedColor = colors.find(c => c.id === selectedColorId);
+    return selectedColor?.hex || '#9ca3af';
+  };
 
   return (
-    <div className="preferences-container">
+    <div className="preferences-page">
       <Toast ref={toast} />
-      <Panel header="Preferences" className="preferences-panel">
-        <p className="preferences-subtitle">Manage your app settings and preferences</p>
 
-        <Divider />
+      {/* Header */}
+      <div className="preferences-header">
+        <button onClick={handleBack} className="back-button">
+          <i className="pi pi-chevron-left" />
+        </button>
+        <h1 className="preferences-title">Settings</h1>
+      </div>
 
-        <Card className="preferences-card">
-          {userProfileTemplate}
-          <Divider />
-          <div className="preference-section">
-            <div className="preference-row">
-              <label>Name</label>
-              <span>{user?.name || 'N/A'}</span>
+      <div className="preferences-content">
+        {/* ACCOUNT Section */}
+        <div className="preferences-section">
+          <h2 className="section-header">ACCOUNT</h2>
+          <div className="account-card">
+            <Avatar
+              label={user?.name?.charAt(0).toUpperCase()}
+              icon="pi pi-user"
+              style={{ backgroundColor: '#F97316', color: 'white', width: '70px', height: '70px', fontSize: '2rem', flexShrink: 0 }}
+              shape="circle"
+            />
+            <div className="account-info">
+              <div className="account-name">{user?.name || 'User'}</div>
+              <div className="account-email">{user?.email || 'No email'}</div>
             </div>
-            <Divider />
-            <div className="preference-row">
-              <label>Email</label>
-              <span>{user?.email || 'N/A'}</span>
+            <i className="pi pi-chevron-right" style={{ color: '#d1d5db', fontSize: '1.25rem' }} />
+          </div>
+        </div>
+
+        {/* DISPLAY Section */}
+        <div className="preferences-section">
+          <h2 className="section-header">DISPLAY</h2>
+
+          {/* Dark Mode */}
+          <div className="display-item">
+            <div className="display-icon dark-mode-icon">
+              <i className="pi pi-moon" style={{ color: 'white', fontSize: '1.5rem' }} />
+            </div>
+            <div className="display-content">
+              <div className="display-label">Dark Mode</div>
+              <div className="display-sublabel">Coming soon</div>
+            </div>
+            <div className="display-toggle disabled">
+              {/* Placeholder for toggle switch */}
             </div>
           </div>
-        </Card>
 
-        <Card title="App Settings" className="preferences-card">
-          <div className="preference-section">
-            <h3 className="settings-section-title">Display Settings</h3>
-            <p className="settings-description">
-              Customize how the app looks and feels.
-            </p>
-
-            <div className="preference-row" style={{ marginBottom: '2rem', alignItems: 'center' }}>
-              <div>
-                <label style={{ fontWeight: 600, fontSize: '1rem' }}>Dark Mode</label>
-                <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.875rem', color: '#6b7280' }}>
-                  Coming soon - toggle between light and dark themes
-                </p>
-              </div>
-              <InputSwitch
-                checked={darkMode}
-                onChange={(e) => handleDarkModeToggle(e.value)}
-                disabled={darkModeLoading || darkModeSaving}
-              />
+          {/* Units */}
+          <div className="display-item">
+            <div className="display-icon units-icon">
+              <i className="pi pi-chart-line" style={{ color: 'white', fontSize: '1.5rem' }} />
             </div>
-
-            <Divider />
-
-            <h3 className="settings-section-title">Category Color Preferences</h3>
-            <p className="settings-description">
-              Choose a color for each food category to customize how they appear in your events.
-            </p>
-
-            {loading ? (
-              <div className="loading-state">
-                <i className="pi pi-spin pi-spinner" style={{ fontSize: '2rem' }}></i>
-                <p>Loading preferences...</p>
-              </div>
-            ) : (
-              <>
-                <div className="color-preferences-list">
-                  {categories.map((category) => {
-                    const selectedColorId = userPreferences.get(category.id);
-                    const isDirty = dirtyFields.has(category.id);
-
-                    return (
-                      <div key={category.id} className="category-color-row">
-                        <div className="category-info">
-                          <label className="category-label">
-                            {category.category_name.replace(/_/g, ' ')}
-                          </label>
-                          {isDirty && (
-                            <span className="unsaved-indicator">
-                              <i className="pi pi-circle-fill" style={{ fontSize: '0.5rem' }}></i>
-                            </span>
-                          )}
-                        </div>
-                        <div className="color-options">
-                          {colors.map((color) => {
-                            const isSelected = selectedColorId === color.id;
-
-                            return (
-                              <button
-                                key={color.id}
-                                className={`color-circle ${isSelected ? 'selected' : ''}`}
-                                style={{
-                                  backgroundColor: color.hex,
-                                  opacity: isSelected ? 1 : 0.4
-                                }}
-                                onClick={() => handleColorSelect(category.id, color.id)}
-                                title={color.color_name}
-                                aria-label={`Select ${color.color_name} for ${category.category_name}`}
-                              >
-                                {isSelected && (
-                                  <i className="pi pi-check" style={{ color: 'white' }}></i>
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="save-preferences-section">
-                  <Button
-                    label="Save Preferences"
-                    icon="pi pi-save"
-                    onClick={handleSavePreferences}
-                    disabled={dirtyFields.size === 0 || saving}
-                    loading={saving}
-                    severity="success"
-                  />
-                  {dirtyFields.size > 0 && (
-                    <span className="unsaved-changes-text">
-                      {dirtyFields.size} unsaved change{dirtyFields.size > 1 ? 's' : ''}
-                    </span>
-                  )}
-                </div>
-              </>
-            )}
+            <div className="display-content">
+              <div className="display-label">Units</div>
+            </div>
+            <div className="display-value">
+              <span>Metric</span>
+              <i className="pi pi-chevron-right" style={{ color: '#d1d5db', marginLeft: '0.5rem' }} />
+            </div>
           </div>
-        </Card>
-      </Panel>
+        </div>
+
+        {/* CATEGORY COLORS Section */}
+        <div className="preferences-section">
+          <h2 className="section-header">CATEGORY COLORS</h2>
+
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '2rem' }}>
+              <i className="pi pi-spin pi-spinner" style={{ fontSize: '2rem' }}></i>
+            </div>
+          ) : (
+            <div className="category-colors-list">
+              {categories.map((category) => {
+                const selectedColorId = userPreferences.get(category.id);
+                const selectedColorHex = getSelectedColorHex(category.id);
+                const categoryName = CATEGORY_DISPLAY_NAMES[category.category_name] || category.category_name;
+
+                return (
+                  <div key={category.id} className="category-color-card">
+                    <div className="category-header">
+                      <span className="category-name">{categoryName}</span>
+                      <div
+                        className="category-indicator"
+                        style={{ backgroundColor: selectedColorHex }}
+                      />
+                    </div>
+                    <div className="color-picker">
+                      {colors.map((color) => {
+                        const isSelected = selectedColorId === color.id;
+
+                        return (
+                          <button
+                            key={color.id}
+                            className={`color-option ${isSelected ? 'selected' : ''}`}
+                            style={{
+                              backgroundColor: color.hex,
+                              color: color.hex
+                            }}
+                            onClick={() => handleColorSelect(category.id, color.id)}
+                            title={color.color_name}
+                          >
+                            {isSelected && (
+                              <i className="pi pi-check" style={{ color: 'white', fontSize: '1rem', fontWeight: 'bold' }} />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Sign Out Section */}
+        <div className="preferences-section">
+          <h2 className="section-header">ACCOUNT</h2>
+          <button className="sign-out-button" onClick={handleSignOut}>
+            <div className="sign-out-icon">
+              <i className="pi pi-sign-out" style={{ color: '#ef4444', fontSize: '1.25rem' }} />
+            </div>
+            <span className="sign-out-text">Sign Out</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

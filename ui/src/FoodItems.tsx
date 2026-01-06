@@ -597,7 +597,6 @@ const FoodItems = ({ refreshTrigger, onCreateClick }: FoodItemsProps) => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search food items..."
-            icon="pi pi-search"
             style={{
               width: '100%',
               padding: '0.75rem',
