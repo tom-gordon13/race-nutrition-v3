@@ -1,9 +1,7 @@
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { Tag } from 'primereact/tag';
 import { Button } from 'primereact/button';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
+import './EventsTable.css';
 
 interface Event {
   id: string;
@@ -31,91 +29,119 @@ const formatDuration = (seconds: number) => {
 };
 
 export const EventsTable = ({ events, selectedEvent, onEventSelect, onEditEvent, onDuplicateEvent, isMobile }: EventsTableProps) => {
-  // Template for duration column
-  const durationBodyTemplate = (rowData: Event) => {
-    return formatDuration(rowData.expected_duration);
-  };
-
-  // Template for date column
-  const dateBodyTemplate = (rowData: Event) => {
-    return new Date(rowData.created_at).toLocaleDateString();
-  };
-
-  // Template for actions column
-  const actionsBodyTemplate = (rowData: Event) => {
-    return (
-      <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
-        <Button
-          icon="pi pi-pencil"
-          className="p-button-rounded p-button-text"
-          onClick={(e) => {
-            e.stopPropagation();
-            onEditEvent(rowData);
-          }}
-          tooltip="Edit event"
-          tooltipOptions={{ position: 'top' }}
-        />
-        <Button
-          icon="pi pi-copy"
-          className="p-button-rounded p-button-text"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDuplicateEvent(rowData);
-          }}
-          tooltip="Duplicate event"
-          tooltipOptions={{ position: 'top' }}
-        />
-      </div>
-    );
-  };
-
   if (events.length === 0) {
-    return <p style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.6)', padding: '1rem' }}>No events found. Create your first event above!</p>;
+    return <p style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.6)', padding: '2rem' }}>No events found. Create your first event above!</p>;
   }
 
   return (
     <>
-      <DataTable
-        value={events}
-        selectionMode="single"
-        selection={selectedEvent}
-        onSelectionChange={(e) => onEventSelect(e.value as Event)}
-        dataKey="id"
-        stripedRows
-        tableStyle={isMobile ? { minWidth: '100%', width: '100%' } : { minWidth: '50rem' }}
-        emptyMessage="No events found."
-        scrollable
-        scrollHeight="flex"
-      >
-        <Column
-          field="type"
-          header="Event Type"
-          sortable
-          style={isMobile ? { width: '50%', minWidth: 'auto' } : undefined}
-        />
-        <Column
-          header={isMobile ? "Duration" : "Expected Duration"}
-          body={durationBodyTemplate}
-          sortable
-          sortField="expected_duration"
-          style={isMobile ? { width: '30%', minWidth: 'auto' } : undefined}
-        />
-        {!isMobile && (
-          <Column
-            header="Created"
-            body={dateBodyTemplate}
-            sortable
-            sortField="created_at"
-          />
-        )}
-        <Column
-          header="Actions"
-          body={actionsBodyTemplate}
-          style={isMobile ? { width: '20%', minWidth: 'auto', textAlign: 'center' } : { width: '7rem', textAlign: 'center' }}
-        />
-      </DataTable>
-      <div style={{ display: 'flex', justifyContent: 'flex-start', padding: '1rem 0', width: '100%', boxSizing: 'border-box' }}>
-        <Tag value={`Total Events: ${events.length}`} severity="info" />
+      {/* Desktop: Table Header (hidden on mobile) */}
+      {!isMobile && (
+        <div className="events-table-header">
+          <div className="table-header-cell type-col">EVENT TYPE</div>
+          <div className="table-header-cell duration-col">DURATION</div>
+          <div className="table-header-cell created-col">CREATED</div>
+          <div className="table-header-cell privacy-col">PRIVACY</div>
+          <div className="table-header-cell actions-col">ACTIONS</div>
+        </div>
+      )}
+
+      {/* Events List */}
+      <div className="events-list">
+        {events.map((event) => {
+          const isSelected = selectedEvent?.id === event.id;
+          const duration = formatDuration(event.expected_duration);
+          const createdDate = new Date(event.created_at).toLocaleDateString();
+
+          if (isMobile) {
+            // Mobile: Card layout
+            return (
+              <div
+                key={event.id}
+                className={`event-card-mobile ${isSelected ? 'selected' : ''}`}
+                onClick={() => onEventSelect(event)}
+              >
+                <div className="event-card-header">
+                  <div>
+                    <h3 className="event-type">{event.type}</h3>
+                    <span className="event-duration">{duration}</span>
+                  </div>
+                  <div className="event-card-actions-mobile">
+                    <Button
+                      icon="pi pi-pencil"
+                      rounded
+                      text
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEditEvent(event);
+                      }}
+                    />
+                    <Button
+                      icon="pi pi-copy"
+                      rounded
+                      text
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDuplicateEvent(event);
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          } else {
+            // Desktop: Table row layout
+            return (
+              <div
+                key={event.id}
+                className={`event-row ${isSelected ? 'selected' : ''}`}
+                onClick={() => onEventSelect(event)}
+              >
+                <div className="table-cell type-col">
+                  <span className="event-type-desktop">{event.type}</span>
+                </div>
+                <div className="table-cell duration-col">
+                  <span className="event-duration-desktop">{duration}</span>
+                </div>
+                <div className="table-cell created-col">
+                  <span className="event-date">{createdDate}</span>
+                </div>
+                <div className="table-cell privacy-col">
+                  <span className={`privacy-badge ${event.private ? 'private' : 'public'}`}>
+                    {event.private ? 'Private' : 'Public'}
+                  </span>
+                </div>
+                <div className="table-cell actions-col">
+                  <Button
+                    icon="pi pi-pencil"
+                    rounded
+                    text
+                    className="action-button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditEvent(event);
+                    }}
+                  />
+                  <Button
+                    icon="pi pi-copy"
+                    rounded
+                    text
+                    className="action-button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDuplicateEvent(event);
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          }
+        })}
+      </div>
+
+      {/* Total Count */}
+      <div className="events-total">
+        <span className="events-count-badge">Total Events: {events.length}</span>
       </div>
     </>
   );

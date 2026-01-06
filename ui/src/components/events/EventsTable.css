@@ -1,0 +1,223 @@
+/* Events Table Header (Desktop Only) */
+.events-table-header {
+  display: grid;
+  grid-template-columns: 2.5fr 1.5fr 1.5fr 1fr 1fr;
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  background-color: transparent;
+  border-bottom: 2px solid #f3f4f6;
+  margin-bottom: 0.5rem;
+}
+
+.events-table-header .table-header-cell {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #9ca3af;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.events-table-header .duration-col,
+.events-table-header .created-col {
+  text-align: right;
+}
+
+.events-table-header .privacy-col,
+.events-table-header .actions-col {
+  text-align: center;
+}
+
+/* Events List */
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Desktop: Table Row */
+.event-row {
+  display: grid;
+  grid-template-columns: 2.5fr 1.5fr 1.5fr 1fr 1fr;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-items: center;
+  border: 2px solid transparent;
+}
+
+.event-row:hover {
+  background-color: #f3f4f6;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.event-row.selected {
+  background-color: #eef2ff;
+  border-color: #6366F1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.table-cell {
+  display: flex;
+  align-items: center;
+  font-size: 0.9375rem;
+  color: #000000;
+}
+
+.table-cell.duration-col,
+.table-cell.created-col {
+  justify-content: flex-end !important;
+  text-align: right;
+}
+
+.table-cell.privacy-col {
+  justify-content: center !important;
+}
+
+.table-cell.actions-col {
+  justify-content: center !important;
+  gap: 0.25rem;
+}
+
+.event-type-desktop {
+  font-weight: 700;
+  color: #1f2937;
+  font-size: 1rem;
+}
+
+.event-duration-desktop {
+  font-weight: 600;
+  color: #374151;
+}
+
+.event-date {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+/* Privacy Badges */
+.privacy-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.privacy-badge.private {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.privacy-badge.public {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+/* Action Buttons */
+.action-button {
+  color: #9ca3af !important;
+  width: 2rem;
+  height: 2rem;
+}
+
+.action-button:hover {
+  color: #6366F1 !important;
+  background-color: rgba(99, 102, 241, 0.1) !important;
+}
+
+/* Mobile: Card Layout */
+.event-card-mobile {
+  padding: 1.25rem;
+  background-color: #f9fafb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.event-card-mobile:hover {
+  background-color: #f3f4f6;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.event-card-mobile.selected {
+  background-color: #eef2ff;
+  border-color: #6366F1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.event-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.event-type {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 0.25rem 0;
+}
+
+.event-duration {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.event-card-actions-mobile {
+  display: flex;
+  gap: 0.25rem;
+}
+
+/* Total Count */
+.events-total {
+  display: flex;
+  justify-content: flex-start;
+  padding: 1rem 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.events-count-badge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background-color: #dbeafe;
+  color: #1e40af;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  /* Hide table header on mobile */
+  .events-table-header {
+    display: none;
+  }
+
+  .events-list {
+    gap: 0.5rem;
+  }
+
+  .event-card-mobile {
+    padding: 1rem;
+  }
+
+  .event-type {
+    font-size: 1rem;
+  }
+
+  .event-duration {
+    font-size: 0.8125rem;
+  }
+}

@@ -1,0 +1,323 @@
+/* Users Page Container */
+.users-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  padding: 2rem;
+  background-color: #ffffff;
+}
+
+/* Header Section */
+.users-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.users-title-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.users-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  color: #000000;
+}
+
+.users-count {
+  font-size: 1rem;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+/* Table Header (Desktop Only) */
+.users-table-header {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1.5fr 1.5fr;
+  gap: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: transparent;
+  border-bottom: 2px solid #f3f4f6;
+  margin-bottom: 0.5rem;
+}
+
+.users-table-header .table-header-cell {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #9ca3af;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.users-table-header .status-col {
+  text-align: center;
+}
+
+.users-table-header .actions-col {
+  text-align: center;
+}
+
+/* Users List */
+.users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Desktop: Table Row */
+.user-row {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1.5fr 1.5fr;
+  gap: 1.5rem;
+  padding: 1.5rem 1.5rem;
+  background-color: #fafafa;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  align-items: center;
+  border-left: 4px solid transparent;
+}
+
+.user-row:hover {
+  background-color: #f5f5f5;
+  transform: translateX(4px);
+  border-left-color: #6366F1;
+  box-shadow: 0 2px 12px rgba(99, 102, 241, 0.1);
+}
+
+.table-cell {
+  display: flex;
+  align-items: center;
+  font-size: 0.9375rem;
+  color: #000000;
+}
+
+.table-cell.status-col {
+  justify-content: center !important;
+}
+
+.table-cell.actions-col {
+  justify-content: center !important;
+}
+
+.user-name-desktop {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.user-email {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+/* Connection Status Badges */
+.connection-status {
+  display: inline-block;
+  padding: 0.375rem 0.875rem;
+  border-radius: 12px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.connection-status.pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.connection-status.incoming {
+  background-color: #ddd6fe;
+  color: #5b21b6;
+}
+
+.connection-status.connected {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.connection-status-text {
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+/* Action Buttons */
+.connect-button,
+.view-request-button {
+  font-weight: 600;
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.connect-button {
+  background-color: #6366F1 !important;
+  border-color: #6366F1 !important;
+  color: white !important;
+}
+
+.connect-button:hover {
+  background-color: #5558e3 !important;
+  border-color: #5558e3 !important;
+}
+
+.view-request-button {
+  background-color: #9333ea !important;
+  border-color: #9333ea !important;
+  color: white !important;
+}
+
+.view-request-button:hover {
+  background-color: #7e22ce !important;
+  border-color: #7e22ce !important;
+}
+
+/* Mobile: Card Layout */
+.user-card-mobile {
+  padding: 1.25rem;
+  background-color: #fafafa !important;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  border-left: 4px solid #6366F1;
+  display: block;
+  width: 100%;
+}
+
+.user-card-mobile:hover {
+  background-color: #f5f5f5;
+  box-shadow: 0 2px 12px rgba(99, 102, 241, 0.1);
+}
+
+.user-card-header {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
+.user-info-mobile {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.5rem !important;
+  flex: 1 !important;
+  overflow: visible !important;
+  width: auto !important;
+  min-width: 0 !important;
+}
+
+.user-card-mobile .user-name {
+  font-size: 1.125rem !important;
+  font-weight: 700 !important;
+  color: #000000 !important;
+  margin: 0 !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  padding: 0 !important;
+  line-height: 1.4 !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif !important;
+  width: 100% !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  min-height: 1.5rem !important;
+}
+
+.user-status-mobile {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.connection-check {
+  color: #22c55e !important;
+  font-size: 1.5rem;
+}
+
+.user-card-actions {
+  display: flex !important;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .users-page {
+    padding: 1rem;
+  }
+
+  .users-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .users-title {
+    font-size: 1.75rem;
+  }
+
+  /* Hide table header on mobile */
+  .users-table-header {
+    display: none;
+  }
+
+  .users-list {
+    gap: 0.5rem;
+  }
+
+  .user-card-mobile {
+    padding: 1rem;
+    background-color: #fafafa !important;
+  }
+
+  .user-card-mobile .user-name {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    color: #000000 !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.4 !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif !important;
+  }
+
+  .user-info-mobile {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    flex: 1 !important;
+  }
+
+  .user-card-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .user-status-mobile {
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  .user-card-actions {
+    display: flex !important;
+    justify-content: flex-start !important;
+  }
+
+  .connect-button,
+  .view-request-button {
+    width: 100%;
+    justify-content: center;
+    padding: 0.625rem 1rem;
+  }
+}

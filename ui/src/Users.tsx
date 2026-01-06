@@ -1,15 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { Card } from 'primereact/card';
 import { ProgressSpinner } from 'primereact/progressspinner';
-import { Tag } from 'primereact/tag';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import { API_URL } from './config/api';
+import './Users.css';
 
 
 
@@ -35,6 +32,17 @@ const Users = () => {
   const [showRequestDialog, setShowRequestDialog] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<User | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Fetch current user's UUID
   useEffect(() => {
@@ -145,67 +153,60 @@ const Users = () => {
     }
   };
 
-  // Template for connect column
-  const connectBodyTemplate = (rowData: User) => {
-    const { connection } = rowData;
+  // Render connection status for desktop view
+  const renderConnectionStatus = (connection: ConnectionInfo | null) => {
+    if (!connection) {
+      return <span className="connection-status-text">—</span>;
+    }
 
+    if (connection.status === 'PENDING' && connection.type === 'INITIATED') {
+      return <span className="connection-status pending">Pending</span>;
+    }
+
+    if (connection.status === 'PENDING' && connection.type === 'RECEIVED') {
+      return <span className="connection-status incoming">Incoming</span>;
+    }
+
+    if (connection.status === 'ACCEPTED') {
+      return <span className="connection-status connected">Connected</span>;
+    }
+
+    return <span className="connection-status-text">—</span>;
+  };
+
+  // Render connection action button
+  const renderConnectionAction = (rowData: User, connection: ConnectionInfo | null) => {
     // No connection - show connect button
     if (!connection) {
       return (
-        <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
-          <Button
-            icon="pi pi-user-plus"
-            className="p-button-rounded p-button-text"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleConnect(rowData.id);
-            }}
-            tooltip="Connect"
-            tooltipOptions={{ position: 'top' }}
-          />
-        </div>
+        <Button
+          icon="pi pi-user-plus"
+          label="Connect"
+          className="connect-button"
+          onClick={() => handleConnect(rowData.id)}
+        />
       );
     }
 
-    // I initiated a pending request - show "Pending"
+    // I initiated a pending request - no action
     if (connection.type === 'INITIATED' && connection.status === 'PENDING') {
-      return (
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <Tag value="Pending" severity="warning" />
-        </div>
-      );
+      return null;
     }
 
     // I received a pending request - show "View Request" button
     if (connection.type === 'RECEIVED' && connection.status === 'PENDING') {
       return (
-        <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
-          <Button
-            label="View Request"
-            className="p-button-sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleViewRequest(rowData);
-            }}
-            style={{
-              fontSize: '0.75rem',
-              padding: '0.25rem 0.5rem',
-              backgroundColor: '#9333ea',
-              borderColor: '#9333ea',
-              color: 'white'
-            }}
-          />
-        </div>
+        <Button
+          label="View Request"
+          className="view-request-button"
+          onClick={() => handleViewRequest(rowData)}
+        />
       );
     }
 
-    // Connection is accepted - show checkmark
+    // Connection is accepted - no action needed
     if (connection.status === 'ACCEPTED') {
-      return (
-        <div style={{ display: 'flex', justifyContent: 'center', color: '#22c55e' }}>
-          <i className="pi pi-check" style={{ fontSize: '1.25rem' }}></i>
-        </div>
-      );
+      return null;
     }
 
     return null;
@@ -228,80 +229,96 @@ const Users = () => {
   }
 
   return (
-    <Card
-      title="Users"
-      className="users-card"
-      style={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: 'transparent',
-        borderRadius: '0',
-        border: 'none'
-      }}
-      pt={{
-        title: {
-          style: {
-            textAlign: 'left',
-            color: '#000000',
-            padding: '1rem 2rem',
-            margin: 0,
-            fontSize: '1.5rem',
-            fontWeight: 600,
-            backgroundColor: 'transparent',
-            borderBottom: 'none'
-          }
-        },
-        body: {
-          style: {
-            flex: 1,
-            overflow: 'auto',
-            padding: 0,
-            backgroundColor: 'white'
-          }
-        },
-        content: {
-          style: {
-            padding: '0 2rem 2rem 2rem'
-          }
-        }
-      }}
-    >
+    <div className="users-page">
+      {/* Header */}
+      <div className="users-header">
+        <div className="users-title-section">
+          <h1 className="users-title">Users</h1>
+          <span className="users-count">{users.length} users</span>
+        </div>
+      </div>
+
+      {/* Desktop: Table Header (hidden on mobile) */}
+      {!isMobile && users.length > 0 && (
+        <div className="users-table-header">
+          <div className="table-header-cell name-col">NAME</div>
+          <div className="table-header-cell email-col">EMAIL</div>
+          <div className="table-header-cell status-col">STATUS</div>
+          <div className="table-header-cell actions-col">ACTION</div>
+        </div>
+      )}
+
+      {/* Users List */}
       {users.length === 0 ? (
-        <p style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.6)', padding: '1rem' }}>
+        <p style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.6)', padding: '2rem' }}>
           No users found.
         </p>
       ) : (
-        <>
-          <DataTable
-            value={users}
-            stripedRows
-            emptyMessage="No users found."
-          >
-            <Column
-              header="First Name"
-              field="first_name"
-              sortable
-              sortField="first_name"
-              style={{ width: '33.33%' }}
-            />
-            <Column
-              header="Last Name"
-              field="last_name"
-              sortable
-              sortField="last_name"
-              style={{ width: '33.33%' }}
-            />
-            <Column
-              header="Connect"
-              body={connectBodyTemplate}
-              style={{ width: '33.33%', textAlign: 'center' }}
-            />
-          </DataTable>
-          <div style={{ display: 'flex', justifyContent: 'flex-start', padding: '1rem 0' }}>
-            <Tag value={`Total: ${users.length}`} severity="info" />
-          </div>
-        </>
+        <div className="users-list">
+          {users.map((userItem) => {
+            const connection = userItem.connection;
+
+            if (isMobile) {
+              // Mobile: Card layout
+              return (
+                <div key={userItem.id} className="user-card-mobile">
+                  <div className="user-card-header">
+                    <div className="user-info-mobile">
+                      <div
+                        className="user-name"
+                        style={{
+                          fontSize: '1.125rem',
+                          fontWeight: 700,
+                          color: '#000000',
+                          margin: 0,
+                          padding: 0,
+                          display: 'block',
+                          visibility: 'visible',
+                          opacity: 1,
+                          lineHeight: 1.4,
+                          width: '100%',
+                          zIndex: 10,
+                          position: 'relative'
+                        }}
+                      >
+                        {userItem.first_name} {userItem.last_name}
+                      </div>
+                      <div className="user-status-mobile">
+                        {renderConnectionStatus(connection)}
+                      </div>
+                    </div>
+                    {connection && connection.status === 'ACCEPTED' && (
+                      <i className="pi pi-check connection-check"></i>
+                    )}
+                  </div>
+                  <div className="user-card-actions">
+                    {renderConnectionAction(userItem, connection)}
+                  </div>
+                </div>
+              );
+            } else {
+              // Desktop: Table row layout
+              return (
+                <div key={userItem.id} className="user-row">
+                  <div className="table-cell name-col">
+                    <span className="user-name-desktop">
+                      {userItem.first_name} {userItem.last_name}
+                    </span>
+                  </div>
+                  <div className="table-cell email-col">
+                    <span className="user-email">—</span>
+                  </div>
+                  <div className="table-cell status-col">
+                    {renderConnectionStatus(connection)}
+                  </div>
+                  <div className="table-cell actions-col">
+                    {renderConnectionAction(userItem, connection)}
+                  </div>
+                </div>
+              );
+            }
+          })}
+        </div>
       )}
 
       {/* Connection Request Dialog */}
@@ -349,7 +366,7 @@ const Users = () => {
           </div>
         )}
       </Dialog>
-    </Card>
+    </div>
   );
 };
 
