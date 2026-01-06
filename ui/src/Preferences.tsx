@@ -1,7 +1,6 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import { useState, useEffect } from 'react';
 import { Avatar } from 'primereact/avatar';
-import { Button } from 'primereact/button';
 import { Toast } from 'primereact/toast';
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -41,22 +40,11 @@ export default function Preferences() {
   const { user, logout } = useAuth0();
   const navigate = useNavigate();
   const toast = useRef<Toast>(null);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   const [colors, setColors] = useState<ReferenceColor[]>([]);
   const [categories, setCategories] = useState<ReferenceFoodCategory[]>([]);
   const [userPreferences, setUserPreferences] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
-
-  // Detect mobile screen size
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   // Fetch reference data (colors and categories)
   useEffect(() => {

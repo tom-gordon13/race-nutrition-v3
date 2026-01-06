@@ -2111,8 +2111,8 @@ tbody tr.selected {
   }
 
   .event-detail-header {
-    padding: 1rem;
-    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    gap: 0.25rem;
     background-color: transparent;
     border-bottom: none;
   }
@@ -2122,42 +2122,55 @@ tbody tr.selected {
   }
 
   .event-header-top-row h3 {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 
   .event-header-bottom-row {
     flex-wrap: wrap;
-    gap: 0.75rem;
+    gap: 0.5rem;
   }
 
   .event-stats-container {
-    gap: 1rem;
-    padding: 0.25rem 0;
+    gap: 0.75rem;
+    padding: 0;
   }
 
   .event-stat-value {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 
   .event-stat-label {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
   }
 
   .event-action-buttons {
     width: 100%;
-    gap: 0.5rem;
+    gap: 0.35rem;
   }
 
   .add-nutrient-btn {
-    font-size: 0.85rem;
-    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+    padding: 0.35rem 0.5rem;
     flex: 1;
   }
 
   .close-btn {
-    width: 2rem;
-    height: 2rem;
-    font-size: 1.25rem;
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 1.1rem;
+  }
+
+  .event-header-top-row .expand-btn,
+  .event-header-top-row .share-event-btn,
+  .event-header-top-row .edit-event-btn {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 1rem;
+  }
+
+  .event-header-top-row .expand-btn i,
+  .event-header-top-row .share-event-btn i {
+    font-size: 0.9rem;
   }
 
   /* Timeline timestamp markers (condensed view) */
@@ -2685,10 +2698,10 @@ tbody tr.selected {
 
 @media (max-width: 768px) {
   .edit-event-btn {
-    width: 2rem;
-    height: 2rem;
+    width: 1.75rem;
+    height: 1.75rem;
     padding: 0;
-    font-size: 1.25rem;
+    font-size: 1.1rem;
   }
 
   .edit-event-text {
