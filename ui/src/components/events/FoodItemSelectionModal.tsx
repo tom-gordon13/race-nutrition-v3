@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export type ItemFilterMode = 'my_items' | 'favorites';
+export type ItemFilterMode = 'my_items' | 'favorites' | 'all_items';
 
 interface FoodItemNutrient {
   id: string;
@@ -192,12 +192,11 @@ export const FoodItemSelectionModal = ({
               placeholder="Search food items..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              autoFocus
             />
 
             {/* Filter section */}
             <div className="modal-filters">
-              <div className="my-items-filter">
+              <div className="my-items-filter" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <label className="checkbox-label">
                   <input
                     type="radio"
@@ -209,9 +208,9 @@ export const FoodItemSelectionModal = ({
                       onMyItemsOnlyChange(true);
                     }}
                   />
-                  <span className="checkbox-text">My Items Only</span>
+                  <span className="checkbox-text">My Items</span>
                 </label>
-                <label className="checkbox-label" style={{ marginLeft: '1rem' }}>
+                <label className="checkbox-label">
                   <input
                     type="radio"
                     className="checkbox-input"
@@ -222,7 +221,20 @@ export const FoodItemSelectionModal = ({
                       onMyItemsOnlyChange(false);
                     }}
                   />
-                  <span className="checkbox-text">Favorited Items</span>
+                  <span className="checkbox-text">Favorites</span>
+                </label>
+                <label className="checkbox-label">
+                  <input
+                    type="radio"
+                    className="checkbox-input"
+                    name="item-filter"
+                    checked={itemFilterMode === 'all_items'}
+                    onChange={() => {
+                      onItemFilterModeChange('all_items');
+                      onMyItemsOnlyChange(false);
+                    }}
+                  />
+                  <span className="checkbox-text">All Items</span>
                 </label>
               </div>
 

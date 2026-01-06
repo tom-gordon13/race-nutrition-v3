@@ -460,6 +460,11 @@ const FoodItems = ({ refreshTrigger, onCreateClick }: FoodItemsProps) => {
           newSet.delete(foodItemId);
           return newSet;
         });
+
+        // If in favorites view mode, also remove from the displayed list
+        if (viewMode === 'favorites') {
+          setFavoriteFoodItems(prev => prev.filter(item => item.id !== foodItemId));
+        }
       } else {
         // Add to favorites
         const response = await fetch(`${API_URL}/api/favorite-food-items`, {
@@ -478,6 +483,18 @@ const FoodItems = ({ refreshTrigger, onCreateClick }: FoodItemsProps) => {
         }
 
         setFavoriteFoodItemIds(prev => new Set(prev).add(foodItemId));
+
+        // If in favorites view mode, re-fetch to get the newly added favorite item
+        if (viewMode === 'favorites') {
+          const favResponse = await fetch(
+            `${API_URL}/api/favorite-food-items?auth0_sub=${encodeURIComponent(user.sub)}`
+          );
+          if (favResponse.ok) {
+            const favData = await favResponse.json();
+            const favItems: FoodItem[] = favData.favorites.map((fav: any) => fav.foodItem);
+            setFavoriteFoodItems(favItems);
+          }
+        }
       }
     } catch (err) {
       console.error('Error toggling favorite:', err);
@@ -578,6 +595,7 @@ const FoodItems = ({ refreshTrigger, onCreateClick }: FoodItemsProps) => {
 
             if (isMobile) {
               // Mobile: Card layout
+              const isFavorite = favoriteFoodItemIds.has(item.id);
               return (
                 <div
                   key={item.id}
@@ -585,7 +603,21 @@ const FoodItems = ({ refreshTrigger, onCreateClick }: FoodItemsProps) => {
                   onClick={() => handleCardClick(item)}
                 >
                   <div className="food-item-card-header">
-                    <h3 className="food-item-name">{item.item_name}</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
+                      <h3 className="food-item-name">{item.item_name}</h3>
+                      <i
+                        className={isFavorite ? "pi pi-star-fill" : "pi pi-star"}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleFavorite(item.id);
+                        }}
+                        style={{
+                          fontSize: '1.25rem',
+                          color: isFavorite ? '#fbbf24' : '#9ca3af',
+                          cursor: 'pointer'
+                        }}
+                      />
+                    </div>
                     <span className="food-item-cost">
                       {item.cost !== null && item.cost !== undefined
                         ? new Intl.NumberFormat('en-US', {
@@ -606,6 +638,7 @@ const FoodItems = ({ refreshTrigger, onCreateClick }: FoodItemsProps) => {
               );
             } else {
               // Desktop: Table row layout
+              const isFavorite = favoriteFoodItemIds.has(item.id);
               return (
                 <div
                   key={item.id}
@@ -613,7 +646,21 @@ const FoodItems = ({ refreshTrigger, onCreateClick }: FoodItemsProps) => {
                   onClick={() => handleCardClick(item)}
                 >
                   <div className="table-cell food-item-col">
-                    <span className="food-item-name-desktop">{item.item_name}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span className="food-item-name-desktop">{item.item_name}</span>
+                      <i
+                        className={isFavorite ? "pi pi-star-fill" : "pi pi-star"}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleFavorite(item.id);
+                        }}
+                        style={{
+                          fontSize: '1rem',
+                          color: isFavorite ? '#fbbf24' : '#9ca3af',
+                          cursor: 'pointer'
+                        }}
+                      />
+                    </div>
                   </div>
                   <div className="table-cell category-col">
                     <span

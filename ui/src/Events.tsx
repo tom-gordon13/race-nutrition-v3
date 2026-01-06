@@ -259,8 +259,18 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
         const data = await response.json();
         const favItems = data.favorites.map((fav: any) => fav.foodItem);
         setFoodItems(favItems);
+      } else if (itemFilterMode === 'all_items') {
+        // Fetch all food items (my_items_only = false)
+        response = await fetch(`${API_URL}/api/food-items?auth0_sub=${encodeURIComponent(user.sub)}&my_items_only=false`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch food items');
+        }
+
+        const data = await response.json();
+        setFoodItems(data.foodItems);
       } else {
-        // Fetch regular food items
+        // Fetch my items only (default)
         response = await fetch(`${API_URL}/api/food-items?auth0_sub=${encodeURIComponent(user.sub)}&my_items_only=${myItemsOnly}`);
 
         if (!response.ok) {

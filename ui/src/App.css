@@ -1144,6 +1144,15 @@ tbody tr.selected {
   flex-direction: column;
 }
 
+/* Ensure PrimeReact dialogs appear above fullscreen view */
+.p-dialog-mask {
+  z-index: 15000 !important;
+}
+
+.p-dialog {
+  z-index: 15001 !important;
+}
+
 /* Fullscreen mode for event timeline container */
 .event-timeline-container.fullscreen {
   flex: 1;

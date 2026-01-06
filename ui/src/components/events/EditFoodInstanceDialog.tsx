@@ -160,7 +160,8 @@ export const EditFoodInstanceDialog: React.FC<EditFoodInstanceDialogProps> = ({
       dismissableMask
       closable={false}
       pt={{
-        root: { style: { borderRadius: '20px', overflow: 'hidden' } },
+        root: { style: { borderRadius: '20px', overflow: 'hidden', zIndex: 15000 } },
+        mask: { style: { zIndex: 14999 } },
         header: { style: { display: 'none' } },
         content: { style: { padding: 0, borderRadius: '20px', overflow: 'hidden' } }
       }}
