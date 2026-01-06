@@ -127,9 +127,9 @@ router.post('/sync-user', async (req, res) => {
     const { auth0Sub, email, firstName, lastName } = req.body;
 
 
-    if (!auth0Sub || !firstName || !lastName) {
+    if (!auth0Sub || !firstName) {
       return res.status(400).json({
-        error: 'Missing required fields: auth0Sub, firstName, and lastName are required'
+        error: 'Missing required fields: auth0Sub and firstName are required'
       });
     }
 
@@ -151,7 +151,7 @@ router.post('/sync-user', async (req, res) => {
         auth0_sub: auth0Sub,
         email: email || null,
         first_name: firstName,
-        last_name: lastName
+        last_name: lastName || ''
       }
     });
 
