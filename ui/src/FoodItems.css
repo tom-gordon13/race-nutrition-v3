@@ -144,13 +144,27 @@
   color: #000000;
 }
 
+.table-cell.category-col {
+  gap: 0.5rem;
+}
+
+.table-cell.carbs-col,
+.table-cell.sodium-col,
+.table-cell.caffeine-col,
+.table-cell.cost-col {
+  font-weight: 500;
+  color: #000000;
+  justify-content: flex-end !important;
+  text-align: right;
+}
+
+.table-cell.actions-col {
+  justify-content: flex-end !important;
+}
+
 .food-item-name-desktop {
   font-weight: 600;
   color: #000000;
-}
-
-.category-col {
-  gap: 0.5rem;
 }
 
 .category-dot {
@@ -163,20 +177,6 @@
 .category-name {
   font-weight: 600;
   color: #000000;
-}
-
-.carbs-col,
-.sodium-col,
-.caffeine-col,
-.cost-col {
-  font-weight: 500;
-  color: #000000;
-  justify-content: flex-end;
-  text-align: right;
-}
-
-.actions-col {
-  justify-content: flex-end;
 }
 
 .row-menu-button {
