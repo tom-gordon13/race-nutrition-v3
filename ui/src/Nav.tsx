@@ -55,13 +55,6 @@ const Nav = ({ className = "" }: NavProps) => {
 
   const userMenuItems: MenuItem[] = [
     {
-      label: 'Nutrients',
-      icon: 'pi pi-chart-bar',
-      command: () => {
-        navigate('/nutrients');
-      }
-    },
-    {
       label: 'Settings',
       icon: 'pi pi-cog',
       command: () => {
@@ -166,8 +159,9 @@ const Nav = ({ className = "" }: NavProps) => {
                 onMouseLeave={handleUserMouseLeave}
               >
                 <Avatar
-                  label={user?.name?.charAt(0).toUpperCase()}
-                  icon="pi pi-user"
+                  image={user?.picture}
+                  label={!user?.picture ? user?.name?.charAt(0).toUpperCase() : undefined}
+                  icon={!user?.picture && !user?.name ? "pi pi-user" : undefined}
                   style={{ backgroundColor: '#F97316', color: 'white', width: '2.5rem', height: '2.5rem' }}
                   shape="circle"
                 />
