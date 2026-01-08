@@ -74,7 +74,7 @@ export const PendingEventsTable = ({
             e.stopPropagation();
             onViewEvent(rowData);
           }}
-          tooltip={isMobile ? "View event" : undefined}
+          tooltip={isMobile ? "View plan" : undefined}
           tooltipOptions={{ position: 'top' }}
         />
       </div>
@@ -82,7 +82,7 @@ export const PendingEventsTable = ({
   };
 
   if (sharedEvents.length === 0) {
-    return null; // Don't show anything if there are no pending events
+    return null; // Don't show anything if there are no pending plans
   }
 
   return (
@@ -90,10 +90,10 @@ export const PendingEventsTable = ({
       value={sharedEvents}
       dataKey="id"
       stripedRows
-      emptyMessage="No pending shared events."
+      emptyMessage="No pending shared plans."
     >
       <Column
-        header="Event Name"
+        header="Plan Name"
         body={eventNameBodyTemplate}
         style={{ width: isMobile ? '40%' : 'auto' }}
       />

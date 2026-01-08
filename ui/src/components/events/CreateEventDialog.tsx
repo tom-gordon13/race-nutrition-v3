@@ -80,7 +80,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
     const totalSeconds = hours * 3600 + minutes * 60 + seconds;
 
     if (!eventName.trim()) {
-      setError('Event name is required');
+      setError('Plan name is required');
       return;
     }
 
@@ -93,7 +93,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
     setError(null);
 
     try {
-      
+
       const response = await fetch(`${API_URL}/api/events`, {
         method: 'POST',
         headers: {
@@ -109,7 +109,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Failed to create event');
+        throw new Error(data.error || 'Failed to create plan');
       }
 
       onCreate();
@@ -173,7 +173,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
               color: '#000',
               lineHeight: 1.2
             }}>
-              {eventName || 'Event'}
+              {eventName || 'Plan'}
             </div>
           </div>
           <button
@@ -201,7 +201,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
           <Message severity="error" text={error} style={{ width: '100%', marginBottom: '0.5rem' }} />
         )}
 
-        {/* Event Name Section */}
+        {/* Plan Name Section */}
         <div style={{
           backgroundColor: 'white',
           borderRadius: '8px',
@@ -216,7 +216,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
             color: '#9ca3af',
             letterSpacing: '0.1em'
           }}>
-            EVENT NAME
+            PLAN NAME
           </div>
 
           <InputText
@@ -461,7 +461,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
             }}
           />
           <Button
-            label={loading ? 'Creating...' : 'Create Event'}
+            label={loading ? 'Creating...' : 'Create Plan'}
             icon={loading ? 'pi pi-spin pi-spinner' : 'pi pi-check'}
             onClick={handleCreate}
             disabled={loading}

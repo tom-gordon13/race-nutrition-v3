@@ -141,7 +141,7 @@ export const FoodItemSelectionModal = ({
       return;
     }
 
-    // Validate time is within event bounds
+    // Validate time is within plan bounds
     if (timeSeconds < 0) {
       setError('Time cannot be negative. Please enter a time of 0:00 or later.');
       return;
@@ -149,7 +149,7 @@ export const FoodItemSelectionModal = ({
 
     if (timeSeconds > eventDuration) {
       const maxTime = formatTimeHHMM(eventDuration);
-      setError(`Time cannot exceed event duration of ${maxTime}. Please enter a time between 0:00 and ${maxTime}.`);
+      setError(`Time cannot exceed plan duration of ${maxTime}. Please enter a time between 0:00 and ${maxTime}.`);
       return;
     }
 

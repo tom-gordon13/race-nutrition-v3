@@ -118,7 +118,7 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
   const handleCopyLink = async () => {
     if (!eventId) return;
 
-    const eventUrl = `${window.location.origin}/events/${eventId}`;
+    const eventUrl = `${window.location.origin}/plans/${eventId}`;
 
     try {
       await navigator.clipboard.writeText(eventUrl);
@@ -189,7 +189,7 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
         onHide();
       }, 1500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to share event');
+      setError(err instanceof Error ? err.message : 'Failed to share plan');
       console.error('Error sharing event:', err);
     } finally {
       setSharingUserId(null);
@@ -276,11 +276,11 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
           <Message severity="success" text={success} style={{ width: '100%', marginBottom: '0.5rem' }} />
         )}
 
-        {/* Private Event Alert */}
+        {/* Private Plan Alert */}
         {privateEventAlert && (
           <Message
             severity="warn"
-            text="This event is private. Other users will not be able to see it unless you mark it as public."
+            text="This plan is private. Other users will not be able to see it unless you mark it as public."
             style={{ width: '100%', marginBottom: '0.5rem' }}
           />
         )}

@@ -297,9 +297,9 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
   const handleSelectEvent = (event: Event | null) => {
     setSelectedEvent(event);
     if (event) {
-      navigate(`/events/${event.id}`);
+      navigate(`/plans/${event.id}`);
     } else {
-      navigate('/events');
+      navigate('/plans');
     }
   };
 
@@ -342,9 +342,9 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
             } else {
               // User is not the owner - check if event is private
               if (fetchedEvent.private) {
-                // Private event that user doesn't own - redirect to /events
+                // Private event that user doesn't own - redirect to /plans
                 console.log('Cannot access private event');
-                navigate('/events');
+                navigate('/plans');
                 setError('This event is private and cannot be accessed.');
                 setTimeout(() => setError(null), 3000);
               } else {
@@ -357,13 +357,13 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
             }
           } catch (err) {
             console.error('Error fetching event:', err);
-            navigate('/events');
+            navigate('/plans');
             setError('Event not found or you do not have access to view it.');
             setTimeout(() => setError(null), 3000);
           }
         }
       } else if (!eventId && selectedEvent) {
-        // Clear selection when navigating back to /events
+        // Clear selection when navigating back to /plans
         setSelectedEvent(null);
         setIsViewOnly(false);
         setEventOwnerAuth0Sub(null);
@@ -766,7 +766,7 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
       {!selectedEvent && (
         <div className="events-panel">
           <Card
-            title="My Events"
+            title="My Plans"
             style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'white', borderRadius: '0', border: 'none' }}
             pt={{
               title: { style: { textAlign: 'left', color: '#000000', padding: '1rem 1.5rem', margin: 0, fontSize: '1.5rem', fontWeight: 600, backgroundColor: '#ffffff', borderBottom: '1px solid #e5e7eb' } },

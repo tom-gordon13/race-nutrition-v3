@@ -90,7 +90,7 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
     const totalSeconds = hours * 3600 + minutes * 60 + seconds;
 
     if (!eventName.trim()) {
-      setError('Event name is required');
+      setError('Plan name is required');
       return;
     }
 
@@ -103,7 +103,7 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
     setError(null);
 
     try {
-      
+
       const response = await fetch(`${API_URL}/api/events/${event.id}`, {
         method: 'PUT',
         headers: {
@@ -118,7 +118,7 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update event');
+        throw new Error('Failed to update plan');
       }
 
       const data = await response.json();
@@ -202,7 +202,7 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
           <Message severity="error" text={error} style={{ width: '100%', marginBottom: '0.5rem' }} />
         )}
 
-        {/* Event Name Section */}
+        {/* Plan Name Section */}
         <div style={{
           backgroundColor: 'white',
           borderRadius: '8px',
@@ -217,7 +217,7 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
             color: '#9ca3af',
             letterSpacing: '0.1em'
           }}>
-            EVENT NAME
+            PLAN NAME
           </div>
 
           <InputText
@@ -370,7 +370,7 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
                 fontSize: '0.875rem',
                 color: '#6b7280'
               }}>
-                {isPrivate ? 'Only you can see this event' : 'Event can be shared with others'}
+                {isPrivate ? 'Only you can see this plan' : 'Plan can be shared with others'}
               </div>
             </div>
             <InputSwitch

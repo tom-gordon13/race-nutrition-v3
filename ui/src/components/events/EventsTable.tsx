@@ -41,7 +41,7 @@ const formatEventType = (eventType: string) => {
 
 export const EventsTable = ({ events, selectedEvent, onEventSelect, onEditEvent, onDuplicateEvent, isMobile }: EventsTableProps) => {
   if (events.length === 0) {
-    return <p style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.6)', padding: '2rem' }}>No events found. Create your first event above!</p>;
+    return <p style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.6)', padding: '2rem' }}>No plans found. Create your first plan above!</p>;
   }
 
   return (
@@ -49,7 +49,7 @@ export const EventsTable = ({ events, selectedEvent, onEventSelect, onEditEvent,
       {/* Desktop: Table Header (hidden on mobile) */}
       {!isMobile && (
         <div className="events-table-header">
-          <div className="table-header-cell name-col">EVENT NAME</div>
+          <div className="table-header-cell name-col">PLAN NAME</div>
           <div className="table-header-cell type-col">EVENT TYPE</div>
           <div className="table-header-cell duration-col">DURATION</div>
           <div className="table-header-cell created-col">CREATED</div>
@@ -163,7 +163,7 @@ export const EventsTable = ({ events, selectedEvent, onEventSelect, onEditEvent,
 
       {/* Total Count */}
       <div className="events-total">
-        <span className="events-count-badge">Total Events: {events.length}</span>
+        <span className="events-count-badge">Total Plans: {events.length}</span>
       </div>
     </>
   );

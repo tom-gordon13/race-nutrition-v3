@@ -30,7 +30,7 @@ const Nav = ({ className = "" }: NavProps) => {
   // Determine active index based on current path
   const getActiveIndex = () => {
     if (location.pathname.startsWith('/food-items')) return 0;
-    if (location.pathname.startsWith('/events')) return 1;
+    if (location.pathname.startsWith('/plans')) return 1;
     if (location.pathname.startsWith('/users')) return 2;
     return -1; // No tab selected for other pages like preferences and nutrients
   };
@@ -42,9 +42,9 @@ const Nav = ({ className = "" }: NavProps) => {
       command: () => navigate('/food-items')
     },
     {
-      label: 'Events',
+      label: 'Plans',
       icon: 'pi pi-calendar',
-      command: () => navigate('/events')
+      command: () => navigate('/plans')
     },
     {
       label: 'Users',
