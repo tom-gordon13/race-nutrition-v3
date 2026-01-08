@@ -7,7 +7,6 @@ import Events from "./Events";
 import Plans from "./Plans";
 import Preferences from "./Preferences";
 import Users from "./Users";
-import { Button } from 'primereact/button';
 import { CreateFoodItemDialog } from './components/food-items/CreateFoodItemDialog';
 import './Home.css';
 

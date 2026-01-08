@@ -74,17 +74,6 @@ const Plans = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [eventToEdit, setEventToEdit] = useState<Event | null>(null);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-
-  // Detect mobile screen size
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   const fetchMyPlans = async () => {
     if (!user || !user.sub) {
@@ -179,7 +168,7 @@ const Plans = () => {
     setShowEditDialog(true);
   };
 
-  const handleSaveEditedEvent = async (updatedEvent: Event) => {
+  const handleSaveEditedEvent = async (_updatedEvent: Event) => {
     await fetchMyPlans();
     setShowEditDialog(false);
     setEventToEdit(null);
