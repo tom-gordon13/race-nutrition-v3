@@ -8,6 +8,7 @@ import 'primeicons/primeicons.css';
 import { CreateEventDialog, EditEventDialog } from './components/events';
 import { API_URL } from './config/api';
 import './Plans.css';
+import LoadingSpinner from './LoadingSpinner';
 
 interface Event {
   id: string;
@@ -219,9 +220,24 @@ const Plans = () => {
       return total;
     }, 0);
 
+    const totalSodium = instances.reduce((total, instance) => {
+      const sodiumNutrient = instance.foodItem.foodItemNutrients.find(
+        n => n.nutrient.nutrient_name.toLowerCase().includes('sodium')
+      );
+      if (sodiumNutrient) {
+        return total + (sodiumNutrient.quantity * instance.servings);
+      }
+      return total;
+    }, 0);
+
     const itemCount = instances.length;
 
-    return { totalCalories, totalCarbs, itemCount };
+    // Calculate per hour rates
+    const durationHours = plan.expected_duration / 3600;
+    const carbsPerHour = durationHours > 0 ? Math.round(totalCarbs / durationHours) : 0;
+    const sodiumPerHour = durationHours > 0 ? Math.round(totalSodium / durationHours) : 0;
+
+    return { totalCalories, totalCarbs, totalSodium, itemCount, carbsPerHour, sodiumPerHour };
   };
 
   const formatDuration = (seconds: number) => {
@@ -266,7 +282,7 @@ const Plans = () => {
   const currentPlans = activeTab === 'my_plans' ? myPlans : communityPlans;
 
   if (loading) {
-    return <div className="plans-loading">Loading plans...</div>;
+    return <LoadingSpinner message="Loading plans..." />;
   }
 
   if (!user || !user.sub) {
@@ -281,7 +297,7 @@ const Plans = () => {
           icon="pi pi-plus"
           label="Create New Plan"
           onClick={() => setShowCreateDialog(true)}
-          className="create-plan-btn"
+          className="create-button"
         />
       </div>
 
@@ -333,20 +349,6 @@ const Plans = () => {
                 <div className="plan-card-header">
                   <div className="plan-title-section">
                     <h3 className="plan-title">{plan.name}</h3>
-                    <div className="plan-metadata">
-                      {activeTab === 'community_plans' && plan.owner && (
-                        <div className="plan-owner">
-                          <i className="pi pi-share-alt"></i>
-                          <span>{plan.owner.first_name} {plan.owner.last_name}</span>
-                          {plan.downloadCount !== undefined && (
-                            <span className="download-count">• {plan.downloadCount} downloads</span>
-                          )}
-                        </div>
-                      )}
-                      {activeTab === 'my_plans' && (
-                        <span className="plan-updated">{updatedDate}</span>
-                      )}
-                    </div>
                   </div>
                   <div className="plan-actions">
                     {activeTab === 'my_plans' ? (
@@ -382,23 +384,34 @@ const Plans = () => {
                   <span className={`event-type-badge ${getEventTypeClass(plan.event_type)}`}>
                     {eventType}
                   </span>
-                  <span className="plan-duration">{duration}</span>
+                  {activeTab === 'community_plans' && plan.owner && (
+                    <span className="shared-indicator">
+                      <i className="pi pi-share-alt"></i>
+                      <span>Shared</span>
+                    </span>
+                  )}
+                  <span className="plan-updated">{updatedDate}</span>
                 </div>
 
                 <div className="plan-stats">
                   <div className="plan-stat">
-                    <div className="stat-label">Calories</div>
-                    <div className="stat-value">{stats.totalCalories.toLocaleString()}</div>
+                    <div className="stat-value">{duration}</div>
+                    <div className="stat-label">Duration</div>
                   </div>
                   <div className="plan-stat-divider"></div>
                   <div className="plan-stat">
-                    <div className="stat-label">Carbs</div>
-                    <div className="stat-value">{Math.round(stats.totalCarbs)}g</div>
+                    <div className="stat-value">{stats.carbsPerHour}g</div>
+                    <div className="stat-label">Carbs/hr</div>
                   </div>
                   <div className="plan-stat-divider"></div>
                   <div className="plan-stat">
-                    <div className="stat-label">Items</div>
                     <div className="stat-value">{stats.itemCount}</div>
+                    <div className="stat-label">Items</div>
+                  </div>
+                  <div className="plan-stat-divider"></div>
+                  <div className="plan-stat">
+                    <div className="stat-value">{stats.sodiumPerHour}mg</div>
+                    <div className="stat-label">Sodium/hr</div>
                   </div>
                 </div>
                 </div>

@@ -23,6 +23,7 @@ import {
   FoodItemDetailsDialog
 } from './components/events';
 import { API_URL } from './config/api';
+import LoadingSpinner from './LoadingSpinner';
 
 interface Event {
   id: string;
@@ -674,7 +675,7 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
   };
 
   if (loading) {
-    return <div>Loading events...</div>;
+    return <LoadingSpinner message="Loading events..." />;
   }
 
   if (!user || !user.sub) {

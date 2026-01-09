@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ProgressSpinner } from 'primereact/progressspinner';
 import { Dialog } from 'primereact/dialog';
 import { InputText } from 'primereact/inputtext';
 import { InputNumber } from 'primereact/inputnumber';
@@ -11,6 +10,7 @@ import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import './FoodItems.css';
 import { API_URL } from './config/api';
+import LoadingSpinner from './LoadingSpinner';
 
 const FOOD_CATEGORIES = [
   'ENERGY_GEL',
@@ -529,11 +529,7 @@ const FoodItems = ({ refreshTrigger, onCreateClick }: FoodItemsProps) => {
   });
 
   if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2rem' }}>
-        <ProgressSpinner style={{ width: '50px', height: '50px' }} />
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (error) {
@@ -546,163 +542,128 @@ const FoodItems = ({ refreshTrigger, onCreateClick }: FoodItemsProps) => {
 
   return (
     <div className="food-items-page">
-      {/* Header */}
+      {/* Header Section with Create Button */}
       <div className="food-items-header">
-        <div className="food-items-title-section">
-          <h1 className="food-items-title">Food Items</h1>
-          <span className="food-items-count">
-            {filteredFoodItems.length}{filteredFoodItems.length !== foodItems.length && ` of ${foodItems.length}`} items
-          </span>
-        </div>
         <Button
           label="Create New Item"
           icon="pi pi-plus"
-          className="add-item-button"
+          className="create-button"
           onClick={onCreateClick}
         />
       </div>
 
       {/* Tab Navigation */}
-      <div className="food-items-tabs">
-        <button
-          onClick={() => setViewMode('my_items')}
-          className={`tab-button ${viewMode === 'my_items' ? 'active' : ''}`}
-        >
-          My Items
-        </button>
-        <button
-          onClick={() => setViewMode('all_items')}
-          className={`tab-button ${viewMode === 'all_items' ? 'active' : ''}`}
-        >
-          All Items
-        </button>
-        <button
-          onClick={() => setViewMode('favorites')}
-          className={`tab-button ${viewMode === 'favorites' ? 'active' : ''}`}
-        >
-          Favorites
-        </button>
+      <div className="food-items-tabs-wrapper">
+        <div className="food-items-tabs">
+          <button
+            onClick={() => setViewMode('my_items')}
+            className={`tab-button ${viewMode === 'my_items' ? 'active' : ''}`}
+          >
+            My Items
+          </button>
+          <button
+            onClick={() => setViewMode('all_items')}
+            className={`tab-button ${viewMode === 'all_items' ? 'active' : ''}`}
+          >
+            All Items
+          </button>
+          <button
+            onClick={() => setViewMode('favorites')}
+            className={`tab-button ${viewMode === 'favorites' ? 'active' : ''}`}
+          >
+            Favorites
+          </button>
+          <div className={`tab-indicator tab-indicator-${viewMode}`} />
+        </div>
       </div>
 
       {/* Search and Filter Controls */}
-      <div style={{
-        display: 'flex',
-        gap: '1rem',
-        padding: '1rem 1.5rem',
-        backgroundColor: 'white',
-        flexDirection: isMobile ? 'column' : 'row'
-      }}>
-        <div style={{ flex: 1 }}>
+      <div className="search-filter-section">
+        <div className="search-input-wrapper">
+          <i className="pi pi-search search-icon"></i>
           <InputText
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search food items..."
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              fontSize: '0.9375rem',
-              borderRadius: '8px',
-              border: '1px solid #e5e7eb'
-            }}
+            placeholder="Search items..."
+            className="search-input"
           />
         </div>
-        <div style={{ width: isMobile ? '100%' : '200px' }}>
-          <Dropdown
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.value)}
-            options={[
-              { label: 'All Categories', value: 'ALL' },
-              ...FOOD_CATEGORIES.map((cat) => ({
-                label: CATEGORY_DISPLAY_NAMES[cat] || cat,
-                value: cat
-              }))
-            ]}
-            placeholder="Category"
-            style={{
-              width: '100%',
-              borderRadius: '8px',
-              border: '1px solid #e5e7eb'
-            }}
-            pt={{
-              input: { style: { fontSize: '0.9375rem', padding: '0.75rem' } }
-            }}
-            valueTemplate={(option) => {
-              if (!option) return 'Category';
-              if (option.value === 'ALL') return option.label;
-              const color = getCategoryColor(option.value);
-              return (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span
-                    style={{
-                      width: '12px',
-                      height: '12px',
-                      borderRadius: '50%',
-                      backgroundColor: color,
-                      flexShrink: 0
-                    }}
-                  />
-                  <span>{option.label}</span>
-                </div>
-              );
-            }}
-            itemTemplate={(option) => {
-              if (option.value === 'ALL') return option.label;
-              const color = getCategoryColor(option.value);
-              return (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span
-                    style={{
-                      width: '12px',
-                      height: '12px',
-                      borderRadius: '50%',
-                      backgroundColor: color,
-                      flexShrink: 0
-                    }}
-                  />
-                  <span>{option.label}</span>
-                </div>
-              );
-            }}
-          />
-        </div>
+        <Dropdown
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.value)}
+          options={[
+            { label: 'All', value: 'ALL' },
+            ...FOOD_CATEGORIES.map((cat) => ({
+              label: CATEGORY_DISPLAY_NAMES[cat] || cat,
+              value: cat
+            }))
+          ]}
+          placeholder="All"
+          className="filter-dropdown"
+          valueTemplate={(option) => {
+            if (!option) return <span><i className="pi pi-filter"></i> All</span>;
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <i className="pi pi-filter"></i>
+                <span>{option.label}</span>
+              </div>
+            );
+          }}
+          itemTemplate={(option) => {
+            if (option.value === 'ALL') return option.label;
+            const color = getCategoryColor(option.value);
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span
+                  style={{
+                    width: '12px',
+                    height: '12px',
+                    borderRadius: '50%',
+                    backgroundColor: color,
+                    flexShrink: 0
+                  }}
+                />
+                <span>{option.label}</span>
+              </div>
+            );
+          }}
+        />
       </div>
 
-      {/* Desktop: Table Header (hidden on mobile) */}
-      {!isMobile && filteredFoodItems.length > 0 && (
-        <div className="food-items-table-header">
-          <div className="table-header-cell food-item-col">FOOD ITEM</div>
-          <div className="table-header-cell category-col">CATEGORY</div>
-          <div className="table-header-cell carbs-col">CARBS</div>
-          <div className="table-header-cell sodium-col">SODIUM</div>
-          <div className="table-header-cell caffeine-col">CAFFEINE</div>
-          <div className="table-header-cell cost-col">COST</div>
-          <div className="table-header-cell actions-col"></div>
-        </div>
-      )}
+      {/* Item Count */}
+      <div className="items-count">
+        {filteredFoodItems.length} item{filteredFoodItems.length !== 1 ? 's' : ''}
+      </div>
 
       {/* Food Items List */}
       {filteredFoodItems.length === 0 ? (
-        <p style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.6)', padding: '2rem' }}>
+        <p style={{ textAlign: 'center', color: '#9ca3af', padding: '2rem', backgroundColor: '#ffffff' }}>
           {foodItems.length === 0 ? 'No food items found. Create your first food item above!' : 'No items match your search criteria.'}
         </p>
       ) : (
         <div className="food-items-list">
           {filteredFoodItems.map((item) => {
             const categoryColor = getCategoryColor(item.category);
-            const categoryName = item.category ? CATEGORY_DISPLAY_NAMES[item.category] : 'N/A';
+            const categoryName = item.category ? CATEGORY_DISPLAY_NAMES[item.category] : 'Other';
+            const isFavorite = favoriteFoodItemIds.has(item.id);
+            const carbsValue = getNutrientValue(item, 'Carbohydrates');
+            const sodiumValue = getNutrientValue(item, 'Sodium');
 
-            if (isMobile) {
-              // Mobile: Card layout
-              const isFavorite = favoriteFoodItemIds.has(item.id);
-              return (
-                <div
-                  key={item.id}
-                  className="food-item-card-mobile"
-                  onClick={() => handleCardClick(item)}
-                >
-                  <div className="food-item-card-header">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
-                      <h3 className="food-item-name">{item.item_name}</h3>
+            return (
+              <div
+                key={item.id}
+                className="food-item-card"
+                onClick={() => handleCardClick(item)}
+              >
+                {/* Left colored border */}
+                <div className="card-left-border" style={{ backgroundColor: categoryColor }}></div>
+
+                {/* Card content */}
+                <div className="card-content">
+                  {/* Top row: Name + Star + Price */}
+                  <div className="card-top-row">
+                    <h3 className="item-name">{item.item_name}</h3>
+                    <div className="card-right-section">
                       <i
                         className={isFavorite ? "pi pi-star-fill" : "pi pi-star"}
                         onClick={(e) => {
@@ -711,94 +672,31 @@ const FoodItems = ({ refreshTrigger, onCreateClick }: FoodItemsProps) => {
                         }}
                         style={{
                           fontSize: '1.25rem',
-                          color: isFavorite ? '#fbbf24' : '#9ca3af',
+                          color: isFavorite ? '#fbbf24' : '#d1d5db',
                           cursor: 'pointer'
                         }}
                       />
+                      <span className="item-price">
+                        {item.cost !== null && item.cost !== undefined
+                          ? new Intl.NumberFormat('en-US', {
+                              style: 'currency',
+                              currency: 'USD',
+                            }).format(item.cost)
+                          : '$0.00'}
+                      </span>
                     </div>
-                    <span className="food-item-cost">
-                      {item.cost !== null && item.cost !== undefined
-                        ? new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: 'USD',
-                          }).format(item.cost)
-                        : 'N/A'}
+                  </div>
+
+                  {/* Bottom row: Category badge + Nutrition info */}
+                  <div className="card-bottom-row">
+                    <span className={`category-badge category-${item.category?.toLowerCase() || 'other'}`}>
+                      {categoryName}
                     </span>
-                  </div>
-                  <div className="food-item-category">
-                    <span
-                      className="category-dot"
-                      style={{ backgroundColor: categoryColor }}
-                    ></span>
-                    <span className="category-name">{categoryName}</span>
+                    <span className="nutrition-info">{carbsValue} carbs • {sodiumValue} sodium</span>
                   </div>
                 </div>
-              );
-            } else {
-              // Desktop: Table row layout
-              const isFavorite = favoriteFoodItemIds.has(item.id);
-              return (
-                <div
-                  key={item.id}
-                  className="food-item-row"
-                  onClick={() => handleCardClick(item)}
-                >
-                  <div className="table-cell food-item-col">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span className="food-item-name-desktop">{item.item_name}</span>
-                      <i
-                        className={isFavorite ? "pi pi-star-fill" : "pi pi-star"}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleFavorite(item.id);
-                        }}
-                        style={{
-                          fontSize: '1rem',
-                          color: isFavorite ? '#fbbf24' : '#9ca3af',
-                          cursor: 'pointer'
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div className="table-cell category-col">
-                    <span
-                      className="category-dot"
-                      style={{ backgroundColor: categoryColor }}
-                    ></span>
-                    <span className="category-name">{categoryName}</span>
-                  </div>
-                  <div className="table-cell carbs-col">
-                    {getNutrientValue(item, 'Carbohydrates')}
-                  </div>
-                  <div className="table-cell sodium-col">
-                    {getNutrientValue(item, 'Sodium')}
-                  </div>
-                  <div className="table-cell caffeine-col">
-                    {getNutrientValue(item, 'Caffeine')}
-                  </div>
-                  <div className="table-cell cost-col">
-                    {item.cost !== null && item.cost !== undefined
-                      ? new Intl.NumberFormat('en-US', {
-                          style: 'currency',
-                          currency: 'USD',
-                        }).format(item.cost)
-                      : 'N/A'}
-                  </div>
-                  <div className="table-cell actions-col">
-                    <Button
-                      icon="pi pi-ellipsis-v"
-                      text
-                      rounded
-                      className="row-menu-button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCardClick(item);
-                      }}
-                    />
-                  </div>
-                </div>
-              );
-            }
+              </div>
+            );
           })}
         </div>
       )}

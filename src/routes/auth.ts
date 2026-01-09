@@ -59,8 +59,22 @@ router.get('/users/all', async (req, res) => {
       }
     });
 
+    // Get event counts for all users
+    const eventCounts = await prisma.event.groupBy({
+      by: ['event_user_id'],
+      _count: {
+        id: true
+      }
+    });
+
+    // Build a map of user event counts
+    const eventCountMap = new Map();
+    eventCounts.forEach(ec => {
+      eventCountMap.set(ec.event_user_id, ec._count.id);
+    });
+
     // Filter out users where the connection was denied by them
-    // and attach connection info to each user
+    // and attach connection info and event count to each user
     const usersWithConnections = users
       .filter(user => {
         const connection = connectionMap.get(user.id);
@@ -72,9 +86,11 @@ router.get('/users/all', async (req, res) => {
       })
       .map(user => {
         const connection = connectionMap.get(user.id);
+        const sharedPlansCount = eventCountMap.get(user.id) || 0;
         return {
           ...user,
-          connection: connection || null
+          connection: connection || null,
+          sharedPlansCount
         };
       });
 

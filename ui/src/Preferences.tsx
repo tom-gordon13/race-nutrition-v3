@@ -6,6 +6,7 @@ import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Preferences.css';
 import { API_URL } from './config/api';
+import LoadingSpinner from './LoadingSpinner';
 
 interface ReferenceColor {
   id: string;
@@ -230,9 +231,7 @@ export default function Preferences() {
           <h2 className="section-header">CATEGORY COLORS</h2>
 
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '2rem' }}>
-              <i className="pi pi-spin pi-spinner" style={{ fontSize: '2rem' }}></i>
-            </div>
+            <LoadingSpinner />
           ) : (
             <div className="category-colors-list">
               {categories.map((category) => {
