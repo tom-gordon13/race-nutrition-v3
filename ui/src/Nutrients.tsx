@@ -6,6 +6,7 @@ import { Tag } from 'primereact/tag';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import { API_URL } from './config/api';
+import LoadingSpinner from './LoadingSpinner';
 
 
 
@@ -50,11 +51,7 @@ const Nutrients = () => {
   };
 
   if (loading) {
-    return (
-      <div className="loading-container">
-        <div className="loading-spinner">Loading nutrients...</div>
-      </div>
-    );
+    return <LoadingSpinner message="Loading nutrients..." />;
   }
 
   const headerContent = (

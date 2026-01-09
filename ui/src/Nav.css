@@ -1,7 +1,7 @@
 /* Nav layout - sticky on scroll */
 .nav {
   background-color: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: none;
   padding: 1rem 2rem;
   width: 100%;
   min-height: fit-content;

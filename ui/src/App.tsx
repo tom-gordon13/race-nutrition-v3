@@ -3,19 +3,14 @@ import { useAuth0 } from "@auth0/auth0-react";
 import Nav from './Nav';
 import Home from './Home';
 import { useUserSync } from './hooks/useUserSync';
+import LoadingSpinner from './LoadingSpinner';
 
 const App = () => {
   const { loginWithRedirect, isAuthenticated, isLoading } = useAuth0();
   const { isSyncing, syncError } = useUserSync();
 
   if (isLoading || isSyncing) {
-    return (
-      <div className="loading-container">
-        <div className="loading-spinner">
-          {isLoading ? 'Loading...' : 'Syncing user...'}
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message={isLoading ? 'Loading...' : 'Syncing user...'} />;
   }
 
   if (syncError) {
