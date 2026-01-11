@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Message } from 'primereact/message';
 import '../shared/ModalSheet.css';
 
@@ -72,7 +71,6 @@ export const FoodItemSelectionModal = ({
   onItemFilterModeChange,
   categoryColors
 }: FoodItemSelectionModalProps) => {
-  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [servings, setServings] = useState<number | string>(1);
   const [editedTime, setEditedTime] = useState('');
