@@ -92,9 +92,10 @@ interface SharedEvent {
 interface EventsProps {
   showCreateDialog?: boolean;
   onHideCreateDialog?: () => void;
+  onFullscreenChange?: (isFullscreen: boolean) => void;
 }
 
-const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = {}) => {
+const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChange }: EventsProps = {}) => {
   const { user } = useAuth0();
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
@@ -161,6 +162,11 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
 
   // State for category color preferences
   const [categoryColors, setCategoryColors] = useState<Map<string, string>>(new Map());
+
+  // Notify parent component when fullscreen state changes
+  useEffect(() => {
+    onFullscreenChange?.(isFullscreen);
+  }, [isFullscreen, onFullscreenChange]);
 
   // State for view-only mode (when viewing someone else's non-private event)
   const [isViewOnly, setIsViewOnly] = useState(false);

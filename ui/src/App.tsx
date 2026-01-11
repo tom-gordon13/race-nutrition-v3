@@ -1,4 +1,5 @@
 import './App.css'
+import { useState } from 'react';
 import { useAuth0 } from "@auth0/auth0-react";
 import Nav from './Nav';
 import Home from './Home';
@@ -8,6 +9,7 @@ import LoadingSpinner from './LoadingSpinner';
 const App = () => {
   const { loginWithRedirect, isAuthenticated, isLoading } = useAuth0();
   const { isSyncing, syncError } = useUserSync();
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   if (isLoading || isSyncing) {
     return <LoadingSpinner message={isLoading ? 'Loading...' : 'Syncing user...'} />;
@@ -21,9 +23,9 @@ const App = () => {
     <div className="app">
       {isAuthenticated ? (
         <>
-          <Nav />
+          {!isFullscreen && <Nav />}
           <main className="main-content">
-            <Home />
+            <Home onFullscreenChange={setIsFullscreen} />
           </main>
         </>
       ) : (

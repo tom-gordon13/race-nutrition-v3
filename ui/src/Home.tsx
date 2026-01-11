@@ -10,7 +10,11 @@ import Users from "./Users";
 import { CreateFoodItemDialog } from './components/food-items/CreateFoodItemDialog';
 import './Home.css';
 
-function Home() {
+interface HomeProps {
+  onFullscreenChange?: (isFullscreen: boolean) => void;
+}
+
+function Home({ onFullscreenChange }: HomeProps) {
   const { user } = useAuth0();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -77,6 +81,7 @@ function Home() {
             <Events
               showCreateDialog={showCreateEventDialog}
               onHideCreateDialog={() => setShowCreateEventDialog(false)}
+              onFullscreenChange={onFullscreenChange}
             />
           </div>
         } />
