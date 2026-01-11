@@ -107,73 +107,85 @@ export const FoodItemDetailsDialog = ({
           <div className="form-section">
             <label className="form-label">BASIC INFO</label>
 
-            {/* Category and Brand */}
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            {/* Category and Cost Per Serving */}
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
               {foodItem.category && (
-                <div style={{ flex: 1, minWidth: '150px' }}>
+                <div style={{ flex: 1 }}>
                   <div style={{
-                    fontSize: '0.8125rem',
+                    fontSize: '0.75rem',
                     color: '#9ca3af',
-                    marginBottom: '0.5rem',
+                    marginBottom: '0.375rem',
                     fontWeight: 500
                   }}>
                     Category
                   </div>
                   <div style={{
-                    padding: '0.75rem',
+                    padding: '0.5rem 0.75rem',
                     backgroundColor: categoryColor ? `${categoryColor}1A` : '#f3f4f6',
                     borderRadius: '0.5rem',
-                    fontSize: '1rem',
+                    fontSize: '0.875rem',
                     fontWeight: 600,
                     color: '#111827',
-                    borderLeft: `4px solid ${borderColor}`
+                    borderLeft: `3px solid ${borderColor}`,
+                    textAlign: 'center'
                   }}>
                     {CATEGORY_DISPLAY_NAMES[foodItem.category] || foodItem.category}
                   </div>
                 </div>
               )}
 
-              {foodItem.brand && (
-                <div style={{ flex: 1, minWidth: '150px' }}>
+              {foodItem.cost !== null && foodItem.cost !== undefined && (
+                <div style={{ flex: 1 }}>
                   <div style={{
-                    fontSize: '0.8125rem',
+                    fontSize: '0.75rem',
                     color: '#9ca3af',
-                    marginBottom: '0.5rem',
+                    marginBottom: '0.375rem',
                     fontWeight: 500
                   }}>
-                    Brand
+                    Cost per Serving
                   </div>
                   <div style={{
-                    padding: '0.75rem',
+                    padding: '0.5rem 0.75rem',
                     backgroundColor: '#f3f4f6',
                     borderRadius: '0.5rem',
-                    fontSize: '1rem',
-                    fontWeight: 600,
-                    color: '#111827'
+                    fontSize: '1.25rem',
+                    fontWeight: 700,
+                    color: '#111827',
+                    textAlign: 'center'
                   }}>
-                    {foodItem.brand}
+                    {new Intl.NumberFormat('en-US', {
+                      style: 'currency',
+                      currency: 'USD',
+                    }).format(foodItem.cost)}
                   </div>
                 </div>
               )}
             </div>
-          </div>
 
-          {/* COST PER SERVING Section */}
-          {foodItem.cost !== null && foodItem.cost !== undefined && (
-            <div className="form-section">
-              <label className="form-label">COST PER SERVING</label>
-              <div style={{
-                fontSize: '2rem',
-                fontWeight: 700,
-                color: '#111827'
-              }}>
-                {new Intl.NumberFormat('en-US', {
-                  style: 'currency',
-                  currency: 'USD',
-                }).format(foodItem.cost)}
+            {/* Brand (if exists) */}
+            {foodItem.brand && (
+              <div style={{ marginTop: '0.75rem' }}>
+                <div style={{
+                  fontSize: '0.75rem',
+                  color: '#9ca3af',
+                  marginBottom: '0.375rem',
+                  fontWeight: 500
+                }}>
+                  Brand
+                </div>
+                <div style={{
+                  padding: '0.5rem 0.75rem',
+                  backgroundColor: '#f3f4f6',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  color: '#111827'
+                }}>
+                  {foodItem.brand}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* NUTRIENTS Section */}
           {foodItem.foodItemNutrients && foodItem.foodItemNutrients.length > 0 && (

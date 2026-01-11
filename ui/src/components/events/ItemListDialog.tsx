@@ -122,54 +122,43 @@ export const ItemListDialog = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '1rem 1.25rem',
+          padding: '0.625rem 1.25rem',
           borderBottom: '1px solid #f3f4f6'
         }}>
-          <div>
+          <div style={{ textAlign: 'left' }}>
             <p style={{
-              fontSize: '10px',
+              fontSize: '13px',
               fontWeight: 600,
               color: '#9ca3af',
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
-              marginBottom: '0.25rem'
+              marginBottom: '0.125rem',
+              textAlign: 'left'
             }}>Items</p>
             <h2 style={{
-              fontSize: '1.25rem',
+              fontSize: '2rem',
               fontWeight: 700,
-              color: '#111827'
+              color: '#111827',
+              textAlign: 'left',
+              margin: 0
             }}>Item List</h2>
           </div>
           <button
             onClick={onHide}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '2.5rem',
-              height: '2.5rem',
-              borderRadius: '9999px',
-              backgroundColor: '#f3f4f6',
-              color: '#6b7280',
-              border: 'none',
-              cursor: 'pointer'
-            }}
+            className="modal-close-button"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+            ✕
           </button>
         </div>
 
         {/* Item Count Summary */}
         <div style={{
-          padding: '0.75rem 1.25rem',
+          padding: '0.5rem 1.25rem',
           backgroundColor: '#f9fafb',
           borderBottom: '1px solid #f3f4f6',
           textAlign: 'left'
         }}>
-          <p style={{ fontSize: '0.875rem', color: '#6b7280', textAlign: 'left' }}>
+          <p style={{ fontSize: '0.875rem', color: '#6b7280', textAlign: 'left', margin: 0 }}>
             Total: <span style={{ fontWeight: 600, color: '#111827' }}>{itemCounts.length} unique item{itemCounts.length !== 1 ? 's' : ''}</span>
           </p>
         </div>
@@ -224,47 +213,50 @@ export const ItemListDialog = ({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      padding: '10px 12px',
-                      paddingLeft: '16px'
+                      padding: '8px 12px',
+                      paddingLeft: '14px'
                     }}>
-                      <div style={{ minWidth: 0, textAlign: 'left' }}>
+                      <div style={{ minWidth: 0, flex: 1, textAlign: 'left' }}>
                         <h3 style={{
-                          fontSize: '16px',
+                          fontSize: '14px',
                           fontWeight: 600,
                           color: '#111827',
                           textAlign: 'left',
-                          lineHeight: '1.2'
+                          lineHeight: '1.3',
+                          margin: 0,
+                          padding: 0
                         }}>
                           {item.foodItem.item_name}
                         </h3>
                         <div style={{
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '8px',
-                          marginTop: '4px',
+                          gap: '6px',
+                          marginTop: '2px',
                           textAlign: 'left'
                         }}>
                           {item.foodItem.brand && (
                             <>
-                              <span style={{ fontSize: '13px', color: '#9ca3af', textAlign: 'left' }}>
+                              <span style={{ fontSize: '12px', color: '#9ca3af', textAlign: 'left', lineHeight: '1' }}>
                                 {item.foodItem.brand}
                               </span>
                               {item.foodItem.category && (
-                                <span style={{ color: '#d1d5db', textAlign: 'left' }}>•</span>
+                                <span style={{ color: '#d1d5db', textAlign: 'left', fontSize: '12px', lineHeight: '1' }}>•</span>
                               )}
                             </>
                           )}
                           {item.foodItem.category && (
                             <span style={{
-                              borderRadius: '4px',
-                              padding: '3px 8px',
-                              fontSize: '11px',
+                              borderRadius: '3px',
+                              padding: '2px 6px',
+                              fontSize: '10px',
                               fontWeight: 600,
                               backgroundColor: `${accentColor}20`,
                               color: accentColor,
                               textTransform: 'uppercase',
                               textAlign: 'left',
-                              letterSpacing: '0.02em'
+                              letterSpacing: '0.02em',
+                              lineHeight: '1'
                             }}>
                               {item.foodItem.category.replace(/_/g, ' ')}
                             </span>
@@ -274,22 +266,31 @@ export const ItemListDialog = ({
                       <div style={{
                         textAlign: 'right',
                         flexShrink: 0,
-                        marginLeft: '12px'
+                        marginLeft: '10px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'flex-end'
                       }}>
                         <p style={{
-                          fontSize: '28px',
+                          fontSize: '20px',
                           fontWeight: 700,
                           color: accentColor,
                           textAlign: 'right',
-                          lineHeight: '1'
+                          lineHeight: '1',
+                          margin: 0,
+                          padding: 0
                         }}>
                           {item.totalServings}
                         </p>
                         <p style={{
-                          fontSize: '11px',
+                          fontSize: '10px',
                           color: '#9ca3af',
                           textAlign: 'right',
-                          marginTop: '2px'
+                          marginTop: '1px',
+                          lineHeight: '1',
+                          margin: 0,
+                          padding: 0,
+                          paddingTop: '1px'
                         }}>
                           {item.totalServings === 1 ? 'serving' : 'servings'}
                         </p>

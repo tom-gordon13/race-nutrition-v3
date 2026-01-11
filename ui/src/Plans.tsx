@@ -385,9 +385,9 @@ const Plans = () => {
                     {eventType}
                   </span>
                   {activeTab === 'community_plans' && plan.owner && (
-                    <span className="shared-indicator">
-                      <i className="pi pi-share-alt"></i>
-                      <span>Shared</span>
+                    <span className="owner-name">
+                      <i className="pi pi-user"></i>
+                      <span>{plan.owner.first_name} {plan.owner.last_name}</span>
                     </span>
                   )}
                   <span className="plan-updated">{updatedDate}</span>

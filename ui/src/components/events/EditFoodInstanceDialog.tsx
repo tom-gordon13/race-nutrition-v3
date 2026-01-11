@@ -174,7 +174,8 @@ export const EditFoodInstanceDialog: React.FC<EditFoodInstanceDialogProps> = ({
               <p style={{
                 fontSize: '0.9375rem',
                 color: '#6b7280',
-                marginTop: '0.25rem'
+                marginTop: '0.25rem',
+                textAlign: 'left'
               }}>
                 {foodInstance.foodItem.brand}
               </p>
@@ -195,47 +196,85 @@ export const EditFoodInstanceDialog: React.FC<EditFoodInstanceDialogProps> = ({
             <Message severity="error" text={error} style={{ width: '100%' }} />
           )}
 
-          {/* Time Input Section */}
+          {/* Time and Servings Input Section */}
           <div className="form-section">
-            <label className="form-label">TIME (HH:MM)</label>
-            <input
-              type="text"
-              className="form-input"
-              value={timeInput}
-              onChange={(e) => {
-                setTimeInput(e.target.value);
-                setError(null);
-              }}
-              placeholder="0:00"
-              disabled={viewOnly}
-              readOnly={viewOnly}
-            />
+            <label className="form-label">TIME & SERVINGS</label>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '0.75rem'
+            }}>
+              {/* Time Input Card */}
+              <div className="nutrient-card" style={{ cursor: 'default' }}>
+                <div className="nutrient-card-header">
+                  <span className="nutrient-card-label">Time</span>
+                  <span className="nutrient-card-unit">HH:MM</span>
+                </div>
+                <input
+                  type="text"
+                  value={timeInput}
+                  onChange={(e) => {
+                    setTimeInput(e.target.value);
+                    setError(null);
+                  }}
+                  placeholder="0:00"
+                  disabled={viewOnly}
+                  readOnly={viewOnly}
+                  style={{
+                    width: '100%',
+                    border: 'none',
+                    background: 'transparent',
+                    fontSize: '1.25rem',
+                    fontWeight: 700,
+                    color: '#111827',
+                    padding: 0,
+                    outline: 'none',
+                    fontFamily: 'inherit',
+                    lineHeight: 1.5
+                  }}
+                />
+              </div>
+
+              {/* Servings Input Card */}
+              <div className="nutrient-card" style={{ cursor: 'default' }}>
+                <div className="nutrient-card-header">
+                  <span className="nutrient-card-label">Servings</span>
+                </div>
+                <input
+                  type="number"
+                  value={servings}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value);
+                    setServings(isNaN(value) ? 1 : value);
+                    setError(null);
+                  }}
+                  min={0.1}
+                  step={0.1}
+                  disabled={viewOnly}
+                  readOnly={viewOnly}
+                  style={{
+                    width: '100%',
+                    border: 'none',
+                    background: 'transparent',
+                    fontSize: '1.25rem',
+                    fontWeight: 700,
+                    color: '#111827',
+                    padding: 0,
+                    outline: 'none',
+                    fontFamily: 'inherit',
+                    lineHeight: 1.5
+                  }}
+                />
+              </div>
+            </div>
             <div style={{
               fontSize: '0.8125rem',
               color: '#6b7280',
-              marginTop: '0.5rem'
+              marginTop: '0.5rem',
+              textAlign: 'left'
             }}>
-              Maximum: {formatTimeHHMM(eventDuration)}
+              Maximum time: {formatTimeHHMM(eventDuration)}
             </div>
-          </div>
-
-          {/* Servings Input Section */}
-          <div className="form-section">
-            <label className="form-label">SERVINGS</label>
-            <input
-              type="number"
-              className="form-input"
-              value={servings}
-              onChange={(e) => {
-                const value = parseFloat(e.target.value);
-                setServings(isNaN(value) ? 1 : value);
-                setError(null);
-              }}
-              min={0.1}
-              step={0.1}
-              disabled={viewOnly}
-              readOnly={viewOnly}
-            />
           </div>
 
           {/* Nutrition Information Section */}
@@ -244,40 +283,23 @@ export const EditFoodInstanceDialog: React.FC<EditFoodInstanceDialogProps> = ({
               <label className="form-label">
                 NUTRITION INFORMATION {servings !== 1 && `(${servings} ${servings === 1 ? 'serving' : 'servings'})`}
               </label>
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.5rem'
-              }}>
+              <div className="nutrient-grid">
                 {foodInstance.foodItem.foodItemNutrients.map((nutrient) => {
                   const totalQuantity = nutrient.quantity * servings;
                   return (
-                    <div
-                      key={nutrient.id}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '0.75rem',
-                        backgroundColor: '#f9fafb',
-                        borderRadius: '0.5rem',
-                        border: '1px solid #f3f4f6'
-                      }}
-                    >
-                      <span style={{
-                        fontSize: '1rem',
-                        color: '#374151',
-                        fontWeight: 500
-                      }}>
-                        {nutrient.nutrient.nutrient_name}
-                      </span>
-                      <span style={{
-                        fontSize: '1rem',
+                    <div key={nutrient.id} className="nutrient-card" style={{ cursor: 'default' }}>
+                      <div className="nutrient-card-header">
+                        <span className="nutrient-card-label">{nutrient.nutrient.nutrient_name}</span>
+                        <span className="nutrient-card-unit">{nutrient.unit}</span>
+                      </div>
+                      <div style={{
+                        fontSize: '1.25rem',
+                        fontWeight: 700,
                         color: '#111827',
-                        fontWeight: 600
+                        lineHeight: 1.5
                       }}>
-                        {totalQuantity.toFixed(1)} {nutrient.unit}
-                      </span>
+                        {totalQuantity.toFixed(1)}
+                      </div>
                     </div>
                   );
                 })}
