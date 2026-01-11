@@ -166,6 +166,9 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
   const [isViewOnly, setIsViewOnly] = useState(false);
   const [eventOwnerAuth0Sub, setEventOwnerAuth0Sub] = useState<string | null>(null);
 
+  // State for tab view (Timeline vs Nutrients by Hour)
+  const [activeView, setActiveView] = useState<'timeline' | 'nutrients'>('timeline');
+
   // Detect mobile screen size
   useEffect(() => {
     const handleResize = () => {
@@ -758,9 +761,109 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
     return durationHours > 0 ? totalSodium / durationHours : 0;
   };
 
+  // Calculate total calories
+  const calculateTotalCalories = () => {
+    return foodInstances.reduce((total, instance) => {
+      const calorieNutrient = instance.foodItem.foodItemNutrients.find(
+        n => n.nutrient.nutrient_name.toLowerCase().includes('calorie')
+      );
+      if (calorieNutrient) {
+        return total + (calorieNutrient.quantity * instance.servings);
+      }
+      return total;
+    }, 0);
+  };
+
   const totalCost = selectedEvent ? calculateTotalCost() : 0;
+  const totalCalories = selectedEvent ? calculateTotalCalories() : 0;
   const carbsPerHour = selectedEvent ? calculateCarbsPerHour() : 0;
   const sodiumPerHour = selectedEvent ? calculateSodiumPerHour() : 0;
+
+  // Render Nutrients by Hour view
+  const renderNutrientsByHour = () => {
+    if (!selectedEvent) return null;
+
+    const durationInHours = Math.ceil(selectedEvent.expected_duration / 3600);
+    const hours = [];
+
+    for (let hour = 1; hour <= durationInHours; hour++) {
+      const startTime = (hour - 1) * 3600;
+      const endTime = hour * 3600;
+
+      // Find instances in this hour
+      const instancesInHour = foodInstances.filter(
+        instance => instance.time_elapsed_at_consumption >= startTime && instance.time_elapsed_at_consumption < endTime
+      );
+
+      // Calculate nutrients for this hour
+      const nutrients: { [key: string]: { actual: number; unit: string } } = {};
+
+      instancesInHour.forEach(instance => {
+        instance.foodItem.foodItemNutrients.forEach(nutrient => {
+          const name = nutrient.nutrient.nutrient_name;
+          const amount = nutrient.quantity * instance.servings;
+
+          if (!nutrients[name]) {
+            nutrients[name] = { actual: 0, unit: nutrient.unit };
+          }
+          nutrients[name].actual += amount;
+        });
+      });
+
+      // Format time range
+      const startHours = Math.floor(startTime / 3600);
+      const startMins = Math.floor((startTime % 3600) / 60);
+      const endHours = Math.floor(endTime / 3600);
+      const endMins = Math.floor((endTime % 3600) / 60);
+      const timeRange = `${startHours}:${startMins.toString().padStart(2, '0')} - ${endHours}:${endMins.toString().padStart(2, '0')}`;
+
+      hours.push(
+        <div key={hour} className="hour-section">
+          <div className="hour-header">
+            <span className="hour-title">Hour {hour}</span>
+            <span className="hour-time">{timeRange}</span>
+          </div>
+          <div className="hour-content">
+            <div className="nutrients-table-header">
+              <span>Nutrient</span>
+              <span>Goal</span>
+              <span>Actual</span>
+            </div>
+            <div className="nutrients-rows">
+              {/* Carbs */}
+              <div className="nutrient-row">
+                <span className="nutrient-name">Carbs</span>
+                <span className="nutrient-goal">{carbsPerHour.toFixed(0)}g</span>
+                <span className="nutrient-actual">
+                  {(nutrients['Carbohydrates']?.actual || nutrients['Carbohydrate']?.actual || 0).toFixed(0)}g
+                </span>
+              </div>
+              {/* Sodium */}
+              <div className="nutrient-row">
+                <span className="nutrient-name">Sodium</span>
+                <span className="nutrient-goal">{sodiumPerHour.toFixed(0)}mg</span>
+                <span className="nutrient-actual">
+                  {(() => {
+                    const sodium = nutrients['Sodium']?.actual || 0;
+                    const unit = nutrients['Sodium']?.unit || 'mg';
+                    return unit === 'g' ? `${(sodium * 1000).toFixed(0)}mg` : `${sodium.toFixed(0)}mg`;
+                  })()}
+                </span>
+              </div>
+              {/* Caffeine */}
+              <div className="nutrient-row">
+                <span className="nutrient-name">Caffeine</span>
+                <span className="nutrient-goal">—</span>
+                <span className="nutrient-actual">{(nutrients['Caffeine']?.actual || 0).toFixed(0)}mg</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return <div className="hours-container">{hours}</div>;
+  };
 
   return (
     <div className={`events-container ${selectedEvent ? 'split-view' : ''}`}>
@@ -807,138 +910,155 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
 
       {selectedEvent && (
         <div className="event-detail-container">
-          <div className="event-detail-header">
-            <div className="event-header-top-row">
-              <h3>{selectedEvent.name}{isViewOnly && <span style={{ fontSize: '0.875rem', fontWeight: 'normal', color: '#6b7280', marginLeft: '0.5rem' }}>(View Only)</span>}</h3>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
+          {/* Header */}
+          <header className="plan-detail-header">
+            <div className="plan-header-row">
+              <button onClick={() => handleSelectEvent(null)} className="back-button">
+                <i className="pi pi-chevron-left"></i>
+                <span>Plans</span>
+              </button>
+              <div className="header-actions">
                 {!isViewOnly && (
-                  <button
-                    onClick={() => setShowShareEventDialog(true)}
-                    className="share-event-btn"
-                    title="Share event"
-                  >
+                  <button onClick={() => setShowShareEventDialog(true)} className="icon-button">
                     <i className="pi pi-share-alt"></i>
                   </button>
                 )}
-                {isMobile && !isViewOnly && (
-                  <button
-                    onClick={() => setIsFullscreen(true)}
-                    className="expand-btn"
-                    title="Expand fullscreen"
-                  >
-                    <i className="pi pi-window-maximize"></i>
-                  </button>
-                )}
-                {!isViewOnly && (
-                  <button
-                    onClick={() => handleEditEvent(selectedEvent)}
-                    className="edit-event-btn"
-                  >
-                    <span className="edit-event-text">Edit Event</span>
-                    <span className="edit-event-icon">✎</span>
-                  </button>
-                )}
-                <button
-                  onClick={() => handleSelectEvent(null)}
-                  className="close-btn"
-                >
-                  ✕
+                <button className="icon-button">
+                  <i className="pi pi-ellipsis-h"></i>
                 </button>
               </div>
             </div>
-            <div className="event-header-bottom-row">
-              <div className="event-stats-container">
-                <div className="event-stat">
-                  <div className="event-stat-value">
-                    {(() => {
-                      const hours = Math.floor(selectedEvent.expected_duration / 3600);
-                      const minutes = Math.floor((selectedEvent.expected_duration % 3600) / 60);
-                      return `${hours}h ${minutes}m`;
-                    })()}
-                  </div>
-                  <div className="event-stat-label">Duration</div>
-                </div>
-                <div className="event-stat">
-                  <div className="event-stat-value">
-                    {loadingInstances ? '--' : `$${totalCost.toFixed(2)}`}
-                  </div>
-                  <div className="event-stat-label">Total Cost</div>
-                </div>
-                <div className="event-stat">
-                  <div className="event-stat-value">
-                    {loadingInstances ? '--' : `${carbsPerHour.toFixed(0)}g`}
-                  </div>
-                  <div className="event-stat-label">carbs/hr</div>
-                </div>
-                <div className="event-stat">
-                  <div className="event-stat-value">
-                    {loadingInstances ? '--' : `${sodiumPerHour.toFixed(0)}mg`}
-                  </div>
-                  <div className="event-stat-label">sodium/hr</div>
-                </div>
-              </div>
-              {!isViewOnly && (
-                <div className="event-action-buttons">
-                  <button
-                    onClick={() => setShowNutrientGoalsDialog(true)}
-                    className="add-nutrient-btn"
-                  >
-                    Nutrient Goals
-                  </button>
-                  {/* <button
-                    onClick={() => setShowAnalyticsDialog(true)}
-                    className="add-nutrient-btn"
-                  >
-                    Analytics
-                  </button> */}
-                  <button
-                    onClick={() => setShowItemListDialog(true)}
-                    className="add-nutrient-btn"
-                  >
-                    View Item List
-                  </button>
-                </div>
-              )}
+          </header>
+
+          {/* Plan Title */}
+          <div className="plan-title-section">
+            <h1 className="plan-title">{selectedEvent.name}</h1>
+            <div className="plan-meta">
+              <span className={`event-type-badge ${selectedEvent.event_type.toLowerCase()}`}>
+                {selectedEvent.event_type.charAt(0) + selectedEvent.event_type.slice(1).toLowerCase()}
+              </span>
+              <span className="plan-duration">
+                {(() => {
+                  const hours = Math.floor(selectedEvent.expected_duration / 3600);
+                  const minutes = Math.floor((selectedEvent.expected_duration % 3600) / 60);
+                  return `${hours}h ${minutes}m`;
+                })()}
+              </span>
             </div>
           </div>
-          <div className={`event-detail-content ${isMobile && !isFullscreen ? 'mobile-condensed-view' : ''}`}>
-            {isFullscreen ? (
-              <div className="fullscreen-wrapper">
-                <div className="fullscreen-info-header">
-                  <div className="fullscreen-stat">
-                    <div className="fullscreen-stat-value">{carbsPerHour.toFixed(0)}g</div>
-                    <div className="fullscreen-stat-label">carbs/hr</div>
-                  </div>
-                  <div className="fullscreen-stat">
-                    <div className="fullscreen-stat-value">{sodiumPerHour.toFixed(0)}mg</div>
-                    <div className="fullscreen-stat-label">sodium/hr</div>
-                  </div>
-                  <button
-                    onClick={() => setIsFullscreen(false)}
-                    className="minimize-btn"
-                    title="Exit fullscreen"
-                  >
-                    <i className="pi pi-window-minimize"></i>
+
+          {/* Stats Grid */}
+          <div className="stats-grid-section">
+            <div className="stats-grid">
+              <div className="stat-box">
+                <p className="stat-value">{loadingInstances ? '--' : totalCalories.toLocaleString()}</p>
+                <p className="stat-label">CALORIES</p>
+              </div>
+              <div className="stat-box">
+                <p className="stat-value">{loadingInstances ? '--' : `$${totalCost.toFixed(2)}`}</p>
+                <p className="stat-label">COST</p>
+              </div>
+              <div className="stat-box">
+                <p className="stat-value carbs">{loadingInstances ? '--' : `${carbsPerHour.toFixed(0)}g`}</p>
+                <p className="stat-label">CARBS/HR</p>
+              </div>
+              <div className="stat-box">
+                <p className="stat-value sodium">{loadingInstances ? '--' : `${sodiumPerHour.toFixed(0)}mg`}</p>
+                <p className="stat-label">SODIUM/HR</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="quick-actions-section">
+            <div className="quick-actions">
+              <button onClick={() => setShowNutrientGoalsDialog(true)} className="quick-action-btn primary">
+                <i className="pi pi-clock"></i>
+                Nutrient Goals
+              </button>
+              <button onClick={() => setShowItemListDialog(true)} className="quick-action-btn secondary">
+                <i className="pi pi-th"></i>
+                Item List
+              </button>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="section-divider"></div>
+
+          {/* View Tabs */}
+          <div className="view-tabs-container">
+            <div className="view-tabs">
+              <button
+                className={`tab-button ${activeView === 'timeline' ? 'active' : ''}`}
+                onClick={() => setActiveView('timeline')}
+              >
+                Timeline
+              </button>
+              <button
+                className={`tab-button ${activeView === 'nutrients' ? 'active' : ''}`}
+                onClick={() => setActiveView('nutrients')}
+              >
+                Nutrients by Hour
+              </button>
+              <div className={`tab-indicator tab-indicator-${activeView}`}></div>
+            </div>
+          </div>
+          {/* Timeline View */}
+          {activeView === 'timeline' && (
+            <div className="timeline-view">
+              {/* Timeline Header */}
+              <div className="timeline-header">
+                <div className="timeline-info">
+                  <span className="item-count">{foodInstances.length} items</span>
+                </div>
+                <div className="timeline-actions">
+                  <button onClick={() => setIsFullscreen(true)} className="timeline-action-btn expanded">
+                    <i className="pi pi-window-maximize"></i>
+                    Expanded
+                  </button>
+                  <button onClick={() => handleClickHoldCreate(0)} className="timeline-action-btn add-item">
+                    <i className="pi pi-plus"></i>
+                    Add Item
                   </button>
                 </div>
-                <div className="event-timeline-container fullscreen" ref={timelineContainerRef}>
-                  <EventTimeline
-                    event={selectedEvent}
-                    foodInstances={foodInstances}
-                    loadingInstances={loadingInstances}
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                    onUpdateInstance={handleUpdateInstance}
-                    onClickHoldCreate={handleClickHoldCreate}
-                    onInstanceClick={handleInstanceClick}
-                    timelineStyle={timelineStyle}
-                    categoryColors={categoryColors}
-                    viewOnly={isViewOnly}
-                    isMobile={isMobile}
-                  />
+              </div>
 
+              {/* Legend */}
+              <div className="timeline-legend">
+                {Array.from(new Set(foodInstances.map(fi => fi.foodItem.category).filter(Boolean))).map(category => {
+                  const color = categoryColors.get(category!) || '#646cff';
+                  return (
+                    <div key={category} className="legend-item">
+                      <span className="legend-dot" style={{ backgroundColor: color }}></span>
+                      <span className="legend-text">
+                        {category!.charAt(0).toUpperCase() + category!.slice(1).toLowerCase().replace(/_/g, ' ')}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Timeline Grid */}
+              <div className="event-timeline-container" ref={timelineContainerRef}>
+                <EventTimeline
+                  event={selectedEvent}
+                  foodInstances={foodInstances}
+                  loadingInstances={loadingInstances}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  onUpdateInstance={handleUpdateInstance}
+                  onClickHoldCreate={handleClickHoldCreate}
+                  onInstanceClick={handleInstanceClick}
+                  timelineStyle={timelineStyle}
+                  categoryColors={categoryColors}
+                  viewOnly={isViewOnly}
+                  isMobile={isMobile}
+                />
+
+                {!isMobile && (
                   <NutritionSummary
                     event={selectedEvent}
                     foodInstances={foodInstances}
@@ -947,76 +1067,77 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
                     goalsRefreshTrigger={goalsRefreshTrigger}
                     scrollContainerRef={timelineContainerRef}
                   />
-                </div>
+                )}
               </div>
-            ) : (
-              <>
-                {isMobile && (
-                  <div className="mobile-timeline-header">
-                    <div className="timeline-header-row">
-                      <h4>FUEL TIMELINE</h4>
-                      <span className="timeline-item-count">{foodInstances.length} items</span>
-                    </div>
-                    <div className="timeline-legend">
-                      {Array.from(new Set(foodInstances.map(fi => fi.foodItem.category).filter(Boolean))).map(category => {
-                        const color = categoryColors.get(category!) || '#646cff';
-                        return (
-                          <div key={category} className="legend-item">
-                            <span
-                              className="legend-color"
-                              style={{ backgroundColor: color }}
-                            ></span>
-                            <span className="legend-label">
-                              {category!.charAt(0).toUpperCase() + category!.slice(1).toLowerCase().replace(/_/g, ' ')}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-                <div className="event-timeline-container" ref={timelineContainerRef}>
-                  <EventTimeline
-                    event={selectedEvent}
-                    foodInstances={foodInstances}
-                    loadingInstances={loadingInstances}
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                    onUpdateInstance={handleUpdateInstance}
-                    onClickHoldCreate={handleClickHoldCreate}
-                    onInstanceClick={handleInstanceClick}
-                    timelineStyle={timelineStyle}
-                    categoryColors={categoryColors}
-                    viewOnly={isViewOnly || (isMobile && !isFullscreen)}
-                    isMobile={isMobile}
-                  />
+            </div>
+          )}
 
-                  {!isMobile && (
-                    <NutritionSummary
-                      event={selectedEvent}
-                      foodInstances={foodInstances}
-                      timelineStyle={timelineStyle}
-                      userId={isViewOnly && eventOwnerAuth0Sub ? eventOwnerAuth0Sub : user.sub}
-                      goalsRefreshTrigger={goalsRefreshTrigger}
-                      scrollContainerRef={timelineContainerRef}
-                    />
-                  )}
+          {/* Nutrients by Hour View */}
+          {activeView === 'nutrients' && (
+            <div className="nutrients-view">
+              {renderNutrientsByHour()}
+            </div>
+          )}
+
+          {/* Floating Expanded View Button */}
+          {!isFullscreen && (
+            <div className="floating-expanded-btn-container">
+              <button onClick={() => setIsFullscreen(true)} className="floating-expanded-btn">
+                <i className="pi pi-window-maximize"></i>
+                Expanded View
+              </button>
+            </div>
+          )}
+
+          {/* Fullscreen Mode */}
+          {isFullscreen && (
+            <div className="fullscreen-wrapper">
+              <div className="fullscreen-info-header">
+                <div className="fullscreen-stat">
+                  <div className="fullscreen-stat-value">{carbsPerHour.toFixed(0)}g</div>
+                  <div className="fullscreen-stat-label">carbs/hr</div>
                 </div>
-                {isMobile && !isViewOnly && (
-                  <div className="mobile-edit-fuel-plan-container">
-                    <button
-                      onClick={() => setIsFullscreen(true)}
-                      className="edit-fuel-plan-btn"
-                    >
-                      <i className="pi pi-pencil"></i> Edit Fuel Plan
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+                <div className="fullscreen-stat">
+                  <div className="fullscreen-stat-value">{sodiumPerHour.toFixed(0)}mg</div>
+                  <div className="fullscreen-stat-label">sodium/hr</div>
+                </div>
+                <button
+                  onClick={() => setIsFullscreen(false)}
+                  className="minimize-btn"
+                  title="Exit fullscreen"
+                >
+                  <i className="pi pi-window-minimize"></i>
+                </button>
+              </div>
+              <div className="event-timeline-container fullscreen" ref={timelineContainerRef}>
+                <EventTimeline
+                  event={selectedEvent}
+                  foodInstances={foodInstances}
+                  loadingInstances={loadingInstances}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  onUpdateInstance={handleUpdateInstance}
+                  onClickHoldCreate={handleClickHoldCreate}
+                  onInstanceClick={handleInstanceClick}
+                  timelineStyle={timelineStyle}
+                  categoryColors={categoryColors}
+                  viewOnly={isViewOnly}
+                  isMobile={isMobile}
+                />
+
+                <NutritionSummary
+                  event={selectedEvent}
+                  foodInstances={foodInstances}
+                  timelineStyle={timelineStyle}
+                  userId={isViewOnly && eventOwnerAuth0Sub ? eventOwnerAuth0Sub : user.sub}
+                  goalsRefreshTrigger={goalsRefreshTrigger}
+                  scrollContainerRef={timelineContainerRef}
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
 
