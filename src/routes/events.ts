@@ -52,6 +52,91 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET community events (public events from connected users)
+router.get('/community', async (req, res) => {
+  try {
+    const { auth0_sub } = req.query;
+
+    if (!auth0_sub || typeof auth0_sub !== 'string') {
+      return res.status(400).json({
+        error: 'Missing required query parameter: auth0_sub'
+      });
+    }
+
+    // Look up the current user by their Auth0 ID
+    const currentUser = await prisma.user.findUnique({
+      where: { auth0_sub }
+    });
+
+    if (!currentUser) {
+      return res.status(404).json({
+        error: 'User not found. Please ensure you are logged in.'
+      });
+    }
+
+    // Find all accepted connections for this user (both initiated and received)
+    const connections = await prisma.userConnection.findMany({
+      where: {
+        OR: [
+          { initiating_user: currentUser.id },
+          { receiving_user: currentUser.id }
+        ],
+        status: 'ACCEPTED'
+      }
+    });
+
+    // Extract connected user IDs
+    const connectedUserIds = connections.map(conn =>
+      conn.initiating_user === currentUser.id ? conn.receiving_user : conn.initiating_user
+    );
+
+    console.log(`User ${currentUser.id} has ${connectedUserIds.length} connected users`);
+
+    // Fetch all public events from connected users
+    const events = await prisma.event.findMany({
+      where: {
+        event_user_id: {
+          in: connectedUserIds
+        },
+        private: false
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            first_name: true,
+            last_name: true,
+            email: true
+          }
+        }
+      },
+      orderBy: {
+        created_at: 'desc'
+      }
+    });
+
+    // Transform to include owner info in the expected format
+    const eventsWithOwner = events.map(event => ({
+      ...event,
+      owner: event.user
+    }));
+
+    console.log(`Fetched ${events.length} public community events for user ${currentUser.id}`);
+
+    return res.status(200).json({
+      events: eventsWithOwner,
+      count: events.length
+    });
+
+  } catch (error) {
+    console.error('Error fetching community events:', error);
+    return res.status(500).json({
+      error: 'Failed to fetch community events',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // GET a single event by ID
 router.get('/:id', async (req, res) => {
   try {

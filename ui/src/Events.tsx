@@ -885,12 +885,12 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog }: EventsProps = 
                   >
                     Nutrient Goals
                   </button>
-                  <button
+                  {/* <button
                     onClick={() => setShowAnalyticsDialog(true)}
                     className="add-nutrient-btn"
                   >
                     Analytics
-                  </button>
+                  </button> */}
                   <button
                     onClick={() => setShowItemListDialog(true)}
                     className="add-nutrient-btn"

@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Dialog } from 'primereact/dialog';
-import { Button } from 'primereact/button';
 import { Dropdown } from 'primereact/dropdown';
 import { InputNumber } from 'primereact/inputnumber';
 import { Panel } from 'primereact/panel';
@@ -8,6 +6,7 @@ import { Divider } from 'primereact/divider';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Message } from 'primereact/message';
 import './NutrientGoalsDialog.css';
+import '../shared/ModalSheet.css';
 import { API_URL } from '../../config/api';
 
 interface Nutrient {
@@ -65,17 +64,29 @@ export const NutrientGoalsDialog = ({
   const [error, setError] = useState<string | null>(null);
   const [selectedNutrientId, setSelectedNutrientId] = useState<string | null>(null);
   const [expandedNutrients, setExpandedNutrients] = useState<Set<string>>(new Set());
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
 
-  // Detect mobile screen size
+  // Handle animation timing for smooth slide-up and slide-down
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    if (visible) {
+      // Start rendering immediately
+      setShouldRender(true);
+      // Small delay to ensure the browser calculates the initial state
+      const timer = setTimeout(() => {
+        setIsAnimating(true);
+      }, 10);
+      return () => clearTimeout(timer);
+    } else {
+      // Start slide-out animation
+      setIsAnimating(false);
+      // Wait for animation to complete before unmounting
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+      }, 400); // Match the CSS transition duration
+      return () => clearTimeout(timer);
+    }
+  }, [visible]);
 
   // Fetch nutrients and goals when dialog opens
   useEffect(() => {
@@ -249,167 +260,107 @@ export const NutrientGoalsDialog = ({
     .filter(n => !baseGoals.find(g => g.nutrient_id === n.id))
     .map(n => ({ label: n.nutrient_name, value: n.id }));
 
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onHide();
+    }
+  };
+
+  if (!shouldRender) return null;
+
   return (
-    <Dialog
-      header=""
-      visible={visible}
-      style={{
-        width: isMobile ? '100%' : '700px',
-        maxHeight: '90vh',
-        borderRadius: '20px'
-      }}
-      onHide={onHide}
-      position={isMobile ? "bottom" : "center"}
-      modal
-      dismissableMask
-      closable={false}
-      className="nutrient-goals-dialog"
-      pt={{
-        root: { style: { borderRadius: '20px', overflow: 'hidden' } },
-        header: { style: { display: 'none' } },
-        content: { style: { padding: 0, borderRadius: '20px', overflow: 'auto', maxHeight: '80vh' } }
-      }}
+    <div
+      className={`modal-sheet-overlay ${isAnimating ? 'active' : ''}`}
+      onClick={handleOverlayClick}
     >
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: '#e5e7eb',
-        padding: '1rem',
-        gap: '0.5rem',
-        borderRadius: '20px'
-      }}>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <div style={{
-              fontSize: '0.75rem',
-              fontWeight: 500,
-              color: '#9ca3af',
-              letterSpacing: '0.1em',
-              marginBottom: '0.5rem'
-            }}>
-              GOALS
-            </div>
-            <div style={{
-              fontSize: '1.5rem',
-              fontWeight: 700,
-              color: '#000',
-              lineHeight: 1.2
-            }}>
-              Nutrient Goals
-            </div>
+      <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-handle"></div>
+
+        {/* Modal Header */}
+        <div className="modal-header">
+          <div className="modal-header-content">
+            <p className="modal-header-label">GOALS</p>
+            <h2 className="modal-header-title">Nutrient Goals</h2>
           </div>
           <button
             onClick={onHide}
-            style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              backgroundColor: '#d1d5db',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.25rem',
-              color: '#6b7280'
-            }}
+            className="modal-close-button"
           >
             ✕
           </button>
         </div>
 
-        {/* Error Message */}
-        {error && (
-          <Message severity="error" text={error} style={{ width: '100%', marginBottom: '0.5rem' }} />
-        )}
-
-        {loading ? (
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            padding: '2rem',
-            display: 'flex',
-            justifyContent: 'center'
-          }}>
-            <ProgressSpinner />
-          </div>
-        ) : (
-          <>
-            {/* Add Base Goal Section */}
-            <div style={{
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              padding: '0.875rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.75rem'
-            }}>
-              <div style={{
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                color: '#9ca3af',
-                letterSpacing: '0.1em'
-              }}>
-                ADD BASE GOAL (PER HOUR)
+        <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
+          <div className="modal-content">
+            {/* Error Message */}
+            {error && (
+              <div style={{ padding: '0 1.25rem' }}>
+                <Message severity="error" text={error} style={{ width: '100%', marginBottom: '0.5rem' }} />
               </div>
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                <Dropdown
-                  value={selectedNutrientId}
-                  options={availableNutrients}
-                  onChange={(e) => setSelectedNutrientId(e.value)}
-                  placeholder="Select nutrient..."
-                  style={{ flex: 1 }}
-                  filter
-                />
-                <Button
-                  label="Add"
-                  icon="pi pi-plus"
-                  onClick={addBaseGoal}
-                  disabled={!selectedNutrientId}
-                  style={{
-                    backgroundColor: '#1f2937',
-                    borderColor: '#1f2937',
-                    color: 'white',
-                    padding: '0.625rem 1rem',
-                    borderRadius: '6px'
-                  }}
-                />
-              </div>
-            </div>
+            )}
 
-            {/* Base Goals List */}
-            {baseGoals.length === 0 ? (
+            {loading ? (
               <div style={{
-                backgroundColor: 'white',
-                borderRadius: '8px',
-                padding: '2rem',
-                textAlign: 'center'
+                padding: '3rem',
+                display: 'flex',
+                justifyContent: 'center'
               }}>
-                <Message
-                  severity="info"
-                  text="No nutrient goals set. Add a goal to get started."
-                  style={{ width: '100%' }}
-                />
+                <ProgressSpinner />
               </div>
             ) : (
-              <div style={{
-                backgroundColor: 'white',
-                borderRadius: '8px',
-                padding: '0.875rem',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.75rem'
-              }}>
-                <div style={{
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  color: '#9ca3af',
-                  letterSpacing: '0.1em'
-                }}>
-                  YOUR GOALS
+              <>
+                {/* Add Base Goal Section */}
+                <div className="form-section">
+                  <label className="form-label">Add Base Goal (Per Hour)</label>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <Dropdown
+                      value={selectedNutrientId}
+                      options={availableNutrients}
+                      onChange={(e) => setSelectedNutrientId(e.value)}
+                      placeholder="Select nutrient..."
+                      style={{ flex: 1, fontSize: '1.0625rem' }}
+                      filter
+                    />
+                    <button
+                      onClick={addBaseGoal}
+                      disabled={!selectedNutrientId}
+                      style={{
+                        backgroundColor: '#6366f1',
+                        border: 'none',
+                        color: 'white',
+                        padding: '0.75rem 1.25rem',
+                        borderRadius: '0.75rem',
+                        fontSize: '1.0625rem',
+                        fontWeight: 600,
+                        cursor: !selectedNutrientId ? 'not-allowed' : 'pointer',
+                        opacity: !selectedNutrientId ? 0.5 : 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                      </svg>
+                      Add
+                    </button>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+
+                {/* Base Goals List */}
+                {baseGoals.length === 0 ? (
+                  <div className="form-section" style={{ textAlign: 'center' }}>
+                    <Message
+                      severity="info"
+                      text="No nutrient goals set. Add a goal to get started."
+                      style={{ width: '100%' }}
+                    />
+                  </div>
+                ) : (
+                  <div className="form-section">
+                    <label className="form-label">Your Goals</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {baseGoals.map(goal => {
                 const nutrientHourlyGoals = hourlyGoals.filter(
                   h => h.nutrient_id === goal.nutrient_id
@@ -417,29 +368,44 @@ export const NutrientGoalsDialog = ({
                 const isExpanded = expandedNutrients.has(goal.nutrient_id);
 
                 const headerTemplate = (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '100%' }}>
-                    <span style={{ fontWeight: 'bold', minWidth: '120px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '100%', textAlign: 'left' }}>
+                    <span style={{ fontWeight: 'bold', minWidth: '120px', fontSize: '1.0625rem' }}>
                       {getNutrientName(goal.nutrient_id)}
                     </span>
-                    <span style={{ flex: 1, color: '#666' }}>
+                    <span style={{ flex: 1, color: '#6b7280', fontSize: '1rem' }}>
                       Base: {goal.quantity} {goal.unit}/hr
                       {nutrientHourlyGoals.length > 0 && (
-                        <span style={{ marginLeft: '1rem', fontStyle: 'italic' }}>
+                        <span style={{ marginLeft: '1rem', fontStyle: 'italic', fontSize: '0.9375rem' }}>
                           ({nutrientHourlyGoals.length} hourly override{nutrientHourlyGoals.length !== 1 ? 's' : ''})
                         </span>
                       )}
                     </span>
-                    <Button
-                      icon="pi pi-trash"
-                      className="p-button-rounded p-button-text"
-                      onClick={(e) => {
+                    <button
+                      onClick={(e: React.MouseEvent) => {
                         e.stopPropagation();
                         removeBaseGoal(goal.nutrient_id);
                       }}
-                      tooltip="Remove goal"
-                      tooltipOptions={{ position: 'top' }}
-                      style={{ color: '#dc3545' }}
-                    />
+                      title="Remove goal"
+                      style={{
+                        color: '#dc3545',
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '0.5rem',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'background-color 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fee2e2'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      </svg>
+                    </button>
                   </div>
                 );
 
@@ -460,7 +426,7 @@ export const NutrientGoalsDialog = ({
                   >
                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
                       <div style={{ flex: 1 }}>
-                        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 500 }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9375rem', textAlign: 'left' }}>
                           Base Quantity
                         </label>
                         <InputNumber
@@ -470,18 +436,18 @@ export const NutrientGoalsDialog = ({
                           minFractionDigits={0}
                           maxFractionDigits={2}
                           min={0}
-                          style={{ width: '100%' }}
+                          style={{ width: '100%', fontSize: '1.0625rem' }}
                         />
                       </div>
                       <div style={{ width: '120px' }}>
-                        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 500 }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9375rem', textAlign: 'left' }}>
                           Unit
                         </label>
                         <Dropdown
                           value={goal.unit}
                           options={UNIT_OPTIONS}
                           onChange={(e) => updateBaseGoal(goal.nutrient_id, 'unit', e.value)}
-                          style={{ width: '100%' }}
+                          style={{ width: '100%', fontSize: '1.0625rem' }}
                         />
                       </div>
                     </div>
@@ -490,7 +456,9 @@ export const NutrientGoalsDialog = ({
 
                     {/* Hourly Overrides */}
                     <div>
-                      <h5>Hourly Overrides ({nutrientHourlyGoals.length})</h5>
+                      <h5 style={{ fontSize: '1.0625rem', fontWeight: 600, marginBottom: '0.75rem', textAlign: 'left' }}>
+                        Hourly Overrides ({nutrientHourlyGoals.length})
+                      </h5>
                       <div style={{ marginBottom: '1rem' }}>
                         <Dropdown
                           value={null}
@@ -506,7 +474,7 @@ export const NutrientGoalsDialog = ({
                             }
                           }}
                           placeholder="Add hour override..."
-                          style={{ width: '100%' }}
+                          style={{ width: '100%', fontSize: '1.0625rem' }}
                         />
                       </div>
 
@@ -525,12 +493,12 @@ export const NutrientGoalsDialog = ({
                                 display: 'flex',
                                 gap: '0.5rem',
                                 alignItems: 'center',
-                                padding: '0.5rem',
-                                backgroundColor: '#f8f9fa',
-                                borderRadius: '4px'
+                                padding: '0.75rem',
+                                backgroundColor: '#f3f4f6',
+                                borderRadius: '0.5rem'
                               }}
                             >
-                              <span style={{ width: '80px', fontWeight: 500 }}>
+                              <span style={{ width: '80px', fontWeight: 600, fontSize: '1rem', textAlign: 'left' }}>
                                 Hour {hourlyGoal.hour}
                               </span>
                               <InputNumber
@@ -545,7 +513,7 @@ export const NutrientGoalsDialog = ({
                                 minFractionDigits={0}
                                 maxFractionDigits={2}
                                 min={0}
-                                style={{ flex: 1 }}
+                                style={{ flex: 1, fontSize: '1.0625rem' }}
                               />
                               <Dropdown
                                 value={hourlyGoal.unit}
@@ -556,16 +524,31 @@ export const NutrientGoalsDialog = ({
                                   'unit',
                                   e.value
                                 )}
-                                style={{ width: '100px' }}
+                                style={{ width: '100px', fontSize: '1.0625rem' }}
                               />
-                              <Button
-                                icon="pi pi-trash"
-                                className="p-button-rounded p-button-text p-button-sm"
+                              <button
                                 onClick={() => removeHourlyOverride(hourlyGoal.nutrient_id, hourlyGoal.hour)}
-                                tooltip="Remove override"
-                                tooltipOptions={{ position: 'top' }}
-                                style={{ color: '#dc3545' }}
-                              />
+                                title="Remove override"
+                                style={{
+                                  color: '#dc3545',
+                                  background: 'transparent',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  padding: '0.5rem',
+                                  borderRadius: '50%',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  transition: 'background-color 0.2s'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fee2e2'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                              >
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="3 6 5 6 21 6" />
+                                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                </svg>
+                              </button>
                             </div>
                           ))}
                         </div>
@@ -577,45 +560,64 @@ export const NutrientGoalsDialog = ({
                 </div>
               </div>
             )}
+              </>
+            )}
+          </div>
 
-            {/* Footer Buttons */}
-            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0' }}>
-              <Button
-                label="Cancel"
-                icon="pi pi-times"
-                onClick={onHide}
-                disabled={saving}
-                style={{
-                  flex: 1,
-                  backgroundColor: '#d1d5db',
-                  border: 'none',
-                  color: '#6b7280',
-                  fontWeight: 600,
-                  padding: '0.75rem',
-                  borderRadius: '8px',
-                  fontSize: '0.9375rem'
-                }}
-              />
-              <Button
-                label={saving ? 'Saving...' : 'Save Goals'}
-                icon={saving ? 'pi pi-spin pi-spinner' : 'pi pi-check'}
-                onClick={handleSave}
-                disabled={saving || baseGoals.length === 0}
-                style={{
-                  flex: 1,
-                  backgroundColor: '#22c55e',
-                  border: 'none',
-                  color: 'white',
-                  fontWeight: 600,
-                  padding: '0.75rem',
-                  borderRadius: '8px',
-                  fontSize: '0.9375rem'
-                }}
-              />
-            </div>
-          </>
+          {/* Footer Buttons */}
+          <div className="modal-footer">
+            <button
+              type="button"
+              onClick={onHide}
+              disabled={saving}
+              className="btn-secondary"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving || baseGoals.length === 0}
+              className="btn-primary"
+            >
+              {saving ? (
+                <>
+                  <svg className="pi pi-spin pi-spinner" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <circle cx="12" cy="12" r="10" opacity="0.25"/>
+                    <path d="M12 2a10 10 0 0 1 10 10" opacity="0.75"/>
+                  </svg>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  Save Goals
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+
+        {/* Loading Overlay */}
+        {saving && (
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: '24px 24px 0 0',
+            zIndex: 10
+          }}>
+            <ProgressSpinner style={{ width: '50px', height: '50px' }} />
+          </div>
         )}
       </div>
-    </Dialog>
+    </div>
   );
 };

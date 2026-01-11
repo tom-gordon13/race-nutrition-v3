@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog } from 'primereact/dialog';
-import './FoodItemDetailsDialog.css';
+import '../shared/ModalSheet.css';
 
 interface FoodItemNutrient {
   id: string;
@@ -46,19 +45,33 @@ export const FoodItemDetailsDialog = ({
   onHide,
   categoryColors
 }: FoodItemDetailsDialogProps) => {
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
 
-  // Detect mobile screen size
+  // Handle animation timing for smooth slide-up and slide-down
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
+    if (visible) {
+      setShouldRender(true);
+      const timer = setTimeout(() => {
+        setIsAnimating(true);
+      }, 10);
+      return () => clearTimeout(timer);
+    } else {
+      setIsAnimating(false);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [visible]);
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onHide();
+    }
+  };
 
-  if (!foodItem) return null;
+  if (!foodItem || !shouldRender) return null;
 
   const categoryColor = foodItem.category && categoryColors
     ? categoryColors.get(foodItem.category)
@@ -67,248 +80,166 @@ export const FoodItemDetailsDialog = ({
   const borderColor = categoryColor || '#646cff';
 
   return (
-    <Dialog
-      visible={visible}
-      onHide={onHide}
-      header=""
-      className="food-item-details-dialog"
-      style={{
-        width: isMobile ? '100%' : '600px',
-        maxHeight: '90vh',
-        borderRadius: '20px'
-      }}
-      position={isMobile ? "bottom" : "center"}
-      modal
-      dismissableMask
-      closable={false}
-      pt={{
-        root: { style: { borderRadius: '20px', overflow: 'hidden' } },
-        header: { style: { display: 'none' } },
-        content: { style: { padding: 0, borderRadius: '20px', overflow: 'hidden' } }
-      }}
+    <div
+      className={`modal-sheet-overlay ${isAnimating ? 'active' : ''}`}
+      onClick={handleOverlayClick}
     >
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: '#e5e7eb',
-        padding: '1rem',
-        gap: '0.5rem',
-        borderRadius: '20px'
-      }}>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <div style={{
-              fontSize: '0.75rem',
-              fontWeight: 500,
-              color: '#9ca3af',
-              letterSpacing: '0.1em',
-              marginBottom: '0.5rem'
-            }}>
-              FOOD ITEM DETAILS
-            </div>
-            <div style={{
-              fontSize: '1.5rem',
-              fontWeight: 700,
-              color: '#000',
-              lineHeight: 1.2
-            }}>
-              {foodItem.item_name}
-            </div>
+      <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-handle"></div>
+
+        {/* Modal Header */}
+        <div className="modal-header">
+          <div className="modal-header-content">
+            <p className="modal-header-label">FOOD ITEM DETAILS</p>
+            <h2 className="modal-header-title">{foodItem.item_name}</h2>
           </div>
           <button
             onClick={onHide}
-            style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              backgroundColor: '#d1d5db',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.25rem',
-              color: '#6b7280'
-            }}
+            className="modal-close-button"
           >
             ✕
           </button>
         </div>
 
-        {/* BASIC INFO Section */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          padding: '0.875rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.75rem'
-        }}>
-          <div style={{
-            fontSize: '0.75rem',
-            fontWeight: 600,
-            color: '#9ca3af',
-            letterSpacing: '0.1em'
-          }}>
-            BASIC INFO
-          </div>
+        <div className="modal-content" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
 
-          {/* Category and Brand */}
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            {foodItem.category && (
-              <div style={{ flex: 1, minWidth: '150px' }}>
-                <div style={{
-                  fontSize: '0.75rem',
-                  color: '#9ca3af',
-                  marginBottom: '0.5rem',
-                  fontWeight: 500
-                }}>
-                  Category
-                </div>
-                <div style={{
-                  padding: '0.625rem',
-                  backgroundColor: categoryColor ? `${categoryColor}1A` : '#f3f4f6',
-                  borderRadius: '6px',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  color: '#000',
-                  borderLeft: `4px solid ${borderColor}`
-                }}>
-                  {CATEGORY_DISPLAY_NAMES[foodItem.category] || foodItem.category}
-                </div>
-              </div>
-            )}
+          {/* BASIC INFO Section */}
+          <div className="form-section">
+            <label className="form-label">BASIC INFO</label>
 
-            {foodItem.brand && (
-              <div style={{ flex: 1, minWidth: '150px' }}>
-                <div style={{
-                  fontSize: '0.75rem',
-                  color: '#9ca3af',
-                  marginBottom: '0.5rem',
-                  fontWeight: 500
-                }}>
-                  Brand
-                </div>
-                <div style={{
-                  padding: '0.625rem',
-                  backgroundColor: '#f3f4f6',
-                  borderRadius: '6px',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  color: '#000'
-                }}>
-                  {foodItem.brand}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* COST PER SERVING Section */}
-        {foodItem.cost !== null && foodItem.cost !== undefined && (
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            padding: '0.875rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.5rem'
-          }}>
-            <div style={{
-              fontSize: '0.75rem',
-              fontWeight: 600,
-              color: '#9ca3af',
-              letterSpacing: '0.1em'
-            }}>
-              COST PER SERVING
-            </div>
-
-            <div style={{
-              fontSize: '1.875rem',
-              fontWeight: 700,
-              color: '#000'
-            }}>
-              {new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD',
-              }).format(foodItem.cost)}
-            </div>
-          </div>
-        )}
-
-        {/* NUTRIENTS Section */}
-        {foodItem.foodItemNutrients && foodItem.foodItemNutrients.length > 0 && (
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            padding: '0.875rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.5rem'
-          }}>
-            <div style={{
-              fontSize: '0.75rem',
-              fontWeight: 600,
-              color: '#9ca3af',
-              letterSpacing: '0.1em'
-            }}>
-              NUTRIENTS (PER SERVING)
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {foodItem.foodItemNutrients.map((nutrient) => (
-                <div
-                  key={nutrient.id}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
+            {/* Category and Brand */}
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              {foodItem.category && (
+                <div style={{ flex: 1, minWidth: '150px' }}>
+                  <div style={{
+                    fontSize: '0.8125rem',
+                    color: '#9ca3af',
+                    marginBottom: '0.5rem',
+                    fontWeight: 500
+                  }}>
+                    Category
+                  </div>
+                  <div style={{
                     padding: '0.75rem',
-                    backgroundColor: '#f9fafb',
-                    borderRadius: '8px'
-                  }}
-                >
-                  <span style={{
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    color: '#000'
-                  }}>
-                    {nutrient.nutrient.nutrient_name}
-                  </span>
-                  <span style={{
+                    backgroundColor: categoryColor ? `${categoryColor}1A` : '#f3f4f6',
+                    borderRadius: '0.5rem',
                     fontSize: '1rem',
-                    fontWeight: 700,
-                    color: borderColor
+                    fontWeight: 600,
+                    color: '#111827',
+                    borderLeft: `4px solid ${borderColor}`
                   }}>
-                    {nutrient.quantity} {nutrient.unit}
-                  </span>
+                    {CATEGORY_DISPLAY_NAMES[foodItem.category] || foodItem.category}
+                  </div>
                 </div>
-              ))}
+              )}
+
+              {foodItem.brand && (
+                <div style={{ flex: 1, minWidth: '150px' }}>
+                  <div style={{
+                    fontSize: '0.8125rem',
+                    color: '#9ca3af',
+                    marginBottom: '0.5rem',
+                    fontWeight: 500
+                  }}>
+                    Brand
+                  </div>
+                  <div style={{
+                    padding: '0.75rem',
+                    backgroundColor: '#f3f4f6',
+                    borderRadius: '0.5rem',
+                    fontSize: '1rem',
+                    fontWeight: 600,
+                    color: '#111827'
+                  }}>
+                    {foodItem.brand}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        )}
 
-        {/* Close Button */}
-        <div style={{ marginTop: '0.5rem' }}>
+          {/* COST PER SERVING Section */}
+          {foodItem.cost !== null && foodItem.cost !== undefined && (
+            <div className="form-section">
+              <label className="form-label">COST PER SERVING</label>
+              <div style={{
+                fontSize: '2rem',
+                fontWeight: 700,
+                color: '#111827'
+              }}>
+                {new Intl.NumberFormat('en-US', {
+                  style: 'currency',
+                  currency: 'USD',
+                }).format(foodItem.cost)}
+              </div>
+            </div>
+          )}
+
+          {/* NUTRIENTS Section */}
+          {foodItem.foodItemNutrients && foodItem.foodItemNutrients.length > 0 && (
+            <div className="form-section">
+              <label className="form-label">NUTRIENTS (PER SERVING)</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {foodItem.foodItemNutrients.map((nutrient) => (
+                  <div
+                    key={nutrient.id}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '0.75rem',
+                      backgroundColor: '#f9fafb',
+                      borderRadius: '0.5rem',
+                      border: '1px solid #f3f4f6'
+                    }}
+                  >
+                    <span style={{
+                      fontSize: '1rem',
+                      fontWeight: 600,
+                      color: '#111827'
+                    }}>
+                      {nutrient.nutrient.nutrient_name}
+                    </span>
+                    <span style={{
+                      fontSize: '1.125rem',
+                      fontWeight: 700,
+                      color: borderColor
+                    }}>
+                      {nutrient.quantity} {nutrient.unit}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Close Button */}
           <button
             onClick={onHide}
             style={{
               width: '100%',
-              backgroundColor: '#1f2937',
+              backgroundColor: '#111827',
               border: 'none',
               color: 'white',
               fontWeight: 600,
-              padding: '0.75rem',
-              borderRadius: '8px',
-              fontSize: '0.9375rem',
-              cursor: 'pointer'
+              padding: '1rem',
+              borderRadius: '0.75rem',
+              fontSize: '1.0625rem',
+              cursor: 'pointer',
+              marginTop: '0.5rem',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#374151';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#111827';
             }}
           >
             Close
           </button>
         </div>
       </div>
-    </Dialog>
+    </div>
   );
 };

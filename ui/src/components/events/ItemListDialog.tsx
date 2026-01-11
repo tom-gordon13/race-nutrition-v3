@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Dialog } from 'primereact/dialog';
 import './ItemListDialog.css';
+import '../shared/ModalSheet.css';
 
 interface FoodItemNutrient {
   id: string;
@@ -54,18 +54,26 @@ export const ItemListDialog = ({
   onItemClick,
   categoryColors
 }: ItemListDialogProps) => {
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [itemCounts, setItemCounts] = useState<ItemCount[]>([]);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
 
-  // Detect mobile screen size
+  // Handle animation timing for smooth slide-up and slide-down
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    if (visible) {
+      setShouldRender(true);
+      const timer = setTimeout(() => {
+        setIsAnimating(true);
+      }, 10);
+      return () => clearTimeout(timer);
+    } else {
+      setIsAnimating(false);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [visible]);
 
   // Calculate item counts when food instances change
   useEffect(() => {
@@ -93,150 +101,210 @@ export const ItemListDialog = ({
     setItemCounts(countsArray);
   }, [foodInstances]);
 
-  const headerContent = (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: '1rem 1.5rem',
-      backgroundColor: '#f3f4f6',
-      borderBottom: '1px solid #d1d5db'
-    }}>
-      <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600, color: '#000000' }}>
-        Item List
-      </h3>
-      <button
-        onClick={onHide}
-        style={{
-          width: '40px',
-          height: '40px',
-          borderRadius: '50%',
-          backgroundColor: '#d1d5db',
-          border: 'none',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '1.25rem',
-          color: '#6b7280'
-        }}
-      >
-        ✕
-      </button>
-    </div>
-  );
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onHide();
+    }
+  };
+
+  if (!shouldRender) return null;
 
   return (
-    <Dialog
-      visible={visible}
-      onHide={onHide}
-      header={headerContent}
-      className="item-list-dialog"
-      style={{
-        width: isMobile ? '100%' : '600px',
-        maxHeight: '90vh',
-        borderRadius: '20px'
-      }}
-      position={isMobile ? "bottom" : "center"}
-      modal
-      dismissableMask
-      closable={false}
-      pt={{
-        root: { style: { borderRadius: '20px', overflow: 'hidden' } },
-        header: { style: { padding: 0, border: 'none' } },
-        content: { style: { padding: '1rem 1.5rem', maxHeight: '70vh', overflowY: 'auto' } }
-      }}
+    <div
+      className={`modal-sheet-overlay ${isAnimating ? 'active' : ''}`}
+      onClick={handleOverlayClick}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        {itemCounts.length === 0 ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
-            No items added to this event yet.
-          </div>
-        ) : (
-          <>
-            <div style={{
-              fontSize: '0.875rem',
+      <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-handle"></div>
+
+        {/* Modal Header */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '1rem 1.25rem',
+          borderBottom: '1px solid #f3f4f6'
+        }}>
+          <div>
+            <p style={{
+              fontSize: '10px',
               fontWeight: 600,
+              color: '#9ca3af',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              marginBottom: '0.25rem'
+            }}>Items</p>
+            <h2 style={{
+              fontSize: '1.25rem',
+              fontWeight: 700,
+              color: '#111827'
+            }}>Item List</h2>
+          </div>
+          <button
+            onClick={onHide}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '2.5rem',
+              height: '2.5rem',
+              borderRadius: '9999px',
+              backgroundColor: '#f3f4f6',
               color: '#6b7280',
-              marginBottom: '0.5rem'
-            }}>
-              Total: {itemCounts.length} unique item{itemCounts.length !== 1 ? 's' : ''}
+              border: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Item Count Summary */}
+        <div style={{
+          padding: '0.75rem 1.25rem',
+          backgroundColor: '#f9fafb',
+          borderBottom: '1px solid #f3f4f6',
+          textAlign: 'left'
+        }}>
+          <p style={{ fontSize: '0.875rem', color: '#6b7280', textAlign: 'left' }}>
+            Total: <span style={{ fontWeight: 600, color: '#111827' }}>{itemCounts.length} unique item{itemCounts.length !== 1 ? 's' : ''}</span>
+          </p>
+        </div>
+
+        <div className="modal-content">
+          {itemCounts.length === 0 ? (
+            <div style={{ padding: '3rem 1.25rem', textAlign: 'center', color: '#6b7280', fontSize: '1rem' }}>
+              No items added to this event yet.
             </div>
+          ) : (
+            <div style={{
+              padding: '12px 20px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px'
+            }}>
 
-            {itemCounts.map((item) => {
-              // Get color for this category
-              const categoryColor = item.foodItem.category && categoryColors
-                ? categoryColors.get(item.foodItem.category)
-                : undefined;
+              {itemCounts.map((item) => {
+                // Get color for this category
+                const categoryColor = item.foodItem.category && categoryColors
+                  ? categoryColors.get(item.foodItem.category)
+                  : undefined;
 
-              const backgroundColor = categoryColor
-                ? `${categoryColor}1A`
-                : 'rgba(100, 108, 255, 0.1)';
+                const accentColor = categoryColor || '#646cff';
 
-              const borderLeftColor = categoryColor || '#646cff';
-
-              return (
-                <div
-                  key={item.foodItem.id}
-                  onClick={() => onItemClick(item.foodItem)}
-                  style={{
-                    padding: '1rem',
-                    backgroundColor,
-                    borderLeft: `4px solid ${borderLeftColor}`,
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = categoryColor
-                      ? `${categoryColor}33`
-                      : 'rgba(100, 108, 255, 0.2)';
-                    e.currentTarget.style.transform = 'translateX(4px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = backgroundColor;
-                    e.currentTarget.style.transform = 'translateX(0)';
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, fontSize: '1rem', color: '#000', marginBottom: '0.25rem' }}>
-                      {item.foodItem.item_name}
-                    </div>
-                    {item.foodItem.brand && (
-                      <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
-                        {item.foodItem.brand}
-                      </div>
-                    )}
-                    {item.foodItem.category && (
-                      <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
-                        {item.foodItem.category.replace(/_/g, ' ')}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
+                return (
+                  <div
+                    key={item.foodItem.id}
+                    onClick={() => onItemClick(item.foodItem)}
+                    className="item-card"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      backgroundColor: '#ffffff',
+                      borderRadius: '12px',
+                      border: '1px solid #f3f4f6',
+                      overflow: 'hidden',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {/* Left accent bar */}
                     <div style={{
-                      fontSize: '1.5rem',
-                      fontWeight: 700,
-                      color: borderLeftColor
+                      width: '6px',
+                      alignSelf: 'stretch',
+                      backgroundColor: accentColor,
+                      flexShrink: 0
+                    }} />
+
+                    {/* Content */}
+                    <div style={{
+                      flex: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '10px 12px',
+                      paddingLeft: '16px'
                     }}>
-                      {item.totalServings}
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                      {item.totalServings === 1 ? 'serving' : 'servings'}
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
-                      ({item.count} {item.count === 1 ? 'instance' : 'instances'})
+                      <div style={{ minWidth: 0, textAlign: 'left' }}>
+                        <h3 style={{
+                          fontSize: '16px',
+                          fontWeight: 600,
+                          color: '#111827',
+                          textAlign: 'left',
+                          lineHeight: '1.2'
+                        }}>
+                          {item.foodItem.item_name}
+                        </h3>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          marginTop: '4px',
+                          textAlign: 'left'
+                        }}>
+                          {item.foodItem.brand && (
+                            <>
+                              <span style={{ fontSize: '13px', color: '#9ca3af', textAlign: 'left' }}>
+                                {item.foodItem.brand}
+                              </span>
+                              {item.foodItem.category && (
+                                <span style={{ color: '#d1d5db', textAlign: 'left' }}>•</span>
+                              )}
+                            </>
+                          )}
+                          {item.foodItem.category && (
+                            <span style={{
+                              borderRadius: '4px',
+                              padding: '3px 8px',
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              backgroundColor: `${accentColor}20`,
+                              color: accentColor,
+                              textTransform: 'uppercase',
+                              textAlign: 'left',
+                              letterSpacing: '0.02em'
+                            }}>
+                              {item.foodItem.category.replace(/_/g, ' ')}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div style={{
+                        textAlign: 'right',
+                        flexShrink: 0,
+                        marginLeft: '12px'
+                      }}>
+                        <p style={{
+                          fontSize: '28px',
+                          fontWeight: 700,
+                          color: accentColor,
+                          textAlign: 'right',
+                          lineHeight: '1'
+                        }}>
+                          {item.totalServings}
+                        </p>
+                        <p style={{
+                          fontSize: '11px',
+                          color: '#9ca3af',
+                          textAlign: 'right',
+                          marginTop: '2px'
+                        }}>
+                          {item.totalServings === 1 ? 'serving' : 'servings'}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </>
-        )}
+                );
+              })}
+
+              {/* Bottom padding for safe area */}
+              <div style={{ height: '1.5rem' }} />
+            </div>
+          )}
+        </div>
       </div>
-    </Dialog>
+    </div>
   );
 };

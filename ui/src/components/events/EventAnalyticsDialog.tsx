@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog } from 'primereact/dialog';
-import { Button } from 'primereact/button';
-import './EventAnalyticsDialog.css';
+import '../shared/ModalSheet.css';
 
 interface EventAnalyticsDialogProps {
   visible: boolean;
@@ -12,125 +10,114 @@ export const EventAnalyticsDialog = ({
   visible,
   onHide
 }: EventAnalyticsDialogProps) => {
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
 
-  // Detect mobile screen size
+  // Handle animation timing for smooth slide-up and slide-down
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
+    if (visible) {
+      setShouldRender(true);
+      const timer = setTimeout(() => {
+        setIsAnimating(true);
+      }, 10);
+      return () => clearTimeout(timer);
+    } else {
+      setIsAnimating(false);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [visible]);
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onHide();
+    }
+  };
+
+  if (!shouldRender) return null;
 
   return (
-    <Dialog
-      header=""
-      visible={visible}
-      style={{
-        width: isMobile ? '100%' : '800px',
-        maxHeight: '90vh',
-        borderRadius: '20px'
-      }}
-      onHide={onHide}
-      position={isMobile ? "bottom" : "center"}
-      modal
-      dismissableMask
-      closable={false}
-      className="event-analytics-dialog"
-      pt={{
-        root: { style: { borderRadius: '20px', overflow: 'hidden' } },
-        header: { style: { display: 'none' } },
-        content: { style: { padding: 0, borderRadius: '20px', overflow: 'hidden' } }
-      }}
+    <div
+      className={`modal-sheet-overlay ${isAnimating ? 'active' : ''}`}
+      onClick={handleOverlayClick}
     >
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: '#e5e7eb',
-        padding: '1rem',
-        gap: '0.5rem',
-        borderRadius: '20px'
-      }}>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <div style={{
-              fontSize: '0.75rem',
-              fontWeight: 500,
-              color: '#9ca3af',
-              letterSpacing: '0.1em',
-              marginBottom: '0.5rem'
-            }}>
-              ANALYTICS
-            </div>
-            <div style={{
-              fontSize: '1.5rem',
-              fontWeight: 700,
-              color: '#000',
-              lineHeight: 1.2
-            }}>
-              Event Analytics
-            </div>
+      <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-handle"></div>
+
+        {/* Modal Header */}
+        <div className="modal-header">
+          <div className="modal-header-content">
+            <p className="modal-header-label">ANALYTICS</p>
+            <h2 className="modal-header-title">Event Analytics</h2>
           </div>
           <button
             onClick={onHide}
-            style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              backgroundColor: '#d1d5db',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.25rem',
-              color: '#6b7280'
-            }}
+            className="modal-close-button"
           >
             ✕
           </button>
         </div>
 
-        {/* Content Section */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          padding: '3rem',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '300px'
-        }}>
-          <p style={{
-            fontSize: '1.25rem',
-            color: '#6b7280',
-            textAlign: 'center',
-            margin: 0
+        <div className="modal-content" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {/* Content Section */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '5rem 2rem',
+            textAlign: 'center'
           }}>
-            Analytics coming soon...
-          </p>
-        </div>
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '1.5rem' }}>
+              <path d="M3 3v18h18" />
+              <path d="m19 9-5 5-4-4-3 3" />
+            </svg>
+            <p style={{
+              fontSize: '1.5rem',
+              fontWeight: 600,
+              color: '#374151',
+              margin: 0,
+              marginBottom: '0.5rem'
+            }}>
+              Analytics Coming Soon
+            </p>
+            <p style={{
+              fontSize: '1rem',
+              color: '#9ca3af',
+              margin: 0
+            }}>
+              We're working on bringing you detailed event analytics.
+            </p>
+          </div>
 
-        {/* Footer Button */}
-        <Button
-          label="Close"
-          icon="pi pi-times"
-          onClick={onHide}
-          style={{
-            backgroundColor: '#1f2937',
-            border: 'none',
-            color: 'white',
-            fontWeight: 600,
-            padding: '0.75rem',
-            borderRadius: '8px',
-            fontSize: '0.9375rem'
-          }}
-        />
+          {/* Footer Button */}
+          <button
+            onClick={onHide}
+            style={{
+              width: '100%',
+              backgroundColor: '#111827',
+              border: 'none',
+              color: 'white',
+              fontWeight: 600,
+              padding: '1rem',
+              borderRadius: '0.75rem',
+              fontSize: '1.0625rem',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#374151';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#111827';
+            }}
+          >
+            Close
+          </button>
+        </div>
       </div>
-    </Dialog>
+    </div>
   );
 };

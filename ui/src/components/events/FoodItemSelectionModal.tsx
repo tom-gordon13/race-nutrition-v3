@@ -1,13 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Dialog } from 'primereact/dialog';
-import { InputText } from 'primereact/inputtext';
-import { InputNumber } from 'primereact/inputnumber';
 import { Message } from 'primereact/message';
-import { Button } from 'primereact/button';
-import 'primereact/resources/themes/lara-light-blue/theme.css';
-import 'primereact/resources/primereact.min.css';
-import 'primeicons/primeicons.css';
+import '../shared/ModalSheet.css';
 
 export type ItemFilterMode = 'my_items' | 'favorites' | 'all_items';
 
@@ -82,17 +76,25 @@ export const FoodItemSelectionModal = ({
   const [servings, setServings] = useState(1);
   const [editedTime, setEditedTime] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
 
-  // Detect mobile screen size
+  // Handle animation timing for smooth slide-up and slide-down
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    if (isOpen) {
+      setShouldRender(true);
+      const timer = setTimeout(() => {
+        setIsAnimating(true);
+      }, 10);
+      return () => clearTimeout(timer);
+    } else {
+      setIsAnimating(false);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
 
   // Initialize editedTime when modal opens or timeInSeconds changes
   useEffect(() => {
@@ -162,403 +164,282 @@ export const FoodItemSelectionModal = ({
     onClose();
   };
 
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  if (!shouldRender) return null;
+
   return (
-    <Dialog
-      header=""
-      visible={isOpen}
-      style={{
-        width: isMobile ? '100%' : '600px',
-        maxHeight: '90vh',
-        borderRadius: '20px'
-      }}
-      onHide={onClose}
-      position={isMobile ? "bottom" : "center"}
-      modal
-      dismissableMask
-      closable={false}
-      pt={{
-        root: { style: { borderRadius: '20px', overflow: 'hidden' } },
-        header: { style: { display: 'none' } },
-        content: { style: { padding: 0, borderRadius: '20px', overflow: 'hidden' } }
-      }}
+    <div
+      className={`modal-sheet-overlay ${isAnimating ? 'active' : ''}`}
+      onClick={handleOverlayClick}
     >
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: '#e5e7eb',
-        padding: '1rem',
-        gap: '0.5rem',
-        borderRadius: '20px',
-        maxHeight: '85vh',
-        overflow: 'hidden'
-      }}>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{
-            fontSize: '0.75rem',
-            fontWeight: 500,
-            color: '#9ca3af',
-            letterSpacing: '0.1em'
-          }}>
-            ADD FOOD ITEM
+      <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-handle"></div>
+
+        {/* Modal Header */}
+        <div className="modal-header">
+          <div className="modal-header-content">
+            <p className="modal-header-label">ADD FOOD ITEM</p>
+            <h2 className="modal-header-title">Select Item</h2>
           </div>
           <button
             onClick={onClose}
-            style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              backgroundColor: '#d1d5db',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.25rem',
-              color: '#6b7280'
-            }}
+            className="modal-close-button"
           >
             ✕
           </button>
         </div>
 
-        {/* Error Message */}
-        {error && (
-          <Message severity="error" text={error} style={{ width: '100%', marginBottom: '0.5rem' }} />
-        )}
+        <div className="modal-content" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
 
-        {/* Time Input Section */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          padding: '0.875rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.75rem'
-        }}>
-          <div style={{
-            fontSize: '0.75rem',
-            fontWeight: 600,
-            color: '#9ca3af',
-            letterSpacing: '0.1em'
-          }}>
-            TIME (HH:MM)
-          </div>
-          <InputText
-            value={editedTime}
-            onChange={(e) => {
-              setEditedTime(e.target.value);
-              setError(null);
-            }}
-            placeholder="HH:MM"
-            style={{
-              width: '100%',
-              fontSize: '1.125rem',
-              fontWeight: 700,
-              border: 'none',
-              borderBottom: '2px solid #e5e7eb',
-              borderRadius: 0,
-              padding: '0.375rem 0',
-              outline: 'none'
-            }}
-          />
-        </div>
+          {/* Error Message */}
+          {error && (
+            <Message severity="error" text={error} style={{ width: '100%' }} />
+          )}
 
-        {/* Servings Input Section */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          padding: '0.875rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.75rem'
-        }}>
-          <div style={{
-            fontSize: '0.75rem',
-            fontWeight: 600,
-            color: '#9ca3af',
-            letterSpacing: '0.1em'
-          }}>
-            SERVINGS
-          </div>
-          <InputNumber
-            value={servings}
-            onValueChange={(e) => {
-              setServings(e.value || 1);
-              setError(null);
-            }}
-            min={0.1}
-            step={0.1}
-            minFractionDigits={1}
-            maxFractionDigits={2}
-            style={{
-              width: '100%'
-            }}
-            inputStyle={{
-              fontSize: '1.125rem',
-              fontWeight: 700,
-              border: 'none',
-              borderBottom: '2px solid #e5e7eb',
-              borderRadius: 0,
-              padding: '0.375rem 0',
-              outline: 'none'
-            }}
-          />
-        </div>
-
-        {/* Search Section */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          padding: '0.875rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.75rem'
-        }}>
-          <div style={{
-            fontSize: '0.75rem',
-            fontWeight: 600,
-            color: '#9ca3af',
-            letterSpacing: '0.1em'
-          }}>
-            SEARCH FOOD ITEMS
-          </div>
-          <InputText
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search food items..."
-            style={{
-              width: '100%',
-              fontSize: '1rem',
-              border: 'none',
-              borderBottom: '2px solid #e5e7eb',
-              borderRadius: 0,
-              padding: '0.375rem 0',
-              outline: 'none'
-            }}
-          />
-
-        </div>
-
-        {/* Filters Section */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          padding: '0.875rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.75rem'
-        }}>
-          <div style={{
-            fontSize: '0.75rem',
-            fontWeight: 600,
-            color: '#9ca3af',
-            letterSpacing: '0.1em'
-          }}>
-            FILTERS
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-              <input
-                type="radio"
-                name="item-filter"
-                checked={itemFilterMode === 'my_items'}
-                onChange={() => {
-                  onItemFilterModeChange('my_items');
-                  onMyItemsOnlyChange(true);
-                }}
-                style={{ cursor: 'pointer' }}
-              />
-              <span style={{ fontSize: '0.9rem' }}>My Items</span>
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-              <input
-                type="radio"
-                name="item-filter"
-                checked={itemFilterMode === 'favorites'}
-                onChange={() => {
-                  onItemFilterModeChange('favorites');
-                  onMyItemsOnlyChange(false);
-                }}
-                style={{ cursor: 'pointer' }}
-              />
-              <span style={{ fontSize: '0.9rem' }}>Favorites</span>
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-              <input
-                type="radio"
-                name="item-filter"
-                checked={itemFilterMode === 'all_items'}
-                onChange={() => {
-                  onItemFilterModeChange('all_items');
-                  onMyItemsOnlyChange(false);
-                }}
-                style={{ cursor: 'pointer' }}
-              />
-              <span style={{ fontSize: '0.9rem' }}>All Items</span>
-            </label>
-          </div>
-
-          <div style={{ marginTop: '0.5rem' }}>
-            <select
-              value={categoryFilter}
-              onChange={(e) => onCategoryFilterChange(e.target.value)}
-              style={{
-                width: '100%',
-                fontSize: '0.9rem',
-                padding: '0.5rem',
-                border: '1px solid #e5e7eb',
-                borderRadius: '6px',
-                backgroundColor: 'white',
-                cursor: 'pointer'
+          {/* Time Input Section */}
+          <div className="form-section">
+            <label className="form-label">TIME (HH:MM)</label>
+            <input
+              type="text"
+              className="form-input"
+              value={editedTime}
+              onChange={(e) => {
+                setEditedTime(e.target.value);
+                setError(null);
               }}
-            >
-              <option value="ALL">All Categories</option>
-              {categories.map((category) => (
-                <option key={category} value={category}>
-                  {category?.replace(/_/g, ' ')}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Food Items List Section */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          padding: '0.875rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.5rem',
-          maxHeight: isMobile ? '50vh' : '400px',
-          overflow: 'auto'
-        }}>
-          <div style={{
-            fontSize: '0.75rem',
-            fontWeight: 600,
-            color: '#9ca3af',
-            letterSpacing: '0.1em'
-          }}>
-            SELECT FOOD ITEM
+              placeholder="HH:MM"
+            />
           </div>
 
-          {filteredItems.length === 0 ? (
-            <div style={{
-              textAlign: 'center',
-              padding: '2rem 1rem',
-              color: '#6b7280',
-              fontSize: '0.875rem'
-            }}>
-              No food items found. Try a different search term.
+          {/* Servings Input Section */}
+          <div className="form-section">
+            <label className="form-label">SERVINGS</label>
+            <input
+              type="number"
+              className="form-input"
+              value={servings}
+              onChange={(e) => {
+                const value = parseFloat(e.target.value);
+                setServings(isNaN(value) ? 1 : value);
+                setError(null);
+              }}
+              min={0.1}
+              step={0.1}
+              placeholder="1.0"
+            />
+          </div>
+
+          {/* Search Section */}
+          <div className="form-section">
+            <label className="form-label">SEARCH FOOD ITEMS</label>
+            <input
+              type="text"
+              className="form-input"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search food items..."
+            />
+          </div>
+
+          {/* Filters Section */}
+          <div className="form-section">
+            <label className="form-label">FILTERS</label>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '1rem', color: '#374151' }}>
+                <input
+                  type="radio"
+                  name="item-filter"
+                  checked={itemFilterMode === 'my_items'}
+                  onChange={() => {
+                    onItemFilterModeChange('my_items');
+                    onMyItemsOnlyChange(true);
+                  }}
+                  style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                />
+                <span>My Items</span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '1rem', color: '#374151' }}>
+                <input
+                  type="radio"
+                  name="item-filter"
+                  checked={itemFilterMode === 'favorites'}
+                  onChange={() => {
+                    onItemFilterModeChange('favorites');
+                    onMyItemsOnlyChange(false);
+                  }}
+                  style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                />
+                <span>Favorites</span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '1rem', color: '#374151' }}>
+                <input
+                  type="radio"
+                  name="item-filter"
+                  checked={itemFilterMode === 'all_items'}
+                  onChange={() => {
+                    onItemFilterModeChange('all_items');
+                    onMyItemsOnlyChange(false);
+                  }}
+                  style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                />
+                <span>All Items</span>
+              </label>
+
+              <select
+                className="form-select"
+                value={categoryFilter}
+                onChange={(e) => onCategoryFilterChange(e.target.value)}
+              >
+                <option value="ALL">All Categories</option>
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category?.replace(/_/g, ' ')}
+                  </option>
+                ))}
+              </select>
             </div>
-          ) : (
-            filteredItems.map((item) => {
-              // Get color for this category
-              const categoryColor = item.category && categoryColors
-                ? categoryColors.get(item.category)
-                : undefined;
+          </div>
 
-              // Determine background and border color
-              const backgroundColor = categoryColor
-                ? `${categoryColor}1A`  // Add 1A for 10% opacity (hex for ~0.1 alpha)
-                : '#f9fafb';
+          {/* Food Items List Section */}
+          <div className="form-section" style={{ maxHeight: '400px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <label className="form-label">SELECT FOOD ITEM</label>
 
-              const borderLeftColor = categoryColor
-                ? categoryColor
-                : '#e5e7eb';
+            <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {filteredItems.length === 0 ? (
+                <div style={{
+                  textAlign: 'center',
+                  padding: '3rem 1rem',
+                  color: '#6b7280',
+                  fontSize: '1rem'
+                }}>
+                  No food items found. Try a different search term.
+                </div>
+              ) : (
+                filteredItems.map((item) => {
+                  // Get color for this category
+                  const categoryColor = item.category && categoryColors
+                    ? categoryColors.get(item.category)
+                    : undefined;
 
-              return (
-                <div
-                  key={item.id}
-                  onClick={() => handleSelect(item.id)}
-                  style={{
-                    backgroundColor,
-                    borderLeftColor,
-                    borderLeftWidth: '4px',
-                    borderLeftStyle: 'solid',
-                    padding: '0.875rem',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.5rem'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                    e.currentTarget.style.boxShadow = '0 3px 10px rgba(0, 0, 0, 0.1)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
-                    <div>
-                      <div style={{ fontWeight: 600, color: '#1f2937', fontSize: '0.9375rem' }}>
-                        {item.item_name}
+                  // Determine background and border color
+                  const backgroundColor = categoryColor
+                    ? `${categoryColor}1A`  // Add 1A for 10% opacity (hex for ~0.1 alpha)
+                    : '#f9fafb';
+
+                  const borderLeftColor = categoryColor
+                    ? categoryColor
+                    : '#e5e7eb';
+
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={() => handleSelect(item.id)}
+                      style={{
+                        backgroundColor,
+                        borderLeftColor,
+                        borderLeftWidth: '4px',
+                        borderLeftStyle: 'solid',
+                        padding: '0.875rem',
+                        borderRadius: '0.5rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.5rem'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                        e.currentTarget.style.boxShadow = '0 3px 10px rgba(0, 0, 0, 0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
+                        <div>
+                          <div style={{ fontWeight: 600, color: '#111827', fontSize: '1rem' }}>
+                            {item.item_name}
+                          </div>
+                          {item.brand && (
+                            <div style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                              {item.brand}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      {item.brand && (
-                        <div style={{ fontSize: '0.8125rem', color: '#6b7280', marginTop: '0.125rem' }}>
-                          {item.brand}
+                      {item.category && (
+                        <div style={{
+                          fontSize: '0.8125rem',
+                          color: '#9ca3af',
+                          fontWeight: 500,
+                          letterSpacing: '0.05em',
+                          textTransform: 'uppercase'
+                        }}>
+                          {item.category.replace(/_/g, ' ')}
+                        </div>
+                      )}
+                      {item.foodItemNutrients && item.foodItemNutrients.length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.25rem' }}>
+                          {item.foodItemNutrients.slice(0, 3).map((nutrient) => (
+                            <span
+                              key={nutrient.id}
+                              style={{
+                                display: 'inline-block',
+                                padding: '0.375rem 0.625rem',
+                                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                                color: '#4f46e5',
+                                borderRadius: '0.375rem',
+                                fontSize: '0.8125rem',
+                                fontWeight: 500
+                              }}
+                            >
+                              {nutrient.nutrient.nutrient_abbreviation}: {nutrient.quantity} {nutrient.unit}
+                            </span>
+                          ))}
                         </div>
                       )}
                     </div>
-                  </div>
-                  {item.category && (
-                    <div style={{
-                      fontSize: '0.75rem',
-                      color: '#9ca3af',
-                      fontWeight: 500,
-                      letterSpacing: '0.05em'
-                    }}>
-                      {item.category.replace(/_/g, ' ')}
-                    </div>
-                  )}
-                  {item.foodItemNutrients && item.foodItemNutrients.length > 0 && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem', marginTop: '0.25rem' }}>
-                      {item.foodItemNutrients.slice(0, 3).map((nutrient) => (
-                        <span
-                          key={nutrient.id}
-                          style={{
-                            display: 'inline-block',
-                            padding: '0.25rem 0.5rem',
-                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                            color: '#4f46e5',
-                            borderRadius: '4px',
-                            fontSize: '0.75rem',
-                            fontWeight: 500
-                          }}
-                        >
-                          {nutrient.nutrient.nutrient_abbreviation}: {nutrient.quantity} {nutrient.unit}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })
-          )}
+                  );
+                })
+              )}
 
-          <Button
-            label="+ Create New Food Item"
-            onClick={handleCreateNewFoodItem}
-            style={{
-              marginTop: '0.5rem',
-              width: '100%',
-              backgroundColor: 'transparent',
-              color: '#6366F1',
-              border: '2px dashed #d1d5db',
-              fontWeight: 600,
-              fontSize: '0.875rem',
-              padding: '0.75rem'
-            }}
-            className="p-button-text"
-          />
+              <button
+                onClick={handleCreateNewFoodItem}
+                style={{
+                  marginTop: '0.5rem',
+                  width: '100%',
+                  backgroundColor: 'transparent',
+                  color: '#6366f1',
+                  border: '2px dashed #d1d5db',
+                  fontWeight: 600,
+                  fontSize: '1rem',
+                  padding: '1rem',
+                  borderRadius: '0.75rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#6366f1';
+                  e.currentTarget.style.backgroundColor = 'rgba(99, 102, 241, 0.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#d1d5db';
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+              >
+                + Create New Food Item
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-    </Dialog>
+    </div>
   );
 };
