@@ -23,6 +23,7 @@ interface FoodItem {
   item_name: string;
   brand?: string;
   category?: string;
+  cost?: number;
   foodItemNutrients: FoodItemNutrient[];
 }
 
@@ -188,10 +189,6 @@ export const FoodItemSelectionModal = ({
     });
   };
 
-  const handleCreateNewFoodItem = () => {
-    navigate('/food-items');
-    onClose();
-  };
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
