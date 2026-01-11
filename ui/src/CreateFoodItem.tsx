@@ -1,34 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-import { InputText } from 'primereact/inputtext';
-import { Dropdown } from 'primereact/dropdown';
-import { InputNumber } from 'primereact/inputnumber';
-import { Button } from 'primereact/button';
-import { Card } from 'primereact/card';
-import 'primereact/resources/themes/lara-light-blue/theme.css';
-import 'primereact/resources/primereact.min.css';
-import 'primeicons/primeicons.css';
 import { API_URL } from './config/api';
-
-
-
-const FOOD_CATEGORIES = [
-  'ENERGY_GEL',
-  'ENERGY_BAR',
-  'SPORTS_DRINK',
-  'FRUIT',
-  'SNACK',
-  'OTHER'
-] as const;
-
-const CATEGORY_DISPLAY_NAMES: Record<string, string> = {
-  'ENERGY_GEL': 'Gel',
-  'ENERGY_BAR': 'Bar',
-  'SPORTS_DRINK': 'Drink',
-  'FRUIT': 'Fruit',
-  'SNACK': 'Snack',
-  'OTHER': 'Other'
-};
+import '../src/components/shared/ModalSheet.css';
 
 interface Nutrient {
   id: string;
@@ -36,30 +9,38 @@ interface Nutrient {
   nutrient_abbreviation: string;
 }
 
-interface FoodItemNutrient {
-  nutrient_id: string;
-  quantity: number | string;
-  unit: string;
+interface NutrientValue {
+  [nutrientId: string]: string;
 }
 
 interface CreateFoodItemProps {
+  visible: boolean;
+  onHide: () => void;
   onFoodItemCreated?: () => void;
 }
 
-const CreateFoodItem = ({ onFoodItemCreated }: CreateFoodItemProps) => {
+// Category configuration with colors matching the design
+const CATEGORIES = [
+  { value: 'ENERGY_GEL', label: 'Gel', color: '#14b8a6' },
+  { value: 'SPORTS_DRINK', label: 'Drink', color: '#f97316' },
+  { value: 'ENERGY_BAR', label: 'Bar', color: '#f59e0b' },
+  { value: 'FRUIT', label: 'Fruit', color: '#d946ef' },
+  { value: 'SNACK', label: 'Chews', color: '#6366f1' },
+  { value: 'OTHER', label: 'Other', color: '#6b7280' }
+];
+
+const CreateFoodItem = ({ visible, onHide, onFoodItemCreated }: CreateFoodItemProps) => {
   const { user } = useAuth0();
   const [itemName, setItemName] = useState('');
   const [brand, setBrand] = useState('');
   const [category, setCategory] = useState('');
-  const [cost, setCost] = useState<number | null>(null);
+  const [cost, setCost] = useState('0.00');
   const [nutrients, setNutrients] = useState<Nutrient[]>([]);
-  const [foodItemNutrients, setFoodItemNutrients] = useState<FoodItemNutrient[]>([
-    { nutrient_id: '', quantity: '', unit: '' }
-  ]);
+  const [nutrientValues, setNutrientValues] = useState<NutrientValue>({});
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [fetchingNutrients, setFetchingNutrients] = useState(true);
+
+  const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
   // Fetch available nutrients on component mount
   useEffect(() => {
@@ -71,7 +52,6 @@ const CreateFoodItem = ({ onFoodItemCreated }: CreateFoodItemProps) => {
         setNutrients(data.nutrients);
       } catch (err) {
         console.error('Error fetching nutrients:', err);
-        setError('Failed to load nutrients');
       } finally {
         setFetchingNutrients(false);
       }
@@ -80,54 +60,75 @@ const CreateFoodItem = ({ onFoodItemCreated }: CreateFoodItemProps) => {
     fetchNutrients();
   }, []);
 
-  const addNutrientRow = () => {
-    setFoodItemNutrients([...foodItemNutrients, { nutrient_id: '', quantity: '', unit: '' }]);
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      handleClose();
+    }
   };
 
-  const removeNutrientRow = (index: number) => {
-    const updated = foodItemNutrients.filter((_, i) => i !== index);
-    setFoodItemNutrients(updated);
+  const handleClose = () => {
+    // Reset form
+    setItemName('');
+    setBrand('');
+    setCategory('');
+    setCost('0.00');
+    setNutrientValues({});
+    onHide();
   };
 
-  const updateNutrient = (index: number, field: keyof FoodItemNutrient, value: string | number) => {
-    const updated = [...foodItemNutrients];
-    updated[index] = { ...updated[index], [field]: value };
-    setFoodItemNutrients(updated);
+  const handleCategorySelect = (categoryValue: string) => {
+    setCategory(categoryValue === category ? '' : categoryValue);
+  };
+
+  const handleNutrientChange = (nutrientId: string, value: string) => {
+    setNutrientValues(prev => ({
+      ...prev,
+      [nutrientId]: value
+    }));
+  };
+
+  const focusNutrientInput = (nutrientId: string) => {
+    const input = inputRefs.current[nutrientId];
+    if (input) {
+      input.focus();
+      input.select();
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
-    setSuccess(null);
 
     try {
-      // Validate user is logged in
       if (!user || !user.sub) {
-        throw new Error('User not authenticated. Please log in again.');
+        throw new Error('User not authenticated');
       }
 
-      console.log('User object:', user);
-      console.log('Auth0 Sub:', user.sub);
+      // Build nutrients array from nutrientValues
+      const foodItemNutrients = Object.entries(nutrientValues)
+        .filter(([_, value]) => value && value.trim() !== '')
+        .map(([nutrientId, value]) => {
+          const nutrient = nutrients.find(n => n.id === nutrientId);
+          const unit = nutrient?.nutrient_abbreviation.toLowerCase().includes('sodium') ||
+                       nutrient?.nutrient_abbreviation.toLowerCase().includes('caffeine')
+                       ? 'mg'
+                       : 'g';
 
-      // Filter out empty nutrient rows
-      const validNutrients = foodItemNutrients.filter(
-        n => n.nutrient_id && n.quantity && n.unit
-      ).map(n => ({
-        ...n,
-        quantity: parseFloat(n.quantity.toString())
-      }));
+          return {
+            nutrient_id: nutrientId,
+            quantity: parseFloat(value),
+            unit
+          };
+        });
 
       const payload = {
         item_name: itemName,
         brand: brand || undefined,
         category: category || undefined,
-        cost: cost !== null ? cost : undefined,
+        cost: parseFloat(cost) || undefined,
         auth0_sub: user.sub,
-        nutrients: validNutrients
+        nutrients: foodItemNutrients
       };
-
-      console.log('Sending payload:', payload);
 
       const response = await fetch(`${API_URL}/api/food-items`, {
         method: 'POST',
@@ -142,193 +143,195 @@ const CreateFoodItem = ({ onFoodItemCreated }: CreateFoodItemProps) => {
         throw new Error(data.error || 'Failed to create food item');
       }
 
-      const data = await response.json();
-      setSuccess(`Food item "${data.foodItem.item_name}" created successfully with ${data.nutrients.length} nutrients!`);
-
-      // Reset form
-      setItemName('');
-      setBrand('');
-      setCategory('');
-      setCost(null);
-      setFoodItemNutrients([{ nutrient_id: '', quantity: '', unit: '' }]);
-
-      // Trigger refetch of food items
+      // Success - trigger refetch and close
       if (onFoodItemCreated) {
         onFoodItemCreated();
       }
+      handleClose();
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
       console.error('Error creating food item:', err);
+      alert(err instanceof Error ? err.message : 'Failed to create food item');
     } finally {
       setLoading(false);
     }
   };
 
-  if (fetchingNutrients) {
-    return <div>Loading nutrients...</div>;
-  }
-
   if (!user || !user.sub) {
-    return <div>Please log in to create food items.</div>;
+    return null;
   }
 
   return (
-    <Card
-      title="Create New Food Item"
-      style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f3f0ff' }}
-      pt={{
-        title: { style: { textAlign: 'left', color: '#646cff', padding: '1.25rem', margin: 0, fontSize: '1.5rem', fontWeight: 700, backgroundColor: '#f3f0ff' } },
-        body: { style: { flex: 1, overflow: 'auto', padding: '0 1.25rem 1.25rem 1.25rem', backgroundColor: '#f3f0ff' } },
-        content: { style: { padding: 0 } }
-      }}
+    <div
+      className={`modal-overlay ${visible ? 'active' : ''}`}
+      onClick={handleOverlayClick}
     >
-      {error && <div className="error-message">{error}</div>}
-      {success && <div className="success-message">{success}</div>}
+      <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-handle"></div>
 
-      <form onSubmit={handleSubmit}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
-          <div className="p-field">
-            <label htmlFor="itemName">Food Item Name *</label>
-            <InputText
-              id="itemName"
-              value={itemName}
-              onChange={(e) => setItemName(e.target.value)}
-              required
-              placeholder="e.g., Banana, Energy Gel, Sports Drink"
-              style={{ width: '100%' }}
-            />
+        {/* Modal Header */}
+        <div className="modal-header">
+          <div className="modal-header-content">
+            <p className="modal-header-label">Create New</p>
+            <h2 className="modal-header-title">Food Item</h2>
           </div>
-
-          <div className="p-field">
-            <label htmlFor="brand">Brand (Optional)</label>
-            <InputText
-              id="brand"
-              value={brand}
-              onChange={(e) => setBrand(e.target.value)}
-              placeholder="e.g., GU, Clif, Gatorade"
-              style={{ width: '100%' }}
-            />
-          </div>
-
-          <div className="p-field">
-            <label htmlFor="category">Category (Optional)</label>
-            <Dropdown
-              id="category"
-              value={category}
-              onChange={(e) => setCategory(e.value)}
-              options={[
-                { label: 'Select a category', value: '' },
-                ...FOOD_CATEGORIES.map((cat) => ({
-                  label: CATEGORY_DISPLAY_NAMES[cat] || cat,
-                  value: cat
-                }))
-              ]}
-              placeholder="Select a category"
-              style={{ width: '100%' }}
-            />
-          </div>
-
-          <div className="p-field">
-            <label htmlFor="cost">Cost (Optional)</label>
-            <InputNumber
-              id="cost"
-              value={cost}
-              onValueChange={(e) => setCost(e.value ?? null)}
-              mode="currency"
-              currency="USD"
-              locale="en-US"
-              placeholder="e.g., 3.99"
-              minFractionDigits={2}
-              maxFractionDigits={2}
-              min={0}
-              max={99999999.99}
-              style={{ width: '100%' }}
-            />
-          </div>
+          <button className="modal-close-button" onClick={handleClose} type="button">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
         </div>
 
-        <div className="nutrients-section">
-          <h3>Nutrients</h3>
+        <form onSubmit={handleSubmit}>
+          <div className="modal-content">
 
-          {foodItemNutrients.map((nutrient, index) => (
-            <div key={index} className="nutrient-row" style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '4px', display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
-              <div className="p-field" style={{ flex: 2, margin: 0 }}>
-                <label htmlFor={`nutrient-${index}`}>Nutrient</label>
-                <Dropdown
-                  id={`nutrient-${index}`}
-                  value={nutrient.nutrient_id}
-                  onChange={(e) => updateNutrient(index, 'nutrient_id', e.value)}
-                  options={nutrients.map((n) => ({
-                    label: `${n.nutrient_name} (${n.nutrient_abbreviation})`,
-                    value: n.id
-                  }))}
-                  placeholder="Select a nutrient"
-                  style={{ width: '100%' }}
+            {/* Item Name */}
+            <div className="form-section">
+              <label className="form-label">Item Name</label>
+              <input
+                type="text"
+                placeholder="e.g., Banana, Energy Gel"
+                className="input-field"
+                value={itemName}
+                onChange={(e) => setItemName(e.target.value)}
+                required
+              />
+            </div>
+
+            {/* Category */}
+            <div className="form-section">
+              <label className="form-label">Category</label>
+              <div className="category-pills">
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.value}
+                    type="button"
+                    className={`category-pill ${category === cat.value ? 'selected' : ''}`}
+                    style={{
+                      background: `${cat.color}20`,
+                      color: cat.color
+                    }}
+                    onClick={() => handleCategorySelect(cat.value)}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Brand */}
+            <div className="form-section">
+              <label className="form-label">
+                Brand <span className="form-label-optional">(optional)</span>
+              </label>
+              <input
+                type="text"
+                placeholder="e.g., SIS, Maurten, Clif"
+                className="input-field"
+                value={brand}
+                onChange={(e) => setBrand(e.target.value)}
+              />
+            </div>
+
+            {/* Cost Per Serving */}
+            <div className="form-section">
+              <label className="form-label">Cost Per Serving</label>
+              <div className="cost-input-wrapper">
+                <span className="currency-symbol">$</span>
+                <input
+                  type="text"
+                  className="input-field"
+                  value={cost}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Allow only numbers and decimal point
+                    if (/^\d*\.?\d{0,2}$/.test(value)) {
+                      setCost(value);
+                    }
+                  }}
+                  onBlur={() => {
+                    // Format to 2 decimal places on blur
+                    const num = parseFloat(cost) || 0;
+                    setCost(num.toFixed(2));
+                  }}
                 />
               </div>
+            </div>
 
-              <div className="p-field" style={{ flex: 1, margin: 0 }}>
-                <label htmlFor={`quantity-${index}`}>Quantity</label>
-                <InputNumber
-                  id={`quantity-${index}`}
-                  value={typeof nutrient.quantity === 'string' ? parseFloat(nutrient.quantity) || undefined : nutrient.quantity}
-                  onValueChange={(e) => updateNutrient(index, 'quantity', e.value || '')}
-                  placeholder="e.g., 100"
-                  minFractionDigits={0}
-                  maxFractionDigits={2}
-                  style={{ width: '100%' }}
-                />
-              </div>
+            {/* Nutrients Section */}
+            <div className="form-section">
+              <label className="form-label">
+                Nutrients <span className="form-label-optional">(tap to add)</span>
+              </label>
 
-              <div className="p-field" style={{ flex: 1, margin: 0 }}>
-                <label htmlFor={`unit-${index}`}>Unit</label>
-                <Dropdown
-                  id={`unit-${index}`}
-                  value={nutrient.unit}
-                  onChange={(e) => updateNutrient(index, 'unit', e.value)}
-                  options={[
-                    { label: 'g (grams)', value: 'g' },
-                    { label: 'mg (milligrams)', value: 'mg' }
-                  ]}
-                  placeholder="Select unit"
-                  style={{ width: '100%' }}
-                />
-              </div>
+              {fetchingNutrients ? (
+                <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>Loading nutrients...</p>
+              ) : (
+                <div className="nutrient-grid">
+                  {nutrients.map((nutrient) => {
+                    const unit = nutrient.nutrient_abbreviation.toLowerCase().includes('sodium') ||
+                                 nutrient.nutrient_abbreviation.toLowerCase().includes('caffeine')
+                                 ? 'mg'
+                                 : 'g';
 
-              {foodItemNutrients.length > 1 && (
-                <Button
-                  type="button"
-                  onClick={() => removeNutrientRow(index)}
-                  icon="pi pi-trash"
-                  severity="danger"
-                  outlined
-                  style={{ marginBottom: '0' }}
-                />
+                    return (
+                      <div
+                        key={nutrient.id}
+                        className="nutrient-card"
+                        onClick={() => focusNutrientInput(nutrient.id)}
+                      >
+                        <div className="nutrient-card-header">
+                          <span className="nutrient-card-label">{nutrient.nutrient_name}</span>
+                          <span className="nutrient-card-unit">{unit}</span>
+                        </div>
+                        <input
+                          ref={(el) => { inputRefs.current[nutrient.id] = el; }}
+                          type="text"
+                          placeholder="—"
+                          value={nutrientValues[nutrient.id] || ''}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            // Allow only numbers and decimal point
+                            if (/^\d*\.?\d{0,2}$/.test(value) || value === '') {
+                              handleNutrientChange(nutrient.id, value);
+                            }
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
-          ))}
 
-          <Button
-            type="button"
-            onClick={addNutrientRow}
-            icon="pi pi-plus"
-            label="Add Nutrient"
-            outlined
-          />
-        </div>
+          </div>
 
-        <Button
-          type="submit"
-          disabled={loading || !itemName}
-          label={loading ? 'Creating...' : 'Create Food Item'}
-          icon={loading ? 'pi pi-spin pi-spinner' : 'pi pi-check'}
-          severity="success"
-          raised
-          style={{ width: '100%', marginTop: '1rem', backgroundColor: '#22c55e', borderColor: '#22c55e', color: 'white', fontWeight: 600 }}
-        />
-      </form>
-    </Card>
+          {/* Action Buttons */}
+          <div className="modal-footer">
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={handleClose}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={loading || !itemName.trim()}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              {loading ? 'Creating...' : 'Create Item'}
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
   );
 };
 

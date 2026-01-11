@@ -219,12 +219,12 @@ const Users = () => {
             className="search-input"
           />
         </div>
-        <button className="filter-button">
+        {/* <button className="filter-button">
           <i className="pi pi-filter"></i>
-        </button>
-        <button className="add-user-button">
+        </button> */}
+        {/* <button className="add-user-button">
           <i className="pi pi-user-plus"></i>
-        </button>
+        </button> */}
       </div>
 
       {/* User Count */}

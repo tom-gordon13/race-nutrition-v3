@@ -1,32 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Dialog } from 'primereact/dialog';
-import { Button } from 'primereact/button';
-import { InputText } from 'primereact/inputtext';
-import { InputNumber } from 'primereact/inputnumber';
-import { Dropdown } from 'primereact/dropdown';
-import { Message } from 'primereact/message';
-import { ProgressSpinner } from 'primereact/progressspinner';
+import React, { useState, useEffect, useRef } from 'react';
 import { API_URL } from '../../config/api';
-
-
-
-const FOOD_CATEGORIES = [
-  'ENERGY_GEL',
-  'ENERGY_BAR',
-  'SPORTS_DRINK',
-  'FRUIT',
-  'SNACK',
-  'OTHER'
-] as const;
-
-const CATEGORY_DISPLAY_NAMES: Record<string, string> = {
-  'ENERGY_GEL': 'Gel',
-  'ENERGY_BAR': 'Bar',
-  'SPORTS_DRINK': 'Drink',
-  'FRUIT': 'Fruit',
-  'SNACK': 'Snack',
-  'OTHER': 'Other'
-};
+import '../shared/ModalSheet.css';
 
 interface Nutrient {
   id: string;
@@ -34,30 +8,27 @@ interface Nutrient {
   nutrient_abbreviation: string;
 }
 
-// Map nutrient names to their standard units
-const getNutrientUnit = (nutrientName: string): string => {
-  const name = nutrientName.toLowerCase();
-
-  // Milligram nutrients
-  if (name.includes('sodium') ||
-      name.includes('potassium') ||
-      name.includes('caffeine') ||
-      name.includes('calcium') ||
-      name.includes('iron') ||
-      name.includes('magnesium') ||
-      name.includes('zinc') ||
-      name.includes('vitamin')) {
-    return 'mg';
-  }
-
-  // Gram nutrients (default for most macros)
-  return 'g';
-};
+interface NutrientValue {
+  [nutrientId: string]: string;
+}
 
 interface FoodItemNutrient {
-  nutrient_id: string;
-  quantity: number | string;
+  id: string;
+  quantity: number;
   unit: string;
+  nutrient: Nutrient;
+}
+
+interface FoodItem {
+  id: string;
+  item_name: string;
+  brand?: string | null;
+  category?: string | null;
+  cost?: number | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  foodItemNutrients: FoodItemNutrient[];
 }
 
 interface CreateFoodItemDialogProps {
@@ -65,103 +36,191 @@ interface CreateFoodItemDialogProps {
   onHide: () => void;
   onCreate: () => void;
   auth0Sub: string;
+  mode?: 'create' | 'edit';
+  existingItem?: FoodItem | null;
 }
+
+// Category configuration with colors matching the design
+const CATEGORIES = [
+  { value: 'ENERGY_GEL', label: 'Gel', color: '#14b8a6' },
+  { value: 'SPORTS_DRINK', label: 'Drink', color: '#f97316' },
+  { value: 'ENERGY_BAR', label: 'Bar', color: '#f59e0b' },
+  { value: 'FRUIT', label: 'Fruit', color: '#d946ef' },
+  { value: 'SNACK', label: 'Chews', color: '#6366f1' },
+  { value: 'OTHER', label: 'Other', color: '#6b7280' }
+];
+
+// Helper function to determine the correct unit for a nutrient
+const getNutrientUnit = (nutrient: Nutrient): string => {
+  const nameLower = nutrient.nutrient_name.toLowerCase();
+  const abbrevLower = nutrient.nutrient_abbreviation.toLowerCase();
+
+  // Nutrients that should be in milligrams (mg)
+  const mgNutrients = [
+    'sodium', 'caffeine', 'potassium', 'calcium', 'iron',
+    'magnesium', 'zinc', 'vitamin', 'cholesterol'
+  ];
+
+  // Check if any of the mg nutrient keywords are in the name or abbreviation
+  for (const keyword of mgNutrients) {
+    if (nameLower.includes(keyword) || abbrevLower.includes(keyword)) {
+      return 'mg';
+    }
+  }
+
+  // Default to grams for macronutrients (carbs, protein, fat, fiber, sugar, etc.)
+  return 'g';
+};
 
 export const CreateFoodItemDialog: React.FC<CreateFoodItemDialogProps> = ({
   visible,
   onHide,
   onCreate,
   auth0Sub,
+  mode = 'create',
+  existingItem = null,
 }) => {
   const [itemName, setItemName] = useState('');
   const [brand, setBrand] = useState('');
   const [category, setCategory] = useState('');
-  const [cost, setCost] = useState<number>(0);
+  const [cost, setCost] = useState('0.00');
+  const [nutrients, setNutrients] = useState<Nutrient[]>([]);
+  const [nutrientValues, setNutrientValues] = useState<NutrientValue>({});
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const [isEditingCost, setIsEditingCost] = useState(false);
-  const [availableNutrients, setAvailableNutrients] = useState<Nutrient[]>([]);
-  const [nutrients, setNutrients] = useState<FoodItemNutrient[]>([]);
+  const [fetchingNutrients, setFetchingNutrients] = useState(true);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
 
-  // Detect mobile screen size
+  const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+
+  // Handle animation timing for smooth slide-up and slide-down
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
+    if (visible) {
+      // Start rendering immediately
+      setShouldRender(true);
+      // Small delay to ensure the browser calculates the initial state
+      const timer = setTimeout(() => {
+        setIsAnimating(true);
+      }, 10);
+      return () => clearTimeout(timer);
+    } else {
+      // Start slide-out animation
+      setIsAnimating(false);
+      // Wait for animation to complete before unmounting
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+      }, 400); // Match the CSS transition duration
+      return () => clearTimeout(timer);
+    }
+  }, [visible]);
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Fetch available nutrients
+  // Fetch available nutrients on component mount
   useEffect(() => {
     const fetchNutrients = async () => {
       try {
         const response = await fetch(`${API_URL}/api/nutrients`);
         if (!response.ok) throw new Error('Failed to fetch nutrients');
         const data = await response.json();
-        setAvailableNutrients(data.nutrients);
+        setNutrients(data.nutrients);
       } catch (err) {
         console.error('Error fetching nutrients:', err);
+      } finally {
+        setFetchingNutrients(false);
       }
     };
 
     fetchNutrients();
   }, []);
 
-  // Reset form when dialog opens
+  // Populate form when editing
   useEffect(() => {
-    if (visible) {
-      setItemName('');
-      setBrand('');
-      setCategory('');
-      setCost(0);
-      setNutrients([]);
-      setError(null);
-      setIsEditingCost(false);
-    }
-  }, [visible]);
+    if (mode === 'edit' && existingItem) {
+      setItemName(existingItem.item_name || '');
+      setBrand(existingItem.brand || '');
+      setCategory(existingItem.category || '');
+      setCost(existingItem.cost ? existingItem.cost.toFixed(2) : '0.00');
 
-  const addNutrientRow = () => {
-    setNutrients([...nutrients, { nutrient_id: '', quantity: '', unit: '' }]);
+      // Populate nutrient values
+      const nutrientVals: NutrientValue = {};
+      existingItem.foodItemNutrients.forEach((fin) => {
+        nutrientVals[fin.nutrient.id] = fin.quantity.toString();
+      });
+      setNutrientValues(nutrientVals);
+    }
+  }, [mode, existingItem]);
+
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      handleClose();
+    }
   };
 
-  const removeNutrientRow = (index: number) => {
-    const updated = nutrients.filter((_, i) => i !== index);
-    setNutrients(updated);
+  const handleClose = () => {
+    // Reset form (won't be visible during slide-out animation)
+    setItemName('');
+    setBrand('');
+    setCategory('');
+    setCost('0.00');
+    setNutrientValues({});
+    // Trigger parent to set visible=false, which will start the slide-out animation
+    onHide();
   };
 
-  const handleCreate = async () => {
-    if (!itemName.trim()) {
-      setError('Food item name is required');
-      return;
-    }
+  const handleCategorySelect = (categoryValue: string) => {
+    setCategory(categoryValue === category ? '' : categoryValue);
+  };
 
+  const handleNutrientChange = (nutrientId: string, value: string) => {
+    setNutrientValues(prev => ({
+      ...prev,
+      [nutrientId]: value
+    }));
+  };
+
+  const focusNutrientInput = (nutrientId: string) => {
+    const input = inputRefs.current[nutrientId];
+    if (input) {
+      input.focus();
+      input.select();
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
-    setError(null);
 
     try {
-      // Filter out empty nutrient rows
-      const validNutrients = nutrients.filter(
-        n => n.nutrient_id && n.quantity && n.unit
-      ).map(n => ({
-        nutrient_id: n.nutrient_id,
-        quantity: parseFloat(n.quantity.toString()),
-        unit: n.unit
-      }));
+      // Build nutrients array from nutrientValues
+      const foodItemNutrients = Object.entries(nutrientValues)
+        .filter(([_, value]) => value && value.trim() !== '')
+        .map(([nutrientId, value]) => {
+          const nutrient = nutrients.find(n => n.id === nutrientId);
+          const unit = nutrient ? getNutrientUnit(nutrient) : 'g';
+
+          return {
+            nutrient_id: nutrientId,
+            quantity: parseFloat(value),
+            unit
+          };
+        });
 
       const payload = {
         item_name: itemName,
         brand: brand || undefined,
         category: category || undefined,
-        cost: cost > 0 ? cost : undefined,
+        cost: parseFloat(cost) || undefined,
         auth0_sub: auth0Sub,
-        nutrients: validNutrients
+        nutrients: foodItemNutrients
       };
 
-      const response = await fetch(`${API_URL}/api/food-items`, {
-        method: 'POST',
+      const url = mode === 'edit' && existingItem
+        ? `${API_URL}/api/food-items/${existingItem.id}`
+        : `${API_URL}/api/food-items`;
+
+      const method = mode === 'edit' ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -170,464 +229,190 @@ export const CreateFoodItemDialog: React.FC<CreateFoodItemDialogProps> = ({
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Failed to create food item');
+        throw new Error(data.error || `Failed to ${mode} food item`);
       }
 
+      // Success - trigger refetch and close
       onCreate();
-      onHide();
+      handleClose();
+
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      console.error(`Error ${mode}ing food item:`, err);
+      alert(err instanceof Error ? err.message : `Failed to ${mode} food item`);
     } finally {
       setLoading(false);
     }
   };
 
+  if (!shouldRender) return null;
+
   return (
-    <Dialog
-      header=""
-      visible={visible}
-      style={{
-        width: isMobile ? '100%' : '700px',
-        maxHeight: '90vh',
-        borderRadius: '20px'
-      }}
-      onHide={onHide}
-      position={isMobile ? "bottom" : "center"}
-      modal
-      dismissableMask
-      closable={false}
-      className="food-item-edit-dialog"
-      pt={{
-        root: { style: { borderRadius: '20px', overflow: 'hidden' } },
-        header: { style: { display: 'none' } },
-        content: { style: { padding: 0, borderRadius: '20px', overflow: 'hidden' } }
-      }}
+    <div
+      className={`food-item-modal-overlay ${isAnimating ? 'active' : ''}`}
+      onClick={handleOverlayClick}
     >
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: '#e5e7eb',
-        padding: '1rem',
-        gap: '0.5rem',
-        borderRadius: '20px',
-        maxHeight: '90vh',
-        overflow: 'auto'
-      }}>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <div style={{
-              fontSize: '0.75rem',
-              fontWeight: 500,
-              color: '#9ca3af',
-              letterSpacing: '0.1em',
-              marginBottom: '0.5rem'
-            }}>
-              CREATE NEW
-            </div>
-            <div style={{
-              fontSize: '1.5rem',
-              fontWeight: 700,
-              color: '#000',
-              lineHeight: 1.2
-            }}>
-              {itemName || 'Food Item'}
-            </div>
+      <div className="food-item-modal-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-handle"></div>
+
+        {/* Modal Header */}
+        <div className="modal-header">
+          <div className="modal-header-content">
+            <p className="modal-header-label">{mode === 'edit' ? 'Edit' : 'Create New'}</p>
+            <h2 className="modal-header-title">Food Item</h2>
           </div>
-          <button
-            onClick={onHide}
-            style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              backgroundColor: '#d1d5db',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.25rem',
-              color: '#6b7280'
-            }}
-          >
+          <button className="modal-close-button" onClick={handleClose} type="button">
             ✕
           </button>
         </div>
 
-        {/* Error Message */}
-        {error && (
-          <Message severity="error" text={error} style={{ width: '100%', marginBottom: '0.5rem' }} />
-        )}
+        <form onSubmit={handleSubmit}>
+          <div className="modal-content">
 
-        {/* BASIC INFO Section */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          padding: '0.875rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.75rem'
-        }}>
-          <div style={{
-            fontSize: '0.75rem',
-            fontWeight: 600,
-            color: '#9ca3af',
-            letterSpacing: '0.1em'
-          }}>
-            BASIC INFO
-          </div>
-
-          {/* Food Name */}
-          <InputText
-            value={itemName}
-            onChange={(e) => setItemName(e.target.value)}
-            placeholder="e.g., Banana, Energy Gel"
-            disabled={loading}
-            style={{
-              width: '100%',
-              fontSize: '1.125rem',
-              fontWeight: 700,
-              border: 'none',
-              borderBottom: '2px solid #e5e7eb',
-              borderRadius: 0,
-              padding: '0.375rem 0',
-              outline: 'none'
-            }}
-          />
-
-          {/* Category and Brand */}
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <div style={{ flex: 1 }}>
-              <div style={{
-                fontSize: '0.75rem',
-                color: '#9ca3af',
-                marginBottom: '0.5rem',
-                fontWeight: 500
-              }}>
-                Category
-              </div>
-              <Dropdown
-                value={category}
-                onChange={(e) => setCategory(e.value)}
-                options={FOOD_CATEGORIES.map((cat) => ({
-                  label: CATEGORY_DISPLAY_NAMES[cat] || cat,
-                  value: cat
-                }))}
-                placeholder="Select category"
-                style={{
-                  width: '100%',
-                  backgroundColor: '#f3f4f6',
-                  border: 'none',
-                  borderRadius: '6px'
-                }}
-                pt={{
-                  input: { style: { fontSize: '0.875rem', fontWeight: 600, color: '#000', backgroundColor: '#f3f4f6' } },
-                  trigger: { style: { color: '#000' } }
-                }}
+            {/* Item Name */}
+            <div className="form-section">
+              <label className="form-label">Item Name</label>
+              <input
+                type="text"
+                placeholder="e.g., Banana, Energy Gel"
+                className="input-field"
+                value={itemName}
+                onChange={(e) => setItemName(e.target.value)}
+                required
               />
             </div>
 
-            <div style={{ flex: 1 }}>
-              <div style={{
-                fontSize: '0.75rem',
-                color: '#9ca3af',
-                marginBottom: '0.5rem',
-                fontWeight: 500
-              }}>
-                Brand
+            {/* Category */}
+            <div className="form-section">
+              <label className="form-label">Category</label>
+              <div className="category-pills">
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.value}
+                    type="button"
+                    className={`category-pill ${category === cat.value ? 'selected' : ''}`}
+                    style={{
+                      background: `${cat.color}20`,
+                      color: cat.color
+                    }}
+                    onClick={() => handleCategorySelect(cat.value)}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
               </div>
-              <InputText
+            </div>
+
+            {/* Brand */}
+            <div className="form-section">
+              <label className="form-label">
+                Brand <span className="form-label-optional">(optional)</span>
+              </label>
+              <input
+                type="text"
+                placeholder="e.g., SIS, Maurten, Clif"
+                className="input-field"
                 value={brand}
                 onChange={(e) => setBrand(e.target.value)}
-                placeholder="Add brand"
-                style={{
-                  width: '100%',
-                  backgroundColor: '#f3f4f6',
-                  border: 'none',
-                  borderRadius: '6px',
-                  padding: '0.625rem',
-                  fontSize: '0.875rem',
-                  color: brand ? '#000' : '#9ca3af'
-                }}
               />
             </div>
-          </div>
-        </div>
 
-        {/* COST PER SERVING Section */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          padding: '0.875rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.5rem'
-        }}>
-          <div style={{
-            fontSize: '0.75rem',
-            fontWeight: 600,
-            color: '#9ca3af',
-            letterSpacing: '0.1em'
-          }}>
-            COST PER SERVING
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            {!isEditingCost ? (
-              <div style={{
-                fontSize: '1.875rem',
-                fontWeight: 700,
-                color: '#000'
-              }}>
-                {new Intl.NumberFormat('en-US', {
-                  style: 'currency',
-                  currency: 'USD',
-                }).format(cost || 0)}
-              </div>
-            ) : (
-              <InputNumber
-                value={cost || 0}
-                onValueChange={(e) => setCost(e.value || 0)}
-                mode="currency"
-                currency="USD"
-                locale="en-US"
-                onBlur={() => setIsEditingCost(false)}
-                autoFocus
-                inputStyle={{
-                  fontSize: '1.875rem',
-                  fontWeight: 700,
-                  border: 'none',
-                  borderBottom: '2px solid #6366f1',
-                  borderRadius: 0,
-                  padding: '0.25rem 0',
-                  outline: 'none',
-                  backgroundColor: 'transparent'
-                }}
-              />
-            )}
-            <Button
-              label="Edit"
-              onClick={() => setIsEditingCost(true)}
-              style={{
-                backgroundColor: '#f3f4f6',
-                border: 'none',
-                color: '#6b7280',
-                fontWeight: 600,
-                padding: '0.5rem 1rem',
-                borderRadius: '6px',
-                fontSize: '0.875rem'
-              }}
-            />
-          </div>
-        </div>
-
-        {/* NUTRIENTS Section */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          padding: '0.5rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.5rem'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{
-              fontSize: '0.75rem',
-              fontWeight: 600,
-              color: '#9ca3af',
-              letterSpacing: '0.1em'
-            }}>
-              NUTRIENTS
-            </div>
-            <Button
-              label="Add"
-              icon="pi pi-plus"
-              onClick={addNutrientRow}
-              style={{
-                backgroundColor: '#6366f1',
-                border: 'none',
-                color: 'white',
-                fontWeight: 600,
-                padding: '0.5rem 0.875rem',
-                borderRadius: '6px',
-                fontSize: '0.875rem'
-              }}
-            />
-          </div>
-
-          {/* Nutrient List */}
-          {nutrients.map((nutrient, index) => {
-            return (
-              <div
-                key={index}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.5rem',
-                  backgroundColor: '#f9fafb',
-                  borderRadius: '8px'
-                }}
-              >
-                {/* Nutrient Info */}
-                <div style={{ flex: 2, minWidth: 0, display: 'flex', alignItems: 'center' }}>
-                  <Dropdown
-                    value={availableNutrients.find(n => n.id === nutrient.nutrient_id) || null}
-                    onChange={(e) => {
-                      if (e.value && e.value.id) {
-                        const unit = getNutrientUnit(e.value.nutrient_name);
-                        const updated = [...nutrients];
-                        updated[index] = {
-                          ...updated[index],
-                          nutrient_id: e.value.id,
-                          unit: unit
-                        };
-                        setNutrients(updated);
-                      }
-                    }}
-                    options={availableNutrients}
-                    optionLabel="nutrient_name"
-                    placeholder="Select nutrient"
-                    style={{ width: '100%', border: 'none', backgroundColor: 'transparent' }}
-                  />
-                </div>
-
-                {/* Quantity with unit label */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.25rem',
-                  flex: 1,
-                  justifyContent: 'flex-end'
-                }}>
-                  <InputNumber
-                    value={typeof nutrient.quantity === 'string' ? parseFloat(nutrient.quantity) || null : (nutrient.quantity || null)}
-                    onValueChange={(e) => {
-                      const updated = [...nutrients];
-                      updated[index] = {
-                        ...updated[index],
-                        quantity: e.value ?? ''
-                      };
-                      setNutrients(updated);
-                    }}
-                    placeholder="0"
-                    minFractionDigits={0}
-                    maxFractionDigits={2}
-                    min={0}
-                    inputStyle={{
-                      width: '45px',
-                      textAlign: 'right',
-                      fontSize: '1rem',
-                      fontWeight: 600,
-                      border: 'none',
-                      borderBottom: '1px solid #e5e7eb',
-                      borderRadius: 0,
-                      padding: '0.25rem 0.25rem',
-                      backgroundColor: 'transparent'
-                    }}
-                  />
-                  <span style={{
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    color: '#6b7280',
-                    minWidth: '30px',
-                    textAlign: 'left'
-                  }}>
-                    {nutrient.unit || '-'}
-                  </span>
-                </div>
-
-                {/* Delete Button */}
-                <Button
-                  icon="pi pi-trash"
-                  onClick={() => removeNutrientRow(index)}
-                  text
-                  rounded
-                  severity="danger"
-                  style={{
-                    color: '#ef4444',
-                    flexShrink: 0,
-                    padding: 0,
-                    margin: 0,
-                    minWidth: 'auto',
-                    width: '1.5rem',
-                    height: '1.5rem'
+            {/* Cost Per Serving */}
+            <div className="form-section">
+              <label className="form-label">Cost Per Serving</label>
+              <div className="cost-input-wrapper">
+                <span className="currency-symbol">$</span>
+                <input
+                  type="text"
+                  className="input-field"
+                  value={cost}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Allow only numbers and decimal point
+                    if (/^\d*\.?\d{0,2}$/.test(value)) {
+                      setCost(value);
+                    }
                   }}
-                  pt={{
-                    root: { style: { padding: 0, margin: 0 } },
-                    icon: { style: { fontSize: '0.875rem' } }
+                  onBlur={() => {
+                    // Format to 2 decimal places on blur
+                    const num = parseFloat(cost) || 0;
+                    setCost(num.toFixed(2));
                   }}
                 />
               </div>
-            );
-          })}
-
-          {nutrients.length === 0 && (
-            <div style={{
-              padding: '1rem',
-              textAlign: 'center',
-              color: '#9ca3af',
-              fontSize: '0.875rem'
-            }}>
-              No nutrients added yet. Click "Add" to add nutrients.
             </div>
-          )}
-        </div>
 
-        {/* Footer Buttons */}
-        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0' }}>
-          <Button
-            label="Cancel"
-            onClick={onHide}
-            disabled={loading}
-            style={{
-              flex: 1,
-              backgroundColor: '#d1d5db',
-              border: 'none',
-              color: '#6b7280',
-              fontWeight: 600,
-              padding: '0.75rem',
-              borderRadius: '8px',
-              fontSize: '0.9375rem'
-            }}
-          />
-          <Button
-            label={loading ? 'Creating...' : 'Create Food Item'}
-            icon={loading ? 'pi pi-spin pi-spinner' : 'pi pi-check'}
-            onClick={handleCreate}
-            disabled={loading || !itemName.trim()}
-            style={{
-              flex: 1,
-              backgroundColor: '#1f2937',
-              border: 'none',
-              color: 'white',
-              fontWeight: 600,
-              padding: '0.75rem',
-              borderRadius: '8px',
-              fontSize: '0.9375rem'
-            }}
-          />
-        </div>
+            {/* Nutrients Section */}
+            <div className="form-section">
+              <label className="form-label">
+                Nutrients <span className="form-label-optional">(tap to add)</span>
+              </label>
 
-        {/* Loading Overlay */}
-        {loading && (
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.3)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: '20px',
-            zIndex: 10
-          }}>
-            <ProgressSpinner style={{ width: '50px', height: '50px' }} />
+              {fetchingNutrients ? (
+                <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>Loading nutrients...</p>
+              ) : (
+                <div className="nutrient-grid">
+                  {nutrients.map((nutrient) => {
+                    const unit = getNutrientUnit(nutrient);
+
+                    return (
+                      <div
+                        key={nutrient.id}
+                        className="nutrient-card"
+                        onClick={() => focusNutrientInput(nutrient.id)}
+                      >
+                        <div className="nutrient-card-header">
+                          <span className="nutrient-card-label">{nutrient.nutrient_name}</span>
+                          <span className="nutrient-card-unit">{unit}</span>
+                        </div>
+                        <input
+                          ref={(el) => { inputRefs.current[nutrient.id] = el; }}
+                          type="text"
+                          placeholder="—"
+                          value={nutrientValues[nutrient.id] || ''}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            // Allow only numbers and decimal point
+                            if (/^\d*\.?\d{0,2}$/.test(value) || value === '') {
+                              handleNutrientChange(nutrient.id, value);
+                            }
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
           </div>
-        )}
+
+          {/* Action Buttons */}
+          <div className="modal-footer">
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={handleClose}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={loading || !itemName.trim()}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              {loading
+                ? (mode === 'edit' ? 'Saving...' : 'Creating...')
+                : (mode === 'edit' ? 'Save Changes' : 'Create Item')
+              }
+            </button>
+          </div>
+        </form>
+
       </div>
-    </Dialog>
+    </div>
   );
 };
