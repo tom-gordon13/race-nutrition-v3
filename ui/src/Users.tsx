@@ -189,6 +189,16 @@ const Users = () => {
 
   return (
     <div className="users-page">
+      {/* Helper Text */}
+      <div className="users-helper-text">
+        <div className="helper-icon">
+          <i className="pi pi-users"></i>
+        </div>
+        <div className="helper-message">
+          <strong>Connections</strong> let you share plans and collaborate with other athletes.
+        </div>
+      </div>
+
       {/* Tab Navigation */}
       <div className="users-tabs-wrapper">
         <div className="users-tabs">

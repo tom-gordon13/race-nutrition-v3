@@ -1,6 +1,5 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import { useState, useEffect } from 'react';
-import { Avatar } from 'primereact/avatar';
 import { Toast } from 'primereact/toast';
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -162,132 +161,151 @@ export default function Preferences() {
     return selectedColor?.hex || '#9ca3af';
   };
 
+  // Get initials from user name
+  const getInitials = (): string => {
+    if (!user?.name) return 'U';
+    const names = user.name.split(' ');
+    if (names.length >= 2) {
+      return names[0][0].toUpperCase();
+    }
+    return user.name[0].toUpperCase();
+  };
+
   return (
     <div className="preferences-page">
       <Toast ref={toast} />
 
       {/* Header */}
-      <div className="preferences-header">
+      <header className="preferences-header">
         <button onClick={handleBack} className="back-button">
-          <i className="pi pi-chevron-left" />
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
         </button>
         <h1 className="preferences-title">Settings</h1>
+      </header>
+
+      {/* Spacer */}
+      <div className="header-spacer"></div>
+
+      {/* Divider */}
+      <div className="section-divider"></div>
+
+      {/* Account Section */}
+      <div className="section-label-wrapper">
+        <p className="section-label">ACCOUNT</p>
       </div>
 
-      <div className="preferences-content">
-        {/* ACCOUNT Section */}
-        <div className="preferences-section">
-          <h2 className="section-header">ACCOUNT</h2>
-          <div className="account-card">
-            <Avatar
-              label={user?.name?.charAt(0).toUpperCase()}
-              icon="pi pi-user"
-              style={{ backgroundColor: '#F97316', color: 'white', width: '70px', height: '70px', fontSize: '2rem', flexShrink: 0 }}
-              shape="circle"
-            />
-            <div className="account-info">
-              <div className="account-name">{user?.name || 'User'}</div>
-              <div className="account-email">{user?.email || 'No email'}</div>
-            </div>
-            <i className="pi pi-chevron-right" style={{ color: '#d1d5db', fontSize: '1.25rem' }} />
-          </div>
+      <div className="account-card">
+        <div className="account-avatar">
+          {getInitials()}
         </div>
-
-        {/* DISPLAY Section */}
-        <div className="preferences-section">
-          <h2 className="section-header">DISPLAY</h2>
-
-          {/* Dark Mode */}
-          <div className="display-item">
-            <div className="display-icon dark-mode-icon">
-              <i className="pi pi-moon" style={{ color: 'white', fontSize: '1.5rem' }} />
-            </div>
-            <div className="display-content">
-              <div className="display-label">Dark Mode</div>
-              <div className="display-sublabel">Coming soon</div>
-            </div>
-            <div className="display-toggle disabled">
-              {/* Placeholder for toggle switch */}
-            </div>
-          </div>
-
-          {/* Units */}
-          <div className="display-item">
-            <div className="display-icon units-icon">
-              <i className="pi pi-chart-line" style={{ color: 'white', fontSize: '1.5rem' }} />
-            </div>
-            <div className="display-content">
-              <div className="display-label">Units</div>
-            </div>
-            <div className="display-value">
-              <span>Metric</span>
-              <i className="pi pi-chevron-right" style={{ color: '#d1d5db', marginLeft: '0.5rem' }} />
-            </div>
-          </div>
+        <div className="account-info">
+          <h3 className="account-name">{user?.name || 'User'}</h3>
+          <p className="account-email">{user?.email || 'No email'}</p>
         </div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+      </div>
 
-        {/* CATEGORY COLORS Section */}
-        <div className="preferences-section">
-          <h2 className="section-header">CATEGORY COLORS</h2>
+      {/* Divider */}
+      <div className="section-divider"></div>
 
-          {loading ? (
-            <LoadingSpinner />
-          ) : (
-            <div className="category-colors-list">
-              {categories.map((category) => {
-                const selectedColorId = userPreferences.get(category.id);
-                const selectedColorHex = getSelectedColorHex(category.id);
-                const categoryName = CATEGORY_DISPLAY_NAMES[category.category_name] || category.category_name;
+      {/* Display Section */}
+      <div className="section-label-wrapper">
+        <p className="section-label">DISPLAY</p>
+      </div>
 
-                return (
-                  <div key={category.id} className="category-color-card">
-                    <div className="category-header">
-                      <span className="category-name">{categoryName}</span>
-                      <div
-                        className="category-indicator"
-                        style={{ backgroundColor: selectedColorHex }}
-                      />
-                    </div>
-                    <div className="color-picker">
-                      {colors.map((color) => {
-                        const isSelected = selectedColorId === color.id;
+      <div className="display-card">
+        <div className="display-item">
+          <div className="dark-mode-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+          </div>
+          <div className="display-content">
+            <p className="display-label">Dark Mode</p>
+            <p className="display-sublabel">Coming soon</p>
+          </div>
+          <div className="toggle-switch disabled"></div>
+        </div>
+      </div>
 
-                        return (
-                          <button
-                            key={color.id}
-                            className={`color-option ${isSelected ? 'selected' : ''}`}
-                            style={{
-                              backgroundColor: color.hex,
-                              color: color.hex
-                            }}
-                            onClick={() => handleColorSelect(category.id, color.id)}
-                            title={color.color_name}
-                          >
-                            {isSelected && (
-                              <i className="pi pi-check" style={{ color: 'white', fontSize: '1rem', fontWeight: 'bold' }} />
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
+      {/* Divider */}
+      <div className="section-divider"></div>
+
+      {/* Category Colors Section */}
+      <div className="section-label-wrapper">
+        <p className="section-label">CATEGORY COLORS</p>
+      </div>
+
+      {loading ? (
+        <LoadingSpinner />
+      ) : (
+        <>
+          {categories.map((category, index) => {
+            const selectedColorId = userPreferences.get(category.id);
+            const selectedColorHex = getSelectedColorHex(category.id);
+            const categoryName = CATEGORY_DISPLAY_NAMES[category.category_name] || category.category_name;
+
+            return (
+              <div key={category.id}>
+                <div className="category-color-card">
+                  <div className="category-header">
+                    <p className="category-name">{categoryName}</p>
+                    <div
+                      className="category-indicator"
+                      style={{ backgroundColor: selectedColorHex }}
+                    />
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                  <div className="color-picker">
+                    {colors.map((color) => {
+                      const isSelected = selectedColorId === color.id;
 
-        {/* Sign Out Section */}
-        <div className="preferences-section">
-          <h2 className="section-header">ACCOUNT</h2>
-          <button className="sign-out-button" onClick={handleSignOut}>
-            <div className="sign-out-icon">
-              <i className="pi pi-sign-out" style={{ color: '#ef4444', fontSize: '1.25rem' }} />
-            </div>
-            <span className="sign-out-text">Sign Out</span>
-          </button>
-        </div>
+                      return (
+                        <button
+                          key={color.id}
+                          className={`color-option ${isSelected ? 'selected' : ''}`}
+                          style={{
+                            backgroundColor: color.hex,
+                            color: color.hex
+                          }}
+                          onClick={() => handleColorSelect(category.id, color.id)}
+                          title={color.color_name}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+                {index < categories.length - 1 && <div className="category-divider"></div>}
+              </div>
+            );
+          })}
+        </>
+      )}
+
+      {/* Divider */}
+      <div className="section-divider"></div>
+
+      {/* Sign Out Section */}
+      <div className="section-label-wrapper">
+        <p className="section-label">ACCOUNT</p>
       </div>
+
+      <button className="sign-out-card" onClick={handleSignOut}>
+        <div className="sign-out-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+        </div>
+        <p className="sign-out-text">Sign Out</p>
+      </button>
+
+      {/* Bottom spacing */}
+      <div style={{ height: '7rem' }}></div>
     </div>
   );
 }

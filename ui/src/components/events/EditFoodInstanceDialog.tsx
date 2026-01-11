@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog } from 'primereact/dialog';
-import { Button } from 'primereact/button';
-import { InputText } from 'primereact/inputtext';
-import { InputNumber } from 'primereact/inputnumber';
 import { Message } from 'primereact/message';
 import { ProgressSpinner } from 'primereact/progressspinner';
+import '../shared/ModalSheet.css';
 
 interface FoodItemNutrient {
   id: string;
@@ -73,17 +70,25 @@ export const EditFoodInstanceDialog: React.FC<EditFoodInstanceDialogProps> = ({
   const [servings, setServings] = useState<number>(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
 
-  // Detect mobile screen size
+  // Handle animation timing for smooth slide-up and slide-down
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    if (visible) {
+      setShouldRender(true);
+      const timer = setTimeout(() => {
+        setIsAnimating(true);
+      }, 10);
+      return () => clearTimeout(timer);
+    } else {
+      setIsAnimating(false);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [visible]);
 
   useEffect(() => {
     if (foodInstance) {
@@ -143,287 +148,263 @@ export const EditFoodInstanceDialog: React.FC<EditFoodInstanceDialogProps> = ({
     }
   };
 
-  if (!foodInstance) return null;
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onHide();
+    }
+  };
+
+  if (!foodInstance || !shouldRender) return null;
 
   return (
-    <Dialog
-      header=""
-      visible={visible}
-      style={{
-        width: isMobile ? '100%' : '500px',
-        maxHeight: '90vh',
-        borderRadius: '20px'
-      }}
-      onHide={onHide}
-      position={isMobile ? "bottom" : "center"}
-      modal
-      dismissableMask
-      closable={false}
-      pt={{
-        root: { style: { borderRadius: '20px', overflow: 'hidden', zIndex: 15000 } },
-        mask: { style: { zIndex: 14999 } },
-        header: { style: { display: 'none' } },
-        content: { style: { padding: 0, borderRadius: '20px', overflow: 'hidden' } }
-      }}
+    <div
+      className={`modal-sheet-overlay ${isAnimating ? 'active' : ''}`}
+      onClick={handleOverlayClick}
+      style={{ zIndex: 15000 }}
     >
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: '#e5e7eb',
-        padding: '1rem',
-        gap: '0.5rem',
-        borderRadius: '20px'
-      }}>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <div style={{
-              fontSize: '0.75rem',
-              fontWeight: 500,
-              color: '#9ca3af',
-              letterSpacing: '0.1em',
-              marginBottom: '0.5rem'
-            }}>
-              {viewOnly ? 'VIEWING FOOD ITEM' : 'EDITING FOOD ITEM'}
-            </div>
-            <div style={{
-              fontSize: '1.5rem',
-              fontWeight: 700,
-              color: '#000',
-              lineHeight: 1.2
-            }}>
-              {foodInstance.foodItem.item_name}
-            </div>
+      <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-handle"></div>
+
+        {/* Modal Header */}
+        <div className="modal-header">
+          <div className="modal-header-content">
+            <p className="modal-header-label">{viewOnly ? 'VIEWING FOOD ITEM' : 'EDITING FOOD ITEM'}</p>
+            <h2 className="modal-header-title">{foodInstance.foodItem.item_name}</h2>
             {foodInstance.foodItem.brand && (
-              <div style={{
-                fontSize: '0.875rem',
+              <p style={{
+                fontSize: '0.9375rem',
                 color: '#6b7280',
-                marginTop: '0.25rem'
+                marginTop: '0.25rem',
+                textAlign: 'left'
               }}>
                 {foodInstance.foodItem.brand}
-              </div>
+              </p>
             )}
           </div>
           <button
             onClick={onHide}
-            style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              backgroundColor: '#d1d5db',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.25rem',
-              color: '#6b7280'
-            }}
+            className="modal-close-button"
           >
             ✕
           </button>
         </div>
 
-        {/* Error Message */}
-        {error && (
-          <Message severity="error" text={error} style={{ width: '100%', marginBottom: '0.5rem' }} />
-        )}
+        <div className="modal-content" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
 
-        {/* Time Input Section */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '1rem'
-        }}>
-          <div style={{
-            fontSize: '0.875rem',
-            fontWeight: 600,
-            color: '#374151',
-            marginBottom: '0.5rem'
-          }}>
-            Time (HH:MM)
-          </div>
-          <InputText
-            value={timeInput}
-            onChange={(e) => {
-              setTimeInput(e.target.value);
-              setError(null);
-            }}
-            placeholder="0:00"
-            disabled={viewOnly}
-            readOnly={viewOnly}
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              fontSize: '1rem',
-              borderRadius: '8px'
-            }}
-          />
-          <div style={{
-            fontSize: '0.75rem',
-            color: '#6b7280',
-            marginTop: '0.5rem'
-          }}>
-            Maximum: {formatTimeHHMM(eventDuration)}
-          </div>
-        </div>
+          {/* Error Message */}
+          {error && (
+            <Message severity="error" text={error} style={{ width: '100%' }} />
+          )}
 
-        {/* Servings Input Section */}
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          padding: '1rem'
-        }}>
-          <div style={{
-            fontSize: '0.875rem',
-            fontWeight: 600,
-            color: '#374151',
-            marginBottom: '0.5rem'
-          }}>
-            Servings
-          </div>
-          <InputNumber
-            value={servings}
-            onValueChange={(e) => {
-              setServings(e.value || 1);
-              setError(null);
-            }}
-            mode="decimal"
-            minFractionDigits={0}
-            maxFractionDigits={2}
-            min={0.1}
-            step={0.1}
-            showButtons={!viewOnly}
-            disabled={viewOnly}
-            readOnly={viewOnly}
-            style={{ width: '100%' }}
-            inputStyle={{
-              padding: '0.75rem',
-              fontSize: '1rem',
-              borderRadius: '8px'
-            }}
-          />
-        </div>
-
-        {/* Nutrition Information Section */}
-        {foodInstance.foodItem.foodItemNutrients && foodInstance.foodItem.foodItemNutrients.length > 0 && (
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            padding: '1rem'
-          }}>
+          {/* Time and Servings Input Section */}
+          <div className="form-section">
+            <label className="form-label">TIME & SERVINGS</label>
             <div style={{
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              color: '#374151',
-              marginBottom: '0.75rem'
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '0.75rem'
             }}>
-              Nutrition Information {servings !== 1 && `(${servings} ${servings === 1 ? 'serving' : 'servings'})`}
+              {/* Time Input Card */}
+              <div className="nutrient-card" style={{ cursor: 'default' }}>
+                <div className="nutrient-card-header">
+                  <span className="nutrient-card-label">Time</span>
+                  <span className="nutrient-card-unit">HH:MM</span>
+                </div>
+                <input
+                  type="text"
+                  value={timeInput}
+                  onChange={(e) => {
+                    setTimeInput(e.target.value);
+                    setError(null);
+                  }}
+                  placeholder="0:00"
+                  disabled={viewOnly}
+                  readOnly={viewOnly}
+                  style={{
+                    width: '100%',
+                    border: 'none',
+                    background: 'transparent',
+                    fontSize: '1.25rem',
+                    fontWeight: 700,
+                    color: '#111827',
+                    padding: 0,
+                    outline: 'none',
+                    fontFamily: 'inherit',
+                    lineHeight: 1.5
+                  }}
+                />
+              </div>
+
+              {/* Servings Input Card */}
+              <div className="nutrient-card" style={{ cursor: 'default' }}>
+                <div className="nutrient-card-header">
+                  <span className="nutrient-card-label">Servings</span>
+                </div>
+                <input
+                  type="number"
+                  value={servings}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value);
+                    setServings(isNaN(value) ? 1 : value);
+                    setError(null);
+                  }}
+                  min={0.1}
+                  step={0.1}
+                  disabled={viewOnly}
+                  readOnly={viewOnly}
+                  style={{
+                    width: '100%',
+                    border: 'none',
+                    background: 'transparent',
+                    fontSize: '1.25rem',
+                    fontWeight: 700,
+                    color: '#111827',
+                    padding: 0,
+                    outline: 'none',
+                    fontFamily: 'inherit',
+                    lineHeight: 1.5
+                  }}
+                />
+              </div>
             </div>
+            <div style={{
+              fontSize: '0.8125rem',
+              color: '#6b7280',
+              marginTop: '0.5rem',
+              textAlign: 'left'
+            }}>
+              Maximum time: {formatTimeHHMM(eventDuration)}
+            </div>
+          </div>
+
+          {/* Nutrition Information Section */}
+          {foodInstance.foodItem.foodItemNutrients && foodInstance.foodItem.foodItemNutrients.length > 0 && (
+            <div className="form-section">
+              <label className="form-label">
+                NUTRITION INFORMATION {servings !== 1 && `(${servings} ${servings === 1 ? 'serving' : 'servings'})`}
+              </label>
+              <div className="nutrient-grid">
+                {foodInstance.foodItem.foodItemNutrients.map((nutrient) => {
+                  const totalQuantity = nutrient.quantity * servings;
+                  return (
+                    <div key={nutrient.id} className="nutrient-card" style={{ cursor: 'default' }}>
+                      <div className="nutrient-card-header">
+                        <span className="nutrient-card-label">{nutrient.nutrient.nutrient_name}</span>
+                        <span className="nutrient-card-unit">{nutrient.unit}</span>
+                      </div>
+                      <div style={{
+                        fontSize: '1.25rem',
+                        fontWeight: 700,
+                        color: '#111827',
+                        lineHeight: 1.5
+                      }}>
+                        {totalQuantity.toFixed(1)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          {loading ? (
             <div style={{
               display: 'flex',
-              flexDirection: 'column',
-              gap: '0.5rem'
+              justifyContent: 'center',
+              padding: '2rem'
             }}>
-              {foodInstance.foodItem.foodItemNutrients.map((nutrient) => {
-                const totalQuantity = nutrient.quantity * servings;
-                return (
-                  <div
-                    key={nutrient.id}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '0.5rem',
-                      backgroundColor: '#f9fafb',
-                      borderRadius: '6px'
-                    }}
-                  >
-                    <span style={{
-                      fontSize: '0.875rem',
-                      color: '#374151',
-                      fontWeight: 500
-                    }}>
-                      {nutrient.nutrient.nutrient_name}
-                    </span>
-                    <span style={{
-                      fontSize: '0.875rem',
-                      color: '#111827',
-                      fontWeight: 600
-                    }}>
-                      {totalQuantity.toFixed(1)} {nutrient.unit}
-                    </span>
-                  </div>
-                );
-              })}
+              <ProgressSpinner style={{ width: '40px', height: '40px' }} />
             </div>
-          </div>
-        )}
-
-        {/* Action Buttons */}
-        {viewOnly ? (
-          <div style={{ marginTop: '0.5rem' }}>
-            <Button
-              label="Close"
+          ) : viewOnly ? (
+            <button
               onClick={onHide}
               style={{
                 width: '100%',
-                padding: '0.75rem',
-                fontSize: '1rem',
+                padding: '1rem',
+                fontSize: '1.0625rem',
                 fontWeight: 600,
-                borderRadius: '12px',
-                backgroundColor: '#646cff',
-                border: 'none'
+                borderRadius: '0.75rem',
+                backgroundColor: '#6366f1',
+                border: 'none',
+                color: 'white',
+                cursor: 'pointer',
+                marginTop: '0.5rem',
+                transition: 'all 0.2s ease'
               }}
-            />
-          </div>
-        ) : (
-          <div style={{
-            display: 'flex',
-            gap: '0.5rem',
-            marginTop: '0.5rem'
-          }}>
-            <Button
-              label="Delete"
-              severity="danger"
-              outlined
-              onClick={handleDelete}
-              disabled={loading}
-              style={{
-                flex: 1,
-                padding: '0.75rem',
-                fontSize: '1rem',
-                fontWeight: 600,
-                borderRadius: '12px'
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#5558e3';
               }}
-            />
-            <Button
-              label={loading ? 'Saving...' : 'Save Changes'}
-              onClick={handleSave}
-              disabled={loading}
-              style={{
-                flex: 2,
-                padding: '0.75rem',
-                fontSize: '1rem',
-                fontWeight: 600,
-                borderRadius: '12px',
-                backgroundColor: '#646cff',
-                border: 'none'
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#6366f1';
               }}
-            />
-          </div>
-        )}
-
-        {loading && (
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            marginTop: '1rem'
-          }}>
-            <ProgressSpinner style={{ width: '40px', height: '40px' }} />
-          </div>
-        )}
+            >
+              Close
+            </button>
+          ) : (
+            <div style={{
+              display: 'flex',
+              gap: '0.75rem',
+              marginTop: '0.5rem'
+            }}>
+              <button
+                onClick={handleDelete}
+                disabled={loading}
+                style={{
+                  flex: 1,
+                  padding: '1rem',
+                  fontSize: '1.0625rem',
+                  fontWeight: 600,
+                  borderRadius: '0.75rem',
+                  backgroundColor: '#fee2e2',
+                  border: '1px solid #fecaca',
+                  color: '#dc2626',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.5 : 1,
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  if (!loading) {
+                    e.currentTarget.style.backgroundColor = '#fecaca';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#fee2e2';
+                }}
+              >
+                Delete
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={loading}
+                style={{
+                  flex: 2,
+                  padding: '1rem',
+                  fontSize: '1.0625rem',
+                  fontWeight: 600,
+                  borderRadius: '0.75rem',
+                  backgroundColor: '#6366f1',
+                  border: 'none',
+                  color: 'white',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.5 : 1,
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  if (!loading) {
+                    e.currentTarget.style.backgroundColor = '#5558e3';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#6366f1';
+                }}
+              >
+                {loading ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
-    </Dialog>
+    </div>
   );
 };

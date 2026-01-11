@@ -1,6 +1,41 @@
 /* Reusable Modal Sheet Styles - Slide-up from bottom dialogs */
 
 /* Modal Overlay */
+.modal-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0);
+  z-index: 1000;
+  pointer-events: none;
+  transition: background 0.3s ease;
+}
+
+.modal-sheet-overlay.active {
+  background: rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+}
+
+/* Modal Sheet Container */
+.modal-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 24px 24px 0 0;
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-sheet-overlay.active .modal-sheet {
+  transform: translateY(0);
+}
+
+/* Legacy class names for backward compatibility */
 .food-item-modal-overlay {
   position: fixed;
   inset: 0;
@@ -15,7 +50,6 @@
   pointer-events: auto;
 }
 
-/* Modal Sheet Container */
 .food-item-modal-sheet {
   position: fixed;
   bottom: 0;
@@ -84,21 +118,22 @@
   justify-content: center;
   width: 2.5rem;
   height: 2.5rem;
-  border-radius: 50%;
-  background: #f3f4f6;
-  color: #1f2937;
+  border-radius: 0;
+  background: transparent;
+  color: #111827;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
-  font-size: 1.5rem;
-  font-weight: 300;
+  font-size: 1.75rem;
+  font-weight: 400;
   line-height: 1;
 }
 
 .modal-close-button:hover {
-  background: #e5e7eb;
+  background: transparent;
   color: #000000;
+  opacity: 0.7;
 }
 
 .modal-close-button:active {
@@ -119,6 +154,7 @@
 }
 
 /* Ensure form has no dark background */
+.modal-sheet form,
 .food-item-modal-sheet form {
   display: contents;
   background: transparent;
@@ -397,6 +433,7 @@
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
+  .modal-sheet,
   .food-item-modal-sheet {
     max-height: 95vh;
     border-radius: 20px 20px 0 0;

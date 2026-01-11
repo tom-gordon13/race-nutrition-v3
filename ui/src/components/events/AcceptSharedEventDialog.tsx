@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
-import { Dialog } from 'primereact/dialog';
-import { Button } from 'primereact/button';
+import React, { useState, useEffect } from 'react';
 import { Message } from 'primereact/message';
 import { ProgressSpinner } from 'primereact/progressspinner';
-import './AcceptSharedEventDialog.css';
+import '../shared/ModalSheet.css';
 import { API_URL } from '../../config/api';
 
 
@@ -53,17 +51,25 @@ export const AcceptSharedEventDialog: React.FC<AcceptSharedEventDialogProps> = (
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
 
-  // Detect mobile screen size
-  React.useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  // Handle animation timing for smooth slide-up and slide-down
+  useEffect(() => {
+    if (visible) {
+      setShouldRender(true);
+      const timer = setTimeout(() => {
+        setIsAnimating(true);
+      }, 10);
+      return () => clearTimeout(timer);
+    } else {
+      setIsAnimating(false);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [visible]);
 
   const handleAccept = async () => {
     if (!sharedEvent) return;
@@ -129,208 +135,177 @@ export const AcceptSharedEventDialog: React.FC<AcceptSharedEventDialogProps> = (
     }
   };
 
-  if (!sharedEvent) return null;
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onHide();
+    }
+  };
+
+  if (!sharedEvent || !shouldRender) return null;
 
   return (
-    <Dialog
-      header=""
-      visible={visible}
-      style={{
-        width: isMobile ? '100%' : '550px',
-        maxHeight: '90vh',
-        borderRadius: '20px'
-      }}
-      onHide={onHide}
-      position={isMobile ? "bottom" : "center"}
-      modal
-      dismissableMask
-      closable={false}
-      className="accept-shared-event-dialog"
-      pt={{
-        root: { style: { borderRadius: '20px', overflow: 'hidden' } },
-        header: { style: { display: 'none' } },
-        content: { style: { padding: 0, borderRadius: '20px', overflow: 'hidden' } }
-      }}
+    <div
+      className={`modal-sheet-overlay ${isAnimating ? 'active' : ''}`}
+      onClick={handleOverlayClick}
     >
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: '#e5e7eb',
-        padding: '1rem',
-        gap: '0.5rem',
-        borderRadius: '20px'
-      }}>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <div style={{
-              fontSize: '0.75rem',
-              fontWeight: 500,
-              color: '#9ca3af',
-              letterSpacing: '0.1em',
-              marginBottom: '0.5rem'
-            }}>
-              SHARED EVENT
-            </div>
-            <div style={{
-              fontSize: '1.5rem',
-              fontWeight: 700,
-              color: '#000',
-              lineHeight: 1.2
-            }}>
-              {sharedEvent.event.name}
-            </div>
+      <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-handle"></div>
+
+        {/* Modal Header */}
+        <div className="modal-header">
+          <div className="modal-header-content">
+            <p className="modal-header-label">SHARED EVENT</p>
+            <h2 className="modal-header-title">{sharedEvent.event.name}</h2>
           </div>
           <button
             onClick={onHide}
-            style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              backgroundColor: '#d1d5db',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.25rem',
-              color: '#6b7280'
-            }}
+            className="modal-close-button"
           >
             ✕
           </button>
         </div>
 
-        {/* Error Message */}
-        {error && (
-          <Message severity="error" text={error} style={{ width: '100%', marginBottom: '0.5rem' }} />
-        )}
+        <div className="modal-content" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
 
-        {loading ? (
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            padding: '2rem',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            <ProgressSpinner style={{ width: '50px', height: '50px' }} />
-            <p style={{ marginTop: '1rem', color: '#6b7280' }}>Processing...</p>
-          </div>
-        ) : (
-          <>
-            {/* Event Details Section */}
+          {/* Error Message */}
+          {error && (
+            <Message severity="error" text={error} style={{ width: '100%' }} />
+          )}
+
+          {loading ? (
             <div style={{
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              padding: '0.875rem',
               display: 'flex',
               flexDirection: 'column',
-              gap: '0.75rem'
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '3rem'
             }}>
+              <ProgressSpinner style={{ width: '50px', height: '50px' }} />
+              <p style={{ marginTop: '1rem', color: '#6b7280', fontSize: '1rem' }}>Processing...</p>
+            </div>
+          ) : (
+            <>
+              {/* Event Details Section */}
+              <div className="form-section">
+                <label className="form-label">EVENT DETAILS</label>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    padding: '0.75rem',
+                    backgroundColor: '#f9fafb',
+                    borderRadius: '0.5rem',
+                    border: '1px solid #f3f4f6'
+                  }}>
+                    <span style={{ fontWeight: 500, color: '#6b7280', fontSize: '1rem' }}>Duration:</span>
+                    <span style={{ fontWeight: 600, color: '#111827', fontSize: '1rem' }}>
+                      {formatDuration(sharedEvent.event.expected_duration)}
+                    </span>
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    padding: '0.75rem',
+                    backgroundColor: '#f9fafb',
+                    borderRadius: '0.5rem',
+                    border: '1px solid #f3f4f6'
+                  }}>
+                    <span style={{ fontWeight: 500, color: '#6b7280', fontSize: '1rem' }}>Shared by:</span>
+                    <span style={{ fontWeight: 600, color: '#111827', fontSize: '1rem' }}>
+                      {sharedEvent.sender.first_name} {sharedEvent.sender.last_name}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Info Section */}
               <div style={{
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                color: '#9ca3af',
-                letterSpacing: '0.1em'
+                display: 'flex',
+                gap: '0.75rem',
+                padding: '1rem',
+                backgroundColor: '#eff6ff',
+                borderRadius: '0.75rem',
+                border: '1px solid #dbeafe'
               }}>
-                EVENT DETAILS
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  padding: '0.5rem',
-                  backgroundColor: '#f9fafb',
-                  borderRadius: '6px'
-                }}>
-                  <span style={{ fontWeight: 500, color: '#6b7280' }}>Duration:</span>
-                  <span style={{ fontWeight: 600, color: '#000' }}>
-                    {formatDuration(sharedEvent.event.expected_duration)}
-                  </span>
-                </div>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  padding: '0.5rem',
-                  backgroundColor: '#f9fafb',
-                  borderRadius: '6px'
-                }}>
-                  <span style={{ fontWeight: 500, color: '#6b7280' }}>Shared by:</span>
-                  <span style={{ fontWeight: 600, color: '#000' }}>
-                    {sharedEvent.sender.first_name} {sharedEvent.sender.last_name}
-                  </span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}>
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+                <div style={{ fontSize: '0.9375rem', color: '#374151' }}>
+                  <strong style={{ display: 'block', marginBottom: '0.5rem', color: '#111827' }}>
+                    Accepting this event will:
+                  </strong>
+                  <ul style={{ margin: 0, paddingLeft: '1.25rem', lineHeight: '1.6' }}>
+                    <li>Create a copy of the event in your events list</li>
+                    <li>Copy all food items and nutrition information</li>
+                    <li>Copy all nutrition goals (hourly and total)</li>
+                  </ul>
                 </div>
               </div>
-            </div>
 
-            {/* Info Section */}
-            <div style={{
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              padding: '0.875rem',
-              display: 'flex',
-              gap: '0.75rem'
-            }}>
-              <i className="pi pi-info-circle" style={{
-                color: '#3b82f6',
-                fontSize: '1.25rem',
-                flexShrink: 0,
-                marginTop: '0.125rem'
-              }}></i>
-              <div style={{ fontSize: '0.875rem', color: '#374151' }}>
-                <strong style={{ display: 'block', marginBottom: '0.5rem' }}>
-                  Accepting this event will:
-                </strong>
-                <ul style={{ margin: 0, paddingLeft: '1.25rem' }}>
-                  <li>Create a copy of the event in your events list</li>
-                  <li>Copy all food items and nutrition information</li>
-                  <li>Copy all nutrition goals (hourly and total)</li>
-                </ul>
+              {/* Footer Buttons */}
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button
+                  onClick={handleDeny}
+                  disabled={loading}
+                  style={{
+                    flex: 1,
+                    backgroundColor: '#e5e7eb',
+                    border: 'none',
+                    color: '#374151',
+                    fontWeight: 600,
+                    padding: '1rem',
+                    borderRadius: '0.75rem',
+                    fontSize: '1.0625rem',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    opacity: loading ? 0.5 : 1,
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!loading) {
+                      e.currentTarget.style.backgroundColor = '#d1d5db';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#e5e7eb';
+                  }}
+                >
+                  Deny
+                </button>
+                <button
+                  onClick={handleAccept}
+                  disabled={loading}
+                  style={{
+                    flex: 1,
+                    backgroundColor: '#22c55e',
+                    border: 'none',
+                    color: 'white',
+                    fontWeight: 600,
+                    padding: '1rem',
+                    borderRadius: '0.75rem',
+                    fontSize: '1.0625rem',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    opacity: loading ? 0.5 : 1,
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!loading) {
+                      e.currentTarget.style.backgroundColor = '#16a34a';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#22c55e';
+                  }}
+                >
+                  Accept Event
+                </button>
               </div>
-            </div>
-
-            {/* Footer Buttons */}
-            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0' }}>
-              <Button
-                label="Deny"
-                icon="pi pi-times"
-                onClick={handleDeny}
-                disabled={loading}
-                style={{
-                  flex: 1,
-                  backgroundColor: '#d1d5db',
-                  border: 'none',
-                  color: '#6b7280',
-                  fontWeight: 600,
-                  padding: '0.75rem',
-                  borderRadius: '8px',
-                  fontSize: '0.9375rem'
-                }}
-              />
-              <Button
-                label="Accept Event"
-                icon="pi pi-check"
-                onClick={handleAccept}
-                disabled={loading}
-                style={{
-                  flex: 1,
-                  backgroundColor: '#22c55e',
-                  border: 'none',
-                  color: 'white',
-                  fontWeight: 600,
-                  padding: '0.75rem',
-                  borderRadius: '8px',
-                  fontSize: '0.9375rem'
-                }}
-              />
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </div>
-    </Dialog>
+    </div>
   );
 };

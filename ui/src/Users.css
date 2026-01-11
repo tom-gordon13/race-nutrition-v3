@@ -67,6 +67,41 @@
   left: 55%;
 }
 
+/* Helper Text */
+.users-helper-text {
+  background-color: #e0e7ff;
+  margin: 1rem 1.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.helper-icon {
+  background-color: #c7d2fe;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #6366F1;
+  font-size: 1.25rem;
+}
+
+.helper-message {
+  font-size: 1rem;
+  color: #1e293b;
+  line-height: 1.5;
+}
+
+.helper-message strong {
+  font-weight: 600;
+  color: #0f172a;
+}
+
 /* Search and Actions Section - Gray background */
 .users-search-section {
   background-color: #f2f3f5;
@@ -345,6 +380,22 @@
 
 /* Mobile Responsive Styles */
 @media (max-width: 768px) {
+  .users-helper-text {
+    margin: 0.875rem 1.25rem;
+    padding: 0.875rem 1rem;
+    gap: 0.875rem;
+  }
+
+  .helper-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.125rem;
+  }
+
+  .helper-message {
+    font-size: 0.9375rem;
+  }
+
   .users-search-section {
     padding: 1rem 1.25rem;
     gap: 0.5rem;
