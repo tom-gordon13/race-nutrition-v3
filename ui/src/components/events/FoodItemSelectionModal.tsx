@@ -73,11 +73,13 @@ export const FoodItemSelectionModal = ({
 }: FoodItemSelectionModalProps) => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [servings, setServings] = useState(1);
+  const [servings, setServings] = useState<number | string>(1);
   const [editedTime, setEditedTime] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
   // Handle animation timing for smooth slide-up and slide-down
   useEffect(() => {
@@ -111,6 +113,8 @@ export const FoodItemSelectionModal = ({
       setServings(1);
       setEditedTime('');
       setError(null);
+      setSelectedItemId(null);
+      setShowCategoryDropdown(false);
     }
   }, [isOpen]);
 
@@ -128,11 +132,21 @@ export const FoodItemSelectionModal = ({
     return matchesSearch && matchesCategory;
   });
 
-  const handleSelect = (foodItemId: string) => {
+  const handleItemClick = (foodItemId: string) => {
+    setSelectedItemId(foodItemId);
+  };
+
+  const handleAddToTimeline = () => {
     // Clear any previous errors
     setError(null);
 
-    if (!servings || servings <= 0) {
+    if (!selectedItemId) {
+      setError('Please select a food item');
+      return;
+    }
+
+    const servingsNum = typeof servings === 'string' ? parseFloat(servings) : servings;
+    if (!servingsNum || isNaN(servingsNum) || servingsNum <= 0) {
       setError('Please enter valid servings');
       return;
     }
@@ -155,8 +169,23 @@ export const FoodItemSelectionModal = ({
       return;
     }
 
-    onSelect(foodItemId, servings, timeSeconds);
+    onSelect(selectedItemId, servingsNum, timeSeconds);
+    setSelectedItemId(null);
     setError(null);
+  };
+
+  const incrementServings = () => {
+    setServings(prev => {
+      const current = typeof prev === 'string' ? parseFloat(prev) || 1 : prev;
+      return Math.round((current + 0.5) * 10) / 10;
+    });
+  };
+
+  const decrementServings = () => {
+    setServings(prev => {
+      const current = typeof prev === 'string' ? parseFloat(prev) || 1 : prev;
+      return Math.max(0.5, Math.round((current - 0.5) * 10) / 10);
+    });
   };
 
   const handleCreateNewFoodItem = () => {
@@ -169,6 +198,21 @@ export const FoodItemSelectionModal = ({
       onClose();
     }
   };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (showCategoryDropdown && !target.closest('.category-filter-dropdown-wrapper')) {
+        setShowCategoryDropdown(false);
+      }
+    };
+
+    if (showCategoryDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showCategoryDropdown]);
 
   if (!shouldRender) return null;
 
@@ -194,250 +238,256 @@ export const FoodItemSelectionModal = ({
           </button>
         </div>
 
-        <div className="modal-content" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <div className="modal-content">
 
           {/* Error Message */}
           {error && (
-            <Message severity="error" text={error} style={{ width: '100%' }} />
+            <div style={{ padding: '0 1.25rem', paddingTop: '0.75rem' }}>
+              <Message severity="error" text={error} style={{ width: '100%' }} />
+            </div>
           )}
 
-          {/* Time Input Section */}
-          <div className="form-section">
-            <label className="form-label">TIME (HH:MM)</label>
-            <input
-              type="text"
-              className="form-input"
-              value={editedTime}
-              onChange={(e) => {
-                setEditedTime(e.target.value);
-                setError(null);
-              }}
-              placeholder="HH:MM"
-            />
-          </div>
-
-          {/* Servings Input Section */}
-          <div className="form-section">
-            <label className="form-label">SERVINGS</label>
-            <input
-              type="number"
-              className="form-input"
-              value={servings}
-              onChange={(e) => {
-                const value = parseFloat(e.target.value);
-                setServings(isNaN(value) ? 1 : value);
-                setError(null);
-              }}
-              min={0.1}
-              step={0.1}
-              placeholder="1.0"
-            />
-          </div>
-
-          {/* Search Section */}
-          <div className="form-section">
-            <label className="form-label">SEARCH FOOD ITEMS</label>
-            <input
-              type="text"
-              className="form-input"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search food items..."
-            />
-          </div>
-
-          {/* Filters Section */}
-          <div className="form-section">
-            <label className="form-label">FILTERS</label>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '1rem', color: '#374151' }}>
+          {/* Time & Servings Row */}
+          <div className="time-servings-section">
+            <div className="time-input-container-equal">
+              <label className="form-label">TIME</label>
+              <div className="time-input-wrapper">
+                <i className="pi pi-clock time-icon"></i>
                 <input
-                  type="radio"
-                  name="item-filter"
-                  checked={itemFilterMode === 'my_items'}
-                  onChange={() => {
-                    onItemFilterModeChange('my_items');
-                    onMyItemsOnlyChange(true);
+                  type="text"
+                  className="time-input-field"
+                  value={editedTime}
+                  onChange={(e) => {
+                    setEditedTime(e.target.value);
+                    setError(null);
                   }}
-                  style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                  placeholder="0:00"
                 />
-                <span>My Items</span>
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '1rem', color: '#374151' }}>
+              </div>
+            </div>
+            <div className="servings-input-container-equal">
+              <label className="form-label">SERVINGS</label>
+              <div className="servings-control">
+                <button onClick={decrementServings} className="servings-btn">
+                  <i className="pi pi-minus"></i>
+                </button>
                 <input
-                  type="radio"
-                  name="item-filter"
-                  checked={itemFilterMode === 'favorites'}
-                  onChange={() => {
-                    onItemFilterModeChange('favorites');
-                    onMyItemsOnlyChange(false);
+                  type="text"
+                  className="servings-value"
+                  value={servings}
+                  onChange={(e) => {
+                    const input = e.target.value;
+                    // Allow empty string
+                    if (input === '') {
+                      setServings('');
+                      return;
+                    }
+                    // Allow any valid decimal number format (including partial like "1." or ".5")
+                    // This regex allows: optional digits, optional decimal, optional digits
+                    if (/^\d*\.?\d*$/.test(input)) {
+                      setServings(input);
+                      setError(null);
+                    }
                   }}
-                  style={{ cursor: 'pointer', width: '16px', height: '16px' }}
-                />
-                <span>Favorites</span>
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '1rem', color: '#374151' }}>
-                <input
-                  type="radio"
-                  name="item-filter"
-                  checked={itemFilterMode === 'all_items'}
-                  onChange={() => {
-                    onItemFilterModeChange('all_items');
-                    onMyItemsOnlyChange(false);
+                  onBlur={(e) => {
+                    // On blur, ensure we have a valid number
+                    const input = e.target.value;
+                    const value = parseFloat(input);
+                    if (isNaN(value) || value <= 0 || input === '' || input === '.') {
+                      setServings(1);
+                    } else {
+                      // Clean up the value (e.g., "1." becomes "1", ".5" becomes "0.5")
+                      setServings(value);
+                    }
                   }}
-                  style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                  inputMode="decimal"
                 />
-                <span>All Items</span>
-              </label>
-
-              <select
-                className="form-select"
-                value={categoryFilter}
-                onChange={(e) => onCategoryFilterChange(e.target.value)}
-              >
-                <option value="ALL">All Categories</option>
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category?.replace(/_/g, ' ')}
-                  </option>
-                ))}
-              </select>
+                <button onClick={incrementServings} className="servings-btn">
+                  <i className="pi pi-plus"></i>
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Food Items List Section */}
-          <div className="form-section" style={{ maxHeight: '400px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <label className="form-label">SELECT FOOD ITEM</label>
+          {/* Search Bar with Filter */}
+          <div className="search-section">
+            <div className="search-with-filter-row">
+              <div className="search-input-container-with-filter">
+                <i className="pi pi-search search-icon-new"></i>
+                <input
+                  type="text"
+                  className="search-input-new"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search food items..."
+                />
+              </div>
 
-            <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {filteredItems.length === 0 ? (
-                <div style={{
-                  textAlign: 'center',
-                  padding: '3rem 1rem',
-                  color: '#6b7280',
-                  fontSize: '1rem'
-                }}>
-                  No food items found. Try a different search term.
-                </div>
-              ) : (
-                filteredItems.map((item) => {
-                  // Get color for this category
-                  const categoryColor = item.category && categoryColors
-                    ? categoryColors.get(item.category)
-                    : undefined;
-
-                  // Determine background and border color
-                  const backgroundColor = categoryColor
-                    ? `${categoryColor}1A`  // Add 1A for 10% opacity (hex for ~0.1 alpha)
-                    : '#f9fafb';
-
-                  const borderLeftColor = categoryColor
-                    ? categoryColor
-                    : '#e5e7eb';
-
-                  return (
-                    <div
-                      key={item.id}
-                      onClick={() => handleSelect(item.id)}
-                      style={{
-                        backgroundColor,
-                        borderLeftColor,
-                        borderLeftWidth: '4px',
-                        borderLeftStyle: 'solid',
-                        padding: '0.875rem',
-                        borderRadius: '0.5rem',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '0.5rem'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-1px)';
-                        e.currentTarget.style.boxShadow = '0 3px 10px rgba(0, 0, 0, 0.1)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = 'none';
+              {/* Category Filter Dropdown */}
+              <div className="category-filter-dropdown-wrapper">
+                <button
+                  className="filter-dropdown-btn"
+                  onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                >
+                  <i className="pi pi-filter"></i>
+                  <span>Filter</span>
+                  <i className={`pi pi-chevron-${showCategoryDropdown ? 'up' : 'down'}`} style={{ fontSize: '0.625rem' }}></i>
+                </button>
+                {showCategoryDropdown && (
+                  <div className="category-dropdown-menu">
+                    <button
+                      className={`category-dropdown-item ${categoryFilter === 'ALL' ? 'active' : ''}`}
+                      onClick={() => {
+                        onCategoryFilterChange('ALL');
+                        setShowCategoryDropdown(false);
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
-                        <div>
-                          <div style={{ fontWeight: 600, color: '#111827', fontSize: '1rem' }}>
-                            {item.item_name}
-                          </div>
-                          {item.brand && (
-                            <div style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.25rem' }}>
-                              {item.brand}
-                            </div>
-                          )}
+                      All Categories
+                    </button>
+                    {categories.map((category) => {
+                      const color = categoryColors?.get(category!) || '#6366f1';
+                      return (
+                        <button
+                          key={category}
+                          className={`category-dropdown-item ${categoryFilter === category ? 'active' : ''}`}
+                          onClick={() => {
+                            onCategoryFilterChange(category!);
+                            setShowCategoryDropdown(false);
+                          }}
+                        >
+                          <span className="category-dot" style={{ backgroundColor: color }}></span>
+                          <span>{category!.charAt(0) + category!.slice(1).toLowerCase().replace(/_/g, ' ')}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Filter Pills */}
+          <div className="filter-pills-section">
+            <button
+              className={`filter-pill-btn ${itemFilterMode === 'favorites' ? 'active' : ''}`}
+              onClick={() => {
+                onItemFilterModeChange('favorites');
+                onMyItemsOnlyChange(false);
+              }}
+            >
+              <i className="pi pi-star-fill" style={{ fontSize: '0.75rem' }}></i>
+              <span>Favorites</span>
+            </button>
+            <button
+              className={`filter-pill-btn ${itemFilterMode === 'my_items' ? 'active' : ''}`}
+              onClick={() => {
+                onItemFilterModeChange('my_items');
+                onMyItemsOnlyChange(true);
+              }}
+            >
+              My Items
+            </button>
+            <button
+              className={`filter-pill-btn ${itemFilterMode === 'all_items' ? 'active' : ''}`}
+              onClick={() => {
+                onItemFilterModeChange('all_items');
+                onMyItemsOnlyChange(false);
+              }}
+            >
+              All Items
+            </button>
+          </div>
+
+          {/* Results Count */}
+          <div className="results-count-section">
+            <span className="results-count">{filteredItems.length} items</span>
+          </div>
+
+          {/* Food Items List */}
+          <div className="food-items-list-new">
+            {filteredItems.length === 0 ? (
+              <div className="no-results-message">
+                No food items found. Try a different search term.
+              </div>
+            ) : (
+              filteredItems.map((item) => {
+                const isSelected = selectedItemId === item.id;
+                const categoryColor = item.category && categoryColors
+                  ? categoryColors.get(item.category)
+                  : '#e5e7eb';
+
+                // Get primary nutrients to display
+                const carbsNutrient = item.foodItemNutrients.find(n =>
+                  n.nutrient.nutrient_name.toLowerCase().includes('carb')
+                );
+                const sodiumNutrient = item.foodItemNutrients.find(n =>
+                  n.nutrient.nutrient_name.toLowerCase() === 'sodium'
+                );
+
+                const nutrientParts = [];
+                if (carbsNutrient) {
+                  nutrientParts.push(`${Math.round(carbsNutrient.quantity)}g carbs`);
+                }
+                if (sodiumNutrient) {
+                  const sodiumValue = sodiumNutrient.unit === 'g'
+                    ? Math.round(sodiumNutrient.quantity * 1000)
+                    : Math.round(sodiumNutrient.quantity);
+                  nutrientParts.push(`${sodiumValue}mg sodium`);
+                }
+                const nutrientText = nutrientParts.join(' • ');
+
+                return (
+                  <div
+                    key={item.id}
+                    className={`food-item-new ${isSelected ? 'selected' : ''}`}
+                    onClick={() => handleItemClick(item.id)}
+                  >
+                    <div className="food-item-color-bar" style={{ backgroundColor: categoryColor }}></div>
+                    <div className="food-item-content-new">
+                      <div className="food-item-header-new">
+                        <h3 className="food-item-name-new">{item.item_name}</h3>
+                        <div className="food-item-price-section">
+                          <i className="pi pi-star-fill" style={{ fontSize: '0.875rem', color: '#fbbf24' }}></i>
+                          <span className="food-item-price">${(item.cost || 0).toFixed(2)}</span>
                         </div>
                       </div>
-                      {item.category && (
-                        <div style={{
-                          fontSize: '0.8125rem',
-                          color: '#9ca3af',
-                          fontWeight: 500,
-                          letterSpacing: '0.05em',
-                          textTransform: 'uppercase'
-                        }}>
-                          {item.category.replace(/_/g, ' ')}
-                        </div>
-                      )}
-                      {item.foodItemNutrients && item.foodItemNutrients.length > 0 && (
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.25rem' }}>
-                          {item.foodItemNutrients.slice(0, 3).map((nutrient) => (
-                            <span
-                              key={nutrient.id}
-                              style={{
-                                display: 'inline-block',
-                                padding: '0.375rem 0.625rem',
-                                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                                color: '#4f46e5',
-                                borderRadius: '0.375rem',
-                                fontSize: '0.8125rem',
-                                fontWeight: 500
-                              }}
-                            >
-                              {nutrient.nutrient.nutrient_abbreviation}: {nutrient.quantity} {nutrient.unit}
-                            </span>
-                          ))}
+                      <div className="food-item-details-new">
+                        {item.category && (
+                          <span
+                            className="food-item-category-badge"
+                            style={{
+                              backgroundColor: `${categoryColor}20`,
+                              color: categoryColor
+                            }}
+                          >
+                            {item.category.charAt(0) + item.category.slice(1).toLowerCase().replace(/_/g, ' ')}
+                          </span>
+                        )}
+                        {nutrientText && (
+                          <span className="food-item-nutrients-text">{nutrientText}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="food-item-check-container">
+                      {isSelected && (
+                        <div className="food-item-checkmark">
+                          <i className="pi pi-check"></i>
                         </div>
                       )}
                     </div>
-                  );
-                })
-              )}
-
-              <button
-                onClick={handleCreateNewFoodItem}
-                style={{
-                  marginTop: '0.5rem',
-                  width: '100%',
-                  backgroundColor: 'transparent',
-                  color: '#6366f1',
-                  border: '2px dashed #d1d5db',
-                  fontWeight: 600,
-                  fontSize: '1rem',
-                  padding: '1rem',
-                  borderRadius: '0.75rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#6366f1';
-                  e.currentTarget.style.backgroundColor = 'rgba(99, 102, 241, 0.05)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = '#d1d5db';
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }}
-              >
-                + Create New Food Item
-              </button>
-            </div>
+                  </div>
+                );
+              })
+            )}
           </div>
+        </div>
+
+        {/* Sticky Footer Button */}
+        <div className="modal-footer-sticky">
+          <button onClick={handleAddToTimeline} className="add-to-timeline-btn">
+            <i className="pi pi-check"></i>
+            <span>Add to Timeline</span>
+          </button>
         </div>
       </div>
     </div>
