@@ -315,6 +315,7 @@
 .shared-plans-count {
   font-size: 0.9375rem;
   color: #9ca3af;
+  text-align: left;
 }
 
 /* User Right Section */

@@ -59,9 +59,12 @@ router.get('/users/all', async (req, res) => {
       }
     });
 
-    // Get event counts for all users
+    // Get public event counts for all users (only count non-private plans)
     const eventCounts = await prisma.event.groupBy({
       by: ['event_user_id'],
+      where: {
+        private: false
+      },
       _count: {
         id: true
       }
