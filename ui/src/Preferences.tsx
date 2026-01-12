@@ -171,6 +171,10 @@ export default function Preferences() {
     return user.name[0].toUpperCase();
   };
 
+  if (loading) {
+    return <LoadingSpinner message="Loading settings..." />;
+  }
+
   return (
     <div className="preferences-page">
       <Toast ref={toast} />
@@ -240,59 +244,52 @@ export default function Preferences() {
         <p className="section-label">CATEGORY COLORS</p>
       </div>
 
-      {loading ? (
-        <LoadingSpinner />
-      ) : (
-        <>
-          {categories.map((category, index) => {
-            const selectedColorId = userPreferences.get(category.id);
-            const selectedColorHex = getSelectedColorHex(category.id);
-            const categoryName = CATEGORY_DISPLAY_NAMES[category.category_name] || category.category_name;
+      {categories.map((category, index) => {
+        const selectedColorId = userPreferences.get(category.id);
+        const selectedColorHex = getSelectedColorHex(category.id);
+        const categoryName = CATEGORY_DISPLAY_NAMES[category.category_name] || category.category_name;
 
-            return (
-              <div key={category.id}>
-                <div className="category-color-card">
-                  <div className="category-header">
-                    <p className="category-name">{categoryName}</p>
-                    <div
-                      className="category-indicator"
-                      style={{ backgroundColor: selectedColorHex }}
-                    />
-                  </div>
-                  <div className="color-picker">
-                    {colors.map((color) => {
-                      const isSelected = selectedColorId === color.id;
-
-                      return (
-                        <button
-                          key={color.id}
-                          className={`color-option ${isSelected ? 'selected' : ''}`}
-                          style={{
-                            backgroundColor: color.hex,
-                            color: color.hex
-                          }}
-                          onClick={() => handleColorSelect(category.id, color.id)}
-                          title={color.color_name}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-                {index < categories.length - 1 && <div className="category-divider"></div>}
+        return (
+          <div key={category.id}>
+            <div className="category-color-card">
+              <div className="category-header">
+                <p className="category-name">{categoryName}</p>
+                <div
+                  className="category-indicator"
+                  style={{ backgroundColor: selectedColorHex }}
+                />
               </div>
-            );
-          })}
-        </>
-      )}
+              <div className="color-picker">
+                {colors.map((color) => {
+                  const isSelected = selectedColorId === color.id;
+
+                  return (
+                    <button
+                      key={color.id}
+                      className={`color-option ${isSelected ? 'selected' : ''}`}
+                      style={{
+                        backgroundColor: color.hex,
+                        color: color.hex
+                      }}
+                      onClick={() => handleColorSelect(category.id, color.id)}
+                      title={color.color_name}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+            {index < categories.length - 1 && <div className="category-divider"></div>}
+          </div>
+        );
+      })}
 
       {/* Divider */}
       <div className="section-divider"></div>
 
-      {/* Sign Out Section */}
-      <div className="section-label-wrapper">
-        <p className="section-label">ACCOUNT</p>
-      </div>
+      {/* Spacer before sign out */}
+      <div style={{ height: '2rem' }}></div>
 
+      {/* Sign Out Section */}
       <button className="sign-out-card" onClick={handleSignOut}>
         <div className="sign-out-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

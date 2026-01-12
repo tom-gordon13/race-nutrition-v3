@@ -1,3 +1,29 @@
+/* Desktop browser - card-like wrapper for all pages */
+.food-items-page-container,
+.plans-route-container,
+.events-route-container,
+.users-route-container,
+.nutrients-route-container,
+.preferences-wrapper {
+  background-color: white;
+  min-height: 100vh;
+}
+
+@media (min-width: 769px) {
+  .food-items-page-container,
+  .plans-route-container,
+  .events-route-container,
+  .users-route-container,
+  .nutrients-route-container,
+  .preferences-wrapper {
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+    min-height: auto;
+    overflow: hidden;
+  }
+}
+
 .preferences-wrapper {
   max-width: 90%;
   margin: 0 auto;
