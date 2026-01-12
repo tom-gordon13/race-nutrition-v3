@@ -95,6 +95,16 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background-color: #f3f4f6;
+}
+
+/* Desktop browser layout - centered with max width */
+@media (min-width: 769px) {
+  .app {
+    /* Subtle dot pattern background */
+    background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
 }
 
 /* Navigation styles */
@@ -113,6 +123,15 @@
   align-items: center;
   width: 100%;
   margin: 0 auto;
+}
+
+/* Desktop - center nav content */
+@media (min-width: 769px) {
+  .nav-content {
+    max-width: 672px; /* 42rem = 672px (max-w-2xl in Tailwind) */
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
 }
 
 .nav-brand h2 {
@@ -188,7 +207,17 @@
   box-sizing: border-box;
   width: 100%;
   padding: 0;
-  background-color: #f3f4f6;
+  background-color: transparent;
+}
+
+/* Desktop - center and constrain main content width */
+@media (min-width: 769px) {
+  .main-content {
+    max-width: 672px; /* 42rem = 672px (max-w-2xl in Tailwind) */
+    margin: 0 auto;
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+  }
 }
 
 /* Tabs */
@@ -1201,6 +1230,18 @@ tbody tr.selected {
 
 .p-dialog {
   z-index: 15001 !important;
+}
+
+/* Desktop - constrain dialog width to match app max-width */
+@media (min-width: 769px) {
+  .p-dialog {
+    max-width: 672px !important; /* Match max-w-2xl */
+  }
+
+  /* Ensure dialogs with specific widths don't exceed max */
+  .p-dialog[style*="width"] {
+    max-width: 672px !important;
+  }
 }
 
 /* Fullscreen mode for event timeline container */
@@ -2783,7 +2824,7 @@ tbody tr.selected {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: none;
+  background: none !important;
   border: none;
   color: #6366f1;
   font-size: 0.875rem;
@@ -2791,14 +2832,27 @@ tbody tr.selected {
   cursor: pointer;
   padding: 0.5rem;
   transition: all 0.15s ease;
+  outline: none;
 }
 
 .back-button:hover {
   opacity: 0.8;
+  background: none !important;
 }
 
 .back-button:active {
   transform: scale(0.95);
+  background: none !important;
+}
+
+.back-button:focus {
+  outline: none;
+  background: none !important;
+  box-shadow: none !important;
+}
+
+.back-button i {
+  background: none !important;
 }
 
 .header-actions {

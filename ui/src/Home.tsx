@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth0 } from '@auth0/auth0-react';
 import Nutrients from "./Nutrients";
 import FoodItems from "./FoodItems";
@@ -19,17 +19,6 @@ function Home({ onFullscreenChange }: HomeProps) {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showCreateEventDialog, setShowCreateEventDialog] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-
-  // Detect mobile screen size
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   const handleFoodItemCreated = () => {
     setRefreshTrigger(prev => prev + 1);
@@ -85,7 +74,11 @@ function Home({ onFullscreenChange }: HomeProps) {
             />
           </div>
         } />
-        <Route path="/nutrients" element={<div style={{ maxWidth: isMobile ? '100%' : '90%', margin: '0 auto', padding: isMobile ? '0.5rem' : '2rem' }}><Nutrients /></div>} />
+        <Route path="/nutrients" element={
+          <div className="nutrients-route-container" style={{ width: '100%', margin: '0', padding: '0', height: '100%', boxSizing: 'border-box' }}>
+            <Nutrients />
+          </div>
+        } />
         <Route path="/preferences" element={<div className="preferences-wrapper"><Preferences /></div>} />
         <Route path="/users" element={
           <div className="users-route-container" style={{ width: '100%', margin: '0', padding: '0', height: '100%', boxSizing: 'border-box' }}>

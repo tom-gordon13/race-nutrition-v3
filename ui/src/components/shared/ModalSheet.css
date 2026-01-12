@@ -35,6 +35,20 @@
   transform: translateY(0);
 }
 
+/* Desktop - constrain modal sheet width to match app max-width */
+@media (min-width: 769px) {
+  .modal-sheet {
+    left: 50%;
+    right: auto;
+    width: 672px; /* Match max-w-2xl */
+    transform: translateX(-50%) translateY(100%);
+  }
+
+  .modal-sheet-overlay.active .modal-sheet {
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
 /* Legacy class names for backward compatibility */
 .food-item-modal-overlay {
   position: fixed;
@@ -67,6 +81,20 @@
 
 .food-item-modal-overlay.active .food-item-modal-sheet {
   transform: translateY(0);
+}
+
+/* Desktop - constrain legacy modal sheet width to match app max-width */
+@media (min-width: 769px) {
+  .food-item-modal-sheet {
+    left: 50%;
+    right: auto;
+    width: 672px; /* Match max-w-2xl */
+    transform: translateX(-50%) translateY(100%);
+  }
+
+  .food-item-modal-overlay.active .food-item-modal-sheet {
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 /* Modal Handle - Draggable indicator */
