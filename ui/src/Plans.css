@@ -149,6 +149,11 @@
   min-width: 0;
 }
 
+.plans-container .plan-title-section {
+  padding: 0;
+  margin: 0;
+}
+
 .plan-title {
   font-size: 1.375rem;
   font-weight: 700;
@@ -158,6 +163,10 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   text-align: left;
+}
+
+.plans-container .plan-title {
+  padding: 0;
 }
 
 .plan-updated {
@@ -214,6 +223,10 @@
   font-size: 0.875rem;
   font-weight: 600;
   text-transform: capitalize;
+}
+
+.plans-container .event-type-badge {
+  margin: 0;
 }
 
 .event-type-badge.triathlon {

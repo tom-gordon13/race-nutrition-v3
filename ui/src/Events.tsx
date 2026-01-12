@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Card } from 'primereact/card';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
@@ -99,9 +99,11 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
   const { user } = useAuth0();
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const timelineContainerRef = useRef<HTMLDivElement>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [initialDataUsed, setInitialDataUsed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -334,17 +336,28 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
   // Auto-select event if eventId is in URL, or clear selection if no eventId
   useEffect(() => {
     const handleEventSelection = async () => {
-      if (eventId && !loading && user?.sub) {
-        // Check if this event is in the user's events list (meaning they own it)
-        const ownedEvent = events.find(e => e.id === eventId);
+      if (eventId && user?.sub) {
+        // Check for initial data from navigation state
+        const navigationState = location.state as { initialData?: Event } | null;
+        if (navigationState?.initialData && !initialDataUsed) {
+          // Use initial data immediately to show the page faster
+          setSelectedEvent(navigationState.initialData);
+          setInitialDataUsed(true);
+          setIsViewOnly(false);
+          // Let the normal data fetching continue in the background
+        }
 
-        if (ownedEvent) {
-          // User owns this event, show it normally
-          if (selectedEvent?.id !== eventId) {
-            setSelectedEvent(ownedEvent);
-            setIsViewOnly(false);
-          }
-        } else {
+        if (!loading) {
+          // Check if this event is in the user's events list (meaning they own it)
+          const ownedEvent = events.find(e => e.id === eventId);
+
+          if (ownedEvent) {
+            // User owns this event, show it normally
+            if (selectedEvent?.id !== eventId) {
+              setSelectedEvent(ownedEvent);
+              setIsViewOnly(false);
+            }
+          } else {
           // Event not in user's list, fetch it from API to check access
           try {
             const response = await fetch(`${API_URL}/api/events/${eventId}?auth0_sub=${encodeURIComponent(user.sub)}`);
@@ -389,12 +402,14 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
             setError('Event not found or you do not have access to view it.');
             setTimeout(() => setError(null), 3000);
           }
+          }
         }
       } else if (!eventId && selectedEvent) {
         // Clear selection when navigating back to /plans
         setSelectedEvent(null);
         setIsViewOnly(false);
         setEventOwnerAuth0Sub(null);
+        setInitialDataUsed(false);
       }
     };
 
@@ -933,7 +948,7 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
       )}
 
       {selectedEvent && (
-        <div className="event-detail-container">
+        <div className="event-detail-container slide-in-from-right">
           {/* Header */}
           <header className="plan-detail-header">
             <div className="plan-header-row">

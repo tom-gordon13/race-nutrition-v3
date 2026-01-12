@@ -160,7 +160,24 @@ const Plans = () => {
   };
 
   const handlePlanClick = (planId: string) => {
-    navigate(`/plans/${planId}`);
+    const plan = activeTab === 'my_plans'
+      ? myPlans.find(p => p.id === planId)
+      : communityPlans.find(p => p.id === planId);
+
+    navigate(`/plans/${planId}`, {
+      state: {
+        initialData: plan ? {
+          id: plan.id,
+          name: plan.name,
+          event_type: plan.event_type,
+          expected_duration: plan.expected_duration,
+          private: plan.private,
+          event_user_id: plan.event_user_id,
+          created_at: plan.created_at,
+          updated_at: plan.updated_at
+        } : null
+      }
+    });
   };
 
   const handleEditClick = (e: React.MouseEvent, plan: EventWithStats) => {

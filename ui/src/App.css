@@ -3545,6 +3545,10 @@ tbody tr.selected {
   }
 }
 
+.slide-in-from-right {
+  animation: slideInFromRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
 /* Ensure plan details takes full height on mobile */
 @media (max-width: 768px) {
   .events-container.split-view {
