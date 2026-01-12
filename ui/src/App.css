@@ -317,6 +317,42 @@
   }
 }
 
+/* Pull to Refresh Indicator */
+.pull-to-refresh-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.2s ease;
+  overflow: hidden;
+}
+
+.ptr-icon,
+.ptr-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6366f1;
+  font-size: 1.5rem;
+}
+
+.ptr-spinner .loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  min-height: auto;
+}
+
+.ptr-spinner .loading-message {
+  display: none;
+}
+
 /* Login Screen for unauthenticated users */
 .login-screen {
   min-height: 100vh;
