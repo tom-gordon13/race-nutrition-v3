@@ -1,5 +1,5 @@
 import './App.css'
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth0 } from "@auth0/auth0-react";
 import Nav from './Nav';
 import Home from './Home';
@@ -10,6 +10,47 @@ const App = () => {
   const { loginWithRedirect, isAuthenticated, isLoading } = useAuth0();
   const { isSyncing, syncError } = useUserSync();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const touchStartY = useRef(0);
+  const appRef = useRef<HTMLDivElement>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (window.scrollY === 0 && !isFullscreen) {
+      touchStartY.current = e.touches[0].clientY;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartY.current === 0 || isRefreshing || isFullscreen) return;
+
+    const currentY = e.touches[0].clientY;
+    const distance = currentY - touchStartY.current;
+
+    if (distance > 0 && window.scrollY === 0) {
+      setPullDistance(Math.min(distance, 100));
+    }
+  };
+
+  const handleTouchEnd = async () => {
+    if (pullDistance > 60 && !isRefreshing && !isFullscreen) {
+      setIsRefreshing(true);
+      setPullDistance(60);
+
+      // Trigger refresh
+      setRefreshKey(prev => prev + 1);
+
+      // Simulate loading time
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      setIsRefreshing(false);
+      setPullDistance(0);
+    } else {
+      setPullDistance(0);
+    }
+    touchStartY.current = 0;
+  };
 
   if (isLoading || isSyncing) {
     return <LoadingSpinner message={isLoading ? 'Loading...' : 'Syncing user...'} />;
@@ -20,12 +61,42 @@ const App = () => {
   }
 
   return (
-    <div className="app">
+    <div
+      className="app"
+      ref={appRef}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       {isAuthenticated ? (
         <>
+          {/* Pull to refresh indicator */}
+          {!isFullscreen && (
+            <div
+              className="pull-to-refresh-indicator"
+              style={{
+                height: `${pullDistance}px`,
+                opacity: pullDistance > 0 ? 1 : 0
+              }}
+            >
+              {isRefreshing ? (
+                <div className="ptr-spinner">
+                  <LoadingSpinner message="" size={30} />
+                </div>
+              ) : pullDistance > 60 ? (
+                <div className="ptr-icon">
+                  <i className="pi pi-refresh"></i>
+                </div>
+              ) : (
+                <div className="ptr-icon" style={{ opacity: pullDistance / 60 }}>
+                  <i className="pi pi-arrow-down"></i>
+                </div>
+              )}
+            </div>
+          )}
           {!isFullscreen && <Nav />}
           <main className="main-content">
-            <Home onFullscreenChange={setIsFullscreen} />
+            <Home key={refreshKey} onFullscreenChange={setIsFullscreen} />
           </main>
         </>
       ) : (
