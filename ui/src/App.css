@@ -2878,6 +2878,69 @@ tbody tr.selected {
   transform: scale(0.95);
 }
 
+/* Plan Options Button - Larger ellipsis button */
+.plan-options-button {
+  padding: 0.75rem;
+  font-size: 1.25rem;
+}
+
+.plan-options-button i {
+  font-size: 1.25rem;
+}
+
+/* Plan Options Dropdown Wrapper */
+.plan-options-dropdown-wrapper {
+  position: relative;
+}
+
+/* Plan Options Dropdown Menu */
+.plan-options-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+  min-width: 160px;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+/* Plan Option Item */
+.plan-option-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  text-align: left;
+}
+
+.plan-option-item:hover {
+  background-color: #f3f4f6;
+}
+
+.plan-option-item:active {
+  background-color: #e5e7eb;
+}
+
+.plan-option-item i {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.plan-option-item:hover i {
+  color: #374151;
+}
+
 /* Plan Title Section */
 .plan-title-section {
   background-color: white;

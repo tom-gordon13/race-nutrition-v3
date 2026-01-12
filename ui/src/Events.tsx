@@ -175,6 +175,9 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
   // State for tab view (Timeline vs Nutrients by Hour)
   const [activeView, setActiveView] = useState<'timeline' | 'nutrients'>('timeline');
 
+  // State for plan options dropdown
+  const [showPlanOptionsDropdown, setShowPlanOptionsDropdown] = useState(false);
+
   // Detect mobile screen size
   useEffect(() => {
     const handleResize = () => {
@@ -184,6 +187,21 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (showPlanOptionsDropdown && !target.closest('.plan-options-dropdown-wrapper')) {
+        setShowPlanOptionsDropdown(false);
+      }
+    };
+
+    if (showPlanOptionsDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showPlanOptionsDropdown]);
 
   const fetchEvents = async () => {
     if (!user || !user.sub) {
@@ -924,14 +942,41 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
                 <span>Plans</span>
               </button>
               <div className="header-actions">
-                {!isViewOnly && (
-                  <button onClick={() => setShowShareEventDialog(true)} className="icon-button">
-                    <i className="pi pi-share-alt"></i>
+                <div className="plan-options-dropdown-wrapper">
+                  <button
+                    className="icon-button plan-options-button"
+                    onClick={() => setShowPlanOptionsDropdown(!showPlanOptionsDropdown)}
+                  >
+                    <i className="pi pi-ellipsis-h"></i>
                   </button>
-                )}
-                <button className="icon-button">
-                  <i className="pi pi-ellipsis-h"></i>
-                </button>
+                  {showPlanOptionsDropdown && (
+                    <div className="plan-options-dropdown">
+                      <button
+                        className="plan-option-item"
+                        onClick={() => {
+                          setEventToEdit(selectedEvent);
+                          setShowEditEventDialog(true);
+                          setShowPlanOptionsDropdown(false);
+                        }}
+                      >
+                        <i className="pi pi-pencil"></i>
+                        <span>Edit Plan</span>
+                      </button>
+                      {!isViewOnly && (
+                        <button
+                          className="plan-option-item"
+                          onClick={() => {
+                            setShowShareEventDialog(true);
+                            setShowPlanOptionsDropdown(false);
+                          }}
+                        >
+                          <i className="pi pi-share-alt"></i>
+                          <span>Share Plan</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </header>

@@ -445,9 +445,10 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '0.75rem 0'
+                padding: '0.75rem 0',
+                gap: '1rem'
               }}>
-                <div style={{ textAlign: 'left' }}>
+                <div style={{ textAlign: 'left', flex: 1, paddingRight: '1rem' }}>
                   <div style={{
                     fontSize: '1.0625rem',
                     fontWeight: 500,
@@ -460,13 +461,14 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
                     fontSize: '0.875rem',
                     color: '#6b7280'
                   }}>
-                    {isPrivate ? 'Only you can see this plan' : 'Anyone with the link can view'}
+                    {isPrivate ? 'Only you can see this plan' : 'Anyone with the link can view, and connections will be able to see this plan in the Community Plans tab.'}
                   </div>
                 </div>
                 <InputSwitch
                   checked={!isPrivate}
                   onChange={(e) => setIsPrivate(!e.value)}
                   disabled={loading}
+                  style={{ flexShrink: 0 }}
                 />
               </div>
             </div>
