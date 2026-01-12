@@ -107,7 +107,7 @@ const Users = () => {
       await fetchUsers();
     } catch (err) {
       console.error('Error sending connection request:', err);
-      setError(err instanceof Error ? err.message : 'Failed to send connection request');
+      setError('Failed to load - please try again in a few minutes');
     }
   };
 

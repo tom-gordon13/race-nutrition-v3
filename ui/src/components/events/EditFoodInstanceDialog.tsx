@@ -134,7 +134,7 @@ export const EditFoodInstanceDialog: React.FC<EditFoodInstanceDialogProps> = ({
       await onSave(foodInstance.id, timeSeconds, servings);
       onHide();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update food instance');
+      setError('Failed to load - please try again in a few minutes');
     } finally {
       setLoading(false);
     }

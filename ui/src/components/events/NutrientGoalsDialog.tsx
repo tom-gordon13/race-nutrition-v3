@@ -104,7 +104,7 @@ export const NutrientGoalsDialog = ({
       setNutrients(data.nutrients);
     } catch (err) {
       console.error('Error fetching nutrients:', err);
-      setError('Failed to load nutrients');
+      setError('Failed to load - please try again in a few minutes');
     }
   };
 
@@ -127,7 +127,7 @@ export const NutrientGoalsDialog = ({
       }
     } catch (err) {
       console.error('Error fetching goals:', err);
-      setError('Failed to load existing goals');
+      setError('Failed to load - please try again in a few minutes');
     } finally {
       setLoading(false);
     }
@@ -243,7 +243,7 @@ export const NutrientGoalsDialog = ({
       onHide();
     } catch (err) {
       console.error('Error saving goals:', err);
-      setError('Failed to save goals');
+      setError('Failed to load - please try again in a few minutes');
     } finally {
       setSaving(false);
     }

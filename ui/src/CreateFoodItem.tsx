@@ -151,7 +151,7 @@ const CreateFoodItem = ({ visible, onHide, onFoodItemCreated }: CreateFoodItemPr
 
     } catch (err) {
       console.error('Error creating food item:', err);
-      alert(err instanceof Error ? err.message : 'Failed to create food item');
+      alert('Failed to load - please try again in a few minutes');
     } finally {
       setLoading(false);
     }

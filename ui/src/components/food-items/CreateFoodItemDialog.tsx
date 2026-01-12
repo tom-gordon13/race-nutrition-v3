@@ -238,7 +238,7 @@ export const CreateFoodItemDialog: React.FC<CreateFoodItemDialogProps> = ({
 
     } catch (err) {
       console.error(`Error ${mode}ing food item:`, err);
-      alert(err instanceof Error ? err.message : `Failed to ${mode} food item`);
+      alert('Failed to load - please try again in a few minutes');
     } finally {
       setLoading(false);
     }

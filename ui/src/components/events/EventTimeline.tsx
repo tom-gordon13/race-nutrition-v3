@@ -286,7 +286,7 @@ export const EventTimeline = ({
       setEditServings('');
     } catch (err) {
       console.error('Error updating instance:', err);
-      alert('Failed to update food instance');
+      alert('Failed to load - please try again in a few minutes');
     }
   };
 

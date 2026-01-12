@@ -96,7 +96,7 @@ export const AcceptSharedEventDialog: React.FC<AcceptSharedEventDialogProps> = (
       onAccept();
       onHide();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to accept plan');
+      setError('Failed to load - please try again in a few minutes');
       console.error('Error accepting shared event:', err);
     } finally {
       setLoading(false);
@@ -128,7 +128,7 @@ export const AcceptSharedEventDialog: React.FC<AcceptSharedEventDialogProps> = (
       onDeny();
       onHide();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to deny plan');
+      setError('Failed to load - please try again in a few minutes');
       console.error('Error denying shared event:', err);
     } finally {
       setLoading(false);

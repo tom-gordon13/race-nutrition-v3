@@ -337,7 +337,7 @@ const FoodItems = ({ refreshTrigger, onCreateClick }: FoodItemsProps) => {
       }
     } catch (err) {
       console.error('Error toggling favorite:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update favorite');
+      setError('Failed to load - please try again in a few minutes');
     }
   };
 

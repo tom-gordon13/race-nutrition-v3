@@ -61,7 +61,7 @@ export default function Preferences() {
         toast.current?.show({
           severity: 'error',
           summary: 'Error',
-          detail: 'Failed to load color options',
+          detail: 'Failed to load - please try again in a few minutes',
           life: 3000
         });
       }
@@ -94,7 +94,7 @@ export default function Preferences() {
         toast.current?.show({
           severity: 'error',
           summary: 'Error',
-          detail: 'Failed to load your saved preferences',
+          detail: 'Failed to load - please try again in a few minutes',
           life: 3000
         });
       } finally {
@@ -140,7 +140,7 @@ export default function Preferences() {
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
-        detail: 'Failed to save color preference',
+        detail: 'Failed to load - please try again in a few minutes',
         life: 3000
       });
     }

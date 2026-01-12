@@ -482,7 +482,7 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
         // Success - no refresh needed, state already updated optimistically
       } catch (err) {
         console.error('Error updating food instance:', err);
-        setError(err instanceof Error ? err.message : 'Failed to move food instance');
+        setError('Failed to load - please try again in a few minutes');
         setTimeout(() => setError(null), 3000);
         // Refresh to revert to original position on error
         await fetchFoodInstances(selectedEvent.id);
@@ -551,7 +551,7 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Error updating food instance:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update food instance');
+      setError('Failed to load - please try again in a few minutes');
       throw err;
     }
   };
@@ -597,7 +597,7 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
       setShowFoodItemModal(false);
     } catch (err) {
       console.error('Error creating food instance:', err);
-      setError(err instanceof Error ? err.message : 'Failed to create food instance');
+      setError('Failed to load - please try again in a few minutes');
     }
   };
 
@@ -650,7 +650,7 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
       setSuccess(`Event duplicated successfully! ${data.foodInstancesCopied} food items copied.`);
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to duplicate event');
+      setError('Failed to load - please try again in a few minutes');
       console.error('Error duplicating event:', err);
       setTimeout(() => setError(null), 3000);
     }

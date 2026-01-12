@@ -99,7 +99,7 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
       setConnectedUsers(data.users);
       setCurrentUserId(data.currentUserId); // Save the database user ID
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load connected users');
+      setError('Failed to load - please try again in a few minutes');
       console.error('Error fetching connected users:', err);
     } finally {
       setLoading(false);
@@ -146,7 +146,7 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
         setSuccess(null);
       }, 3000);
     } catch (err) {
-      setError('Failed to copy link to clipboard');
+      setError('Failed to load - please try again in a few minutes');
       console.error('Error copying to clipboard:', err);
       setTimeout(() => {
         setError(null);
@@ -197,7 +197,7 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
         onHide();
       }, 1500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to share plan');
+      setError('Failed to load - please try again in a few minutes');
       console.error('Error sharing event:', err);
     } finally {
       setSharingUserId(null);
