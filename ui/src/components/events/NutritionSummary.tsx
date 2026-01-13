@@ -74,9 +74,11 @@ interface NutritionSummaryProps {
   userId: string;
   goalsRefreshTrigger?: number;
   scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
+  useFixedHeight?: boolean;
+  maxDisplayHours?: number;
 }
 
-export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, goalsRefreshTrigger, scrollContainerRef }: NutritionSummaryProps) => {
+export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, goalsRefreshTrigger, scrollContainerRef, useFixedHeight = false, maxDisplayHours }: NutritionSummaryProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const hasAutoExpanded = useRef(false);
   const [allNutrients, setAllNutrients] = useState<Nutrient[]>([]);
@@ -87,10 +89,22 @@ export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, 
   const HALF_HOUR = 1800;
   const PRE_START_TIME = 0.25 * 3600; // 0.25 hours in seconds
   const POST_END_TIME = 0.25 * 3600; // 0.25 hours in seconds
-  const tickInterval = event.expected_duration > THREE_HOURS ? ONE_HOUR : HALF_HOUR;
+  const PIXELS_PER_HOUR = 200; // Fixed height per hour in expanded view
+
+  // Calculate display duration (use maxDisplayHours if provided)
+  const displayDuration = maxDisplayHours
+    ? Math.min(maxDisplayHours * 3600, event.expected_duration)
+    : event.expected_duration;
+
+  const tickInterval = displayDuration > THREE_HOURS ? ONE_HOUR : HALF_HOUR;
 
   // Total timeline duration includes pre-start time and post-end time
-  const totalTimelineDuration = event.expected_duration + PRE_START_TIME + POST_END_TIME;
+  const totalTimelineDuration = displayDuration + PRE_START_TIME + POST_END_TIME;
+
+  // Calculate fixed height if needed
+  const fixedTimelineHeight = useFixedHeight
+    ? (totalTimelineDuration / 3600) * PIXELS_PER_HOUR
+    : undefined;
 
   // Fetch all available nutrients
   useEffect(() => {
@@ -181,9 +195,14 @@ export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, 
   // Generate dividers to match timeline (starting from 0, positioned in box with 0.25 hour buffer)
   const generateDividers = () => {
     const dividers = [];
-    for (let time = tickInterval; time < event.expected_duration; time += tickInterval) {
-      const percentage = ((time + PRE_START_TIME) / totalTimelineDuration) * 100;
-      dividers.push({ time, percentage });
+    for (let time = tickInterval; time < displayDuration; time += tickInterval) {
+      if (useFixedHeight && fixedTimelineHeight) {
+        const pixels = ((time + PRE_START_TIME) / totalTimelineDuration) * fixedTimelineHeight;
+        dividers.push({ time, pixels, percentage: 0 });
+      } else {
+        const percentage = ((time + PRE_START_TIME) / totalTimelineDuration) * 100;
+        dividers.push({ time, percentage, pixels: 0 });
+      }
     }
     return dividers;
   };
@@ -192,11 +211,24 @@ export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, 
   const generateWindows = () => {
     const windows = [];
 
-    for (let startTime = 0; startTime < event.expected_duration; startTime += tickInterval) {
-      const endTime = Math.min(startTime + tickInterval, event.expected_duration);
-      const topPercentage = ((startTime + PRE_START_TIME) / totalTimelineDuration) * 100;
-      const bottomPercentage = ((endTime + PRE_START_TIME) / totalTimelineDuration) * 100;
-      const height = bottomPercentage - topPercentage;
+    for (let startTime = 0; startTime < displayDuration; startTime += tickInterval) {
+      const endTime = Math.min(startTime + tickInterval, displayDuration);
+
+      let topPercentage, height, topPixels, heightPixels;
+
+      if (useFixedHeight && fixedTimelineHeight) {
+        topPixels = ((startTime + PRE_START_TIME) / totalTimelineDuration) * fixedTimelineHeight;
+        const bottomPixels = ((endTime + PRE_START_TIME) / totalTimelineDuration) * fixedTimelineHeight;
+        heightPixels = bottomPixels - topPixels;
+        topPercentage = 0;
+        height = 0;
+      } else {
+        topPercentage = ((startTime + PRE_START_TIME) / totalTimelineDuration) * 100;
+        const bottomPercentage = ((endTime + PRE_START_TIME) / totalTimelineDuration) * 100;
+        height = bottomPercentage - topPercentage;
+        topPixels = 0;
+        heightPixels = 0;
+      }
 
       // Calculate which hour this window represents (for goals)
       const hour = Math.floor(startTime / 3600);
@@ -247,6 +279,8 @@ export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, 
         endTime,
         topPercentage,
         height,
+        topPixels,
+        heightPixels,
         hour,
         nutrientTotals: Object.values(nutrientTotals)
       });
@@ -271,8 +305,13 @@ export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, 
     }
   };
 
+  const computedTimelineStyle = {
+    ...timelineStyle,
+    ...(fixedTimelineHeight ? { minHeight: `${fixedTimelineHeight}px`, height: `${fixedTimelineHeight}px` } : {})
+  };
+
   return (
-    <div className={`nutrition-summary-panel ${isExpanded ? 'expanded' : 'collapsed'}`} style={timelineStyle}>
+    <div className={`nutrition-summary-panel ${isExpanded ? 'expanded' : 'collapsed'}`} style={computedTimelineStyle}>
       <button
         className="nutrition-panel-toggle"
         onClick={() => setIsExpanded(!isExpanded)}
@@ -282,12 +321,14 @@ export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, 
       </button>
 
       {isExpanded && (
-        <div className="nutrition-panel-content" style={timelineStyle}>
+        <div className="nutrition-panel-content" style={computedTimelineStyle}>
           {/* Race start line at timestamp 0 */}
           <div
             className="nutrition-race-start"
             style={{
-              top: `${(PRE_START_TIME / totalTimelineDuration) * 100}%`,
+              top: useFixedHeight && fixedTimelineHeight
+                ? `${(PRE_START_TIME / totalTimelineDuration) * fixedTimelineHeight}px`
+                : `${(PRE_START_TIME / totalTimelineDuration) * 100}%`,
               position: 'absolute',
               width: '100%'
             }}
@@ -298,7 +339,11 @@ export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, 
             <div
               key={divider.time}
               className="nutrition-divider"
-              style={{ top: `${divider.percentage}%`, position: 'absolute', width: '100%' }}
+              style={{
+                top: useFixedHeight ? `${divider.pixels}px` : `${divider.percentage}%`,
+                position: 'absolute',
+                width: '100%'
+              }}
             ></div>
           ))}
 
@@ -307,8 +352,8 @@ export const NutritionSummary = ({ event, foodInstances, timelineStyle, userId, 
               key={index}
               className="nutrition-window"
               style={{
-                top: `${window.topPercentage}%`,
-                height: `${window.height}%`
+                top: useFixedHeight ? `${window.topPixels}px` : `${window.topPercentage}%`,
+                height: useFixedHeight ? `${window.heightPixels}px` : `${window.height}%`
               }}
             >
               <div className="nutrition-window-content">

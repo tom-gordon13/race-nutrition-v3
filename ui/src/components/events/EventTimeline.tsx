@@ -57,6 +57,8 @@ interface EventTimelineProps {
   categoryColors?: Map<string, string>;
   viewOnly?: boolean;
   isMobile?: boolean;
+  maxDisplayHours?: number;
+  useFixedHeight?: boolean;
 }
 
 const formatTimeHHMM = (seconds: number) => {
@@ -69,13 +71,14 @@ const formatTimeHHMM = (seconds: number) => {
 };
 
 // Calculate horizontal offsets for overlapping instances
-const calculateHorizontalOffsets = (instances: FoodInstance[], event: Event, viewOnly: boolean = false, isMobile: boolean = false) => {
+const calculateHorizontalOffsets = (instances: FoodInstance[], event: Event, viewOnly: boolean = false, isMobile: boolean = false, displayDuration?: number) => {
   // Desktop view-only: larger pills to show item names, Mobile view-only: condensed, Edit mode: normal
   const ITEM_HEIGHT_PERCENT = viewOnly ? (isMobile ? 2 : 8) : 8;
   const ITEM_WIDTH_PX = viewOnly ? (isMobile ? 95 : 250) : 180;
   const PRE_START_TIME = 0.25 * 3600; // 0.25 hours in seconds
   const POST_END_TIME = 0.25 * 3600; // 0.25 hours in seconds
-  const totalTimelineDuration = event.expected_duration + PRE_START_TIME + POST_END_TIME;
+  const duration = displayDuration || event.expected_duration;
+  const totalTimelineDuration = duration + PRE_START_TIME + POST_END_TIME;
 
   // Sort instances by time
   const sorted = [...instances].sort((a, b) =>
@@ -138,7 +141,9 @@ export const EventTimeline = ({
   timelineStyle,
   categoryColors,
   viewOnly = false,
-  isMobile = false
+  isMobile = false,
+  maxDisplayHours,
+  useFixedHeight = false
 }: EventTimelineProps) => {
   const [hoveredInstanceId, setHoveredInstanceId] = useState<string | null>(null);
   const [editingInstanceId, setEditingInstanceId] = useState<string | null>(null);
@@ -159,19 +164,35 @@ export const EventTimeline = ({
   const HALF_HOUR = 1800;
   const PRE_START_TIME = 0.25 * 3600; // 0.25 hours in seconds (900 seconds) - extra space at top
   const POST_END_TIME = 0.25 * 3600; // 0.25 hours in seconds (900 seconds) - extra space at end
+  const PIXELS_PER_HOUR = 120; // Fixed height per hour in expanded view
+
+  // Calculate display duration (use maxDisplayHours if provided)
+  const displayDuration = maxDisplayHours
+    ? Math.min(maxDisplayHours * 3600, event.expected_duration)
+    : event.expected_duration;
 
   // Total timeline duration includes pre-start time and post-end time
-  const totalTimelineDuration = event.expected_duration + PRE_START_TIME + POST_END_TIME;
+  const totalTimelineDuration = displayDuration + PRE_START_TIME + POST_END_TIME;
 
-  // Determine tick interval based on event duration
-  const tickInterval = event.expected_duration > THREE_HOURS ? ONE_HOUR : HALF_HOUR;
+  // Calculate fixed height if needed
+  const fixedTimelineHeight = useFixedHeight
+    ? (totalTimelineDuration / 3600) * PIXELS_PER_HOUR
+    : undefined;
+
+  // Determine tick interval based on display duration
+  const tickInterval = displayDuration > THREE_HOURS ? ONE_HOUR : HALF_HOUR;
 
   // Generate tick marks (starting from 0, positioned in box with 0.25 hour buffer)
   const generateTicks = () => {
     const ticks = [];
-    for (let time = 0; time <= event.expected_duration; time += tickInterval) {
-      const percentage = ((time + PRE_START_TIME) / totalTimelineDuration) * 100;
-      ticks.push({ time, percentage });
+    for (let time = 0; time <= displayDuration; time += tickInterval) {
+      if (useFixedHeight && fixedTimelineHeight) {
+        const pixels = ((time + PRE_START_TIME) / totalTimelineDuration) * fixedTimelineHeight;
+        ticks.push({ time, pixels, percentage: 0 });
+      } else {
+        const percentage = ((time + PRE_START_TIME) / totalTimelineDuration) * 100;
+        ticks.push({ time, percentage, pixels: 0 });
+      }
     }
     return ticks;
   };
@@ -179,14 +200,24 @@ export const EventTimeline = ({
   // Generate dividers (starting from 0, positioned in box with 0.25 hour buffer)
   const generateDividers = () => {
     const dividers = [];
-    for (let time = tickInterval; time < event.expected_duration; time += tickInterval) {
-      const percentage = ((time + PRE_START_TIME) / totalTimelineDuration) * 100;
-      dividers.push({ time, percentage });
+    for (let time = tickInterval; time < displayDuration; time += tickInterval) {
+      if (useFixedHeight && fixedTimelineHeight) {
+        const pixels = ((time + PRE_START_TIME) / totalTimelineDuration) * fixedTimelineHeight;
+        dividers.push({ time, pixels, percentage: 0 });
+      } else {
+        const percentage = ((time + PRE_START_TIME) / totalTimelineDuration) * 100;
+        dividers.push({ time, percentage, pixels: 0 });
+      }
     }
     return dividers;
   };
 
-  const horizontalOffsets = calculateHorizontalOffsets(foodInstances, event, viewOnly, isMobile);
+  // Filter food instances to only show those within display duration
+  const visibleFoodInstances = maxDisplayHours
+    ? foodInstances.filter(instance => instance.time_elapsed_at_consumption <= displayDuration)
+    : foodInstances;
+
+  const horizontalOffsets = calculateHorizontalOffsets(visibleFoodInstances, event, viewOnly, isMobile, displayDuration);
 
   // Calculate minimum width needed to show all food instances
   const ITEM_WIDTH_PX = viewOnly ? (isMobile ? 95 : 250) : 180;
@@ -357,15 +388,20 @@ export const EventTimeline = ({
     onDragEnd();
   };
 
+  const computedTimelineStyle = {
+    ...timelineStyle,
+    ...(fixedTimelineHeight ? { minHeight: `${fixedTimelineHeight}px`, height: `${fixedTimelineHeight}px` } : {})
+  };
+
   return (
     <>
       {/* Y-axis with tick marks */}
-      <div className="timeline-y-axis" style={timelineStyle}>
+      <div className="timeline-y-axis" style={computedTimelineStyle}>
         {generateTicks().map((tick, index) => (
           <div
             key={index}
             className="timeline-tick"
-            style={{ top: `${tick.percentage}%` }}
+            style={useFixedHeight ? { top: `${tick.pixels}px` } : { top: `${tick.percentage}%` }}
           >
             <span className="tick-label">{formatTimeHHMM(tick.time)}</span>
             <span className="tick-mark"></span>
@@ -377,7 +413,7 @@ export const EventTimeline = ({
       <div
         ref={timelineRef}
         className="event-timeline"
-        style={{ ...timelineStyle, minWidth: `${minTimelineWidth}px` }}
+        style={{ ...computedTimelineStyle, minWidth: `${minTimelineWidth}px` }}
         onDragOver={onDragOver}
         onDrop={onDrop}
         onClick={handleTimelineClick}
@@ -398,7 +434,9 @@ export const EventTimeline = ({
             <div
               className="timeline-race-start"
               style={{
-                top: `${(PRE_START_TIME / totalTimelineDuration) * 100}%`,
+                top: useFixedHeight && fixedTimelineHeight
+                  ? `${(PRE_START_TIME / totalTimelineDuration) * fixedTimelineHeight}px`
+                  : `${(PRE_START_TIME / totalTimelineDuration) * 100}%`,
                 position: 'absolute',
                 width: '100%'
               }}
@@ -409,12 +447,18 @@ export const EventTimeline = ({
               <div
                 key={divider.time}
                 className="timeline-divider"
-                style={{ top: `${divider.percentage}%`, position: 'absolute', width: '100%' }}
+                style={{
+                  top: useFixedHeight ? `${divider.pixels}px` : `${divider.percentage}%`,
+                  position: 'absolute',
+                  width: '100%'
+                }}
               ></div>
             ))}
 
-            {foodInstances.map((instance) => {
-              const position = ((instance.time_elapsed_at_consumption + PRE_START_TIME) / totalTimelineDuration) * 100;
+            {visibleFoodInstances.map((instance) => {
+              const position = useFixedHeight && fixedTimelineHeight
+                ? ((instance.time_elapsed_at_consumption + PRE_START_TIME) / totalTimelineDuration) * fixedTimelineHeight
+                : ((instance.time_elapsed_at_consumption + PRE_START_TIME) / totalTimelineDuration) * 100;
               const isHovered = hoveredInstanceId === instance.id;
               const isEditing = editingInstanceId === instance.id;
               const isTouchDragging = touchDraggingInstanceId === instance.id;
@@ -427,7 +471,7 @@ export const EventTimeline = ({
               // Calculate visual position - use touch drag position if this instance is being dragged
               let visualStyle: React.CSSProperties = {
                 position: 'absolute',
-                top: `${position}%`,
+                top: useFixedHeight ? `${position}px` : `${position}%`,
                 left: `${leftOffset}px`,
                 width: viewOnly ? (isMobile ? '95px' : '250px') : '180px',
                 cursor: isEditing ? 'default' : (viewOnly ? 'pointer' : 'grab'),

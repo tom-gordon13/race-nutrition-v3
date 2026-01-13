@@ -29,6 +29,7 @@
   display: flex;
   flex-direction: column;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
 }
 
 .modal-sheet-overlay.active .modal-sheet {
@@ -40,7 +41,8 @@
   .modal-sheet {
     left: 50%;
     right: auto;
-    width: 672px; /* Match max-w-2xl */
+    width: min(672px, 90vw); /* Match max-w-2xl but allow scaling */
+    max-width: 800px; /* Allow expansion on larger screens */
     transform: translateX(-50%) translateY(100%);
   }
 
@@ -77,6 +79,7 @@
   display: flex;
   flex-direction: column;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
 }
 
 .food-item-modal-overlay.active .food-item-modal-sheet {
@@ -88,7 +91,8 @@
   .food-item-modal-sheet {
     left: 50%;
     right: auto;
-    width: 672px; /* Match max-w-2xl */
+    width: min(672px, 90vw); /* Match max-w-2xl but allow scaling */
+    max-width: 800px; /* Allow expansion on larger screens */
     transform: translateX(-50%) translateY(100%);
   }
 
@@ -171,14 +175,17 @@
 /* Modal Content - Scrollable area */
 .modal-content {
   overflow-y: auto;
+  overflow-x: hidden;
   flex: 1;
   padding: 0;
   -webkit-overflow-scrolling: touch;
   background: white;
   width: 100%;
+  max-width: 100%;
   border: none;
   box-shadow: none;
   outline: none;
+  box-sizing: border-box;
 }
 
 /* Ensure form has no dark background */
@@ -213,6 +220,8 @@
   border: none;
   box-shadow: none;
   outline: none;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .form-section:first-child {
@@ -310,6 +319,14 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 0.75rem;
   background: white;
+}
+
+/* Desktop - expand grid for better use of space */
+@media (min-width: 769px) {
+  .nutrient-grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+  }
 }
 
 .nutrient-card {
@@ -651,6 +668,8 @@
   padding: 1rem 1.25rem;
   border-bottom: 1px solid #f3f4f6;
   background-color: #f9fafb;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .time-input-container {
@@ -659,16 +678,20 @@
 
 .time-input-container-equal {
   flex: 1;
+  min-width: 0; /* Allow flex item to shrink below content size */
 }
 
 .servings-input-container-equal {
   flex: 1;
+  min-width: 0; /* Allow flex item to shrink below content size */
 }
 
 .time-input-wrapper {
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
+  max-width: 100%;
 }
 
 .time-icon {
@@ -681,6 +704,7 @@
 
 .time-input-field {
   width: 100%;
+  max-width: 100%;
   border-radius: 0.5rem;
   border: 1px solid #e5e7eb;
   background: white;
@@ -688,6 +712,7 @@
   font-size: 0.875rem;
   font-weight: 600;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
 }
 
 .time-input-field:focus {
@@ -708,6 +733,9 @@
   border-radius: 0.5rem;
   background: white;
   overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .servings-btn {
@@ -750,12 +778,16 @@
 .search-section {
   padding: 0.75rem 1.25rem;
   border-bottom: 1px solid #f3f4f6;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .search-with-filter-row {
   display: flex;
   gap: 0.5rem;
   align-items: center;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .search-input-container {
@@ -765,6 +797,8 @@
 .search-input-container-with-filter {
   position: relative;
   flex: 1;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .search-icon-new {
@@ -779,12 +813,14 @@
 
 .search-input-new {
   width: 100%;
+  max-width: 100%;
   border-radius: 0.75rem;
   border: 1px solid #e5e7eb;
   background: #f9fafb;
   padding: 0.75rem 1rem 0.75rem 2.75rem;
   font-size: 0.875rem;
   transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .search-input-new::placeholder {
@@ -804,6 +840,8 @@
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
   border-bottom: 1px solid #f3f4f6;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .filter-pill-btn {
@@ -923,6 +961,8 @@
   justify-content: space-between;
   padding: 0.5rem 1.25rem;
   background: #f9fafb;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .results-count {
@@ -935,6 +975,7 @@
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  width: 100%;
 }
 
 .food-items-list-new::-webkit-scrollbar {
@@ -959,6 +1000,8 @@
   cursor: pointer;
   transition: background 0.15s ease;
   background: white;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .food-item-new:hover {
@@ -1069,6 +1112,8 @@
   border-top: 1px solid #f3f4f6;
   background: white;
   flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .add-to-timeline-btn {
@@ -1099,6 +1144,43 @@
 
 .add-to-timeline-btn i {
   font-size: 1.125rem;
+}
+
+/* Desktop - Better spacing for larger dialogs */
+@media (min-width: 769px) {
+  .form-section {
+    padding: 0 1.5rem;
+    padding-bottom: 1.75rem;
+  }
+
+  .modal-header {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .modal-footer,
+  .modal-footer-sticky {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .time-servings-section {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .search-section {
+    padding: 1rem 1.5rem;
+  }
+
+  .filter-pills-section {
+    padding: 1rem 1.5rem;
+  }
+
+  .results-count-section {
+    padding: 0.75rem 1.5rem;
+  }
+
+  .food-item-new {
+    padding: 1rem 1.5rem;
+  }
 }
 
 /* Mobile Responsive */

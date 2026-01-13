@@ -1343,7 +1343,7 @@ tbody tr.selected {
   width: 100vw;
   height: 100vh;
   z-index: 10000;
-  background-color: #1a1a1a;
+  background-color: white;
   display: flex;
   flex-direction: column;
 }
@@ -1373,13 +1373,31 @@ tbody tr.selected {
 .event-timeline-container.fullscreen {
   flex: 1;
   display: flex;
+  flex-direction: row;
+  align-items: flex-start;
   gap: 0;
   position: relative;
   min-height: 0;
   overflow-y: auto;
   overflow-x: auto;
   overscroll-behavior-x: contain;
-  background-color: #1a1a1a;
+  background-color: white;
+}
+
+/* Fullscreen timeline and y-axis styling - allow them to extend to their full calculated height */
+.event-timeline-container.fullscreen .event-timeline {
+  flex: 1 !important;
+  height: unset !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  width: 100%;
+}
+
+.event-timeline-container.fullscreen .timeline-y-axis {
+  flex: none !important;
+  height: unset !important;
+  min-height: 0 !important;
+  max-height: none !important;
 }
 
 /* Fullscreen info header */
@@ -1389,8 +1407,8 @@ tbody tr.selected {
   justify-content: center;
   align-items: center;
   gap: 3rem;
-  background-color: rgba(0, 0, 0, 0.8);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: #000000;
+  border-bottom: 1px solid #e5e7eb;
   padding: 1rem 2rem;
   position: relative;
   flex-shrink: 0;
@@ -1406,13 +1424,13 @@ tbody tr.selected {
 .fullscreen-stat-value {
   font-size: 1.75rem;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.95);
+  color: #ffffff;
   line-height: 1;
 }
 
 .fullscreen-stat-label {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: #9ca3af;
   font-weight: 500;
   text-transform: lowercase;
 }
@@ -2546,6 +2564,22 @@ tbody tr.selected {
     padding: 0;
   }
 
+  /* Fullscreen timeline overrides for mobile */
+  .event-timeline-container.fullscreen .event-timeline {
+    flex: 1 !important;
+    height: unset !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    width: 100%;
+  }
+
+  .event-timeline-container.fullscreen .timeline-y-axis {
+    flex: none !important;
+    height: unset !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+
   /* Smaller tick labels (only in condensed view) */
   .event-detail-content.mobile-condensed-view .tick-label {
     font-size: 0.7rem;
@@ -3222,6 +3256,7 @@ tbody tr.selected {
 .view-tabs-container {
   background-color: white;
   border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
 }
 
 .view-tabs {
@@ -3463,6 +3498,70 @@ tbody tr.selected {
   font-weight: 500;
 }
 
+/* See Full Event Button */
+.see-full-event-container {
+  padding: 1.5rem 1.25rem;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.see-full-event-divider {
+  text-align: center;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.see-full-event-divider::before,
+.see-full-event-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #e5e7eb 50%, transparent);
+}
+
+.see-full-event-text {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.see-full-event-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #6366F1;
+  color: white;
+  border: 2px solid #6366F1;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.see-full-event-button:hover {
+  background-color: #5558e3;
+  border-color: #5558e3;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+}
+
+.see-full-event-button:active {
+  transform: translateY(0);
+}
+
+.see-full-event-button i {
+  font-size: 1rem;
+}
+
 /* Floating Expanded View Button */
 .floating-expanded-btn-container {
   position: relative;
@@ -3533,7 +3632,7 @@ tbody tr.selected {
   }
 }
 
-/* Slide-in animation for plan details */
+/* Slide-in animation for plan details - DISABLED to fix timeline height issue */
 @keyframes slideInFromRight {
   from {
     transform: translateX(100%);
@@ -3546,7 +3645,7 @@ tbody tr.selected {
 }
 
 .slide-in-from-right {
-  animation: slideInFromRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  /* animation: slideInFromRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards; */
 }
 
 /* Ensure plan details takes full height on mobile */

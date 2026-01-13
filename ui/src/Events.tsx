@@ -1049,110 +1049,130 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
             </div>
           </div>
 
-          {/* Divider */}
-          <div className="section-divider"></div>
-
-          {/* View Tabs */}
-          <div className="view-tabs-container">
-            <div className="view-tabs">
-              <button
-                className={`tab-button ${activeView === 'timeline' ? 'active' : ''}`}
-                onClick={() => setActiveView('timeline')}
-              >
-                Timeline
-              </button>
-              <button
-                className={`tab-button ${activeView === 'nutrients' ? 'active' : ''}`}
-                onClick={() => setActiveView('nutrients')}
-              >
-                Nutrients by Hour
-              </button>
-              <div className={`tab-indicator tab-indicator-${activeView}`}></div>
-            </div>
-          </div>
-          {/* Timeline View */}
-          {activeView === 'timeline' && (
-            <div className="timeline-view">
-              {/* Timeline Header */}
-              <div className="timeline-header">
-                <div className="timeline-info">
-                  <span className="item-count">{foodInstances.length} items</span>
-                </div>
-                <div className="timeline-actions">
-                  <button onClick={() => setIsFullscreen(true)} className="timeline-action-btn expanded">
-                    <i className="pi pi-window-maximize"></i>
-                    Expanded
-                  </button>
-                  <button onClick={() => handleClickHoldCreate(0)} className="timeline-action-btn add-item">
-                    <i className="pi pi-plus"></i>
-                    Add Item
-                  </button>
-                </div>
-              </div>
-
-              {/* Legend */}
-              <div className="timeline-legend">
-                {Array.from(new Set(foodInstances.map(fi => fi.foodItem.category).filter(Boolean))).map(category => {
-                  const color = categoryColors.get(category!) || '#646cff';
-                  return (
-                    <div key={category} className="legend-item">
-                      <span className="legend-dot" style={{ backgroundColor: color }}></span>
-                      <span className="legend-text">
-                        {category!.charAt(0).toUpperCase() + category!.slice(1).toLowerCase().replace(/_/g, ' ')}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Timeline Grid */}
-              <div className="event-timeline-container" ref={timelineContainerRef}>
-                <EventTimeline
-                  event={selectedEvent}
-                  foodInstances={foodInstances}
-                  loadingInstances={loadingInstances}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                  onDragStart={handleDragStart}
-                  onDragEnd={handleDragEnd}
-                  onUpdateInstance={handleUpdateInstance}
-                  onClickHoldCreate={handleClickHoldCreate}
-                  onInstanceClick={handleInstanceClick}
-                  timelineStyle={timelineStyle}
-                  categoryColors={categoryColors}
-                  viewOnly={isViewOnly}
-                  isMobile={isMobile}
-                />
-
-                {!isMobile && (
-                  <NutritionSummary
-                    event={selectedEvent}
-                    foodInstances={foodInstances}
-                    timelineStyle={timelineStyle}
-                    userId={isViewOnly && eventOwnerAuth0Sub ? eventOwnerAuth0Sub : user.sub}
-                    goalsRefreshTrigger={goalsRefreshTrigger}
-                    scrollContainerRef={timelineContainerRef}
-                  />
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Nutrients by Hour View */}
-          {activeView === 'nutrients' && (
-            <div className="nutrients-view">
-              {renderNutrientsByHour()}
-            </div>
-          )}
-
-          {/* Floating Expanded View Button */}
+          {/* Non-Fullscreen Content */}
           {!isFullscreen && (
-            <div className="floating-expanded-btn-container">
-              <button onClick={() => setIsFullscreen(true)} className="floating-expanded-btn">
-                <i className="pi pi-window-maximize"></i>
-                Expanded View
-              </button>
-            </div>
+            <>
+              {/* Divider */}
+              <div className="section-divider"></div>
+
+              {/* View Tabs */}
+              <div className="view-tabs-container">
+                <div className="view-tabs">
+                  <button
+                    className={`tab-button ${activeView === 'timeline' ? 'active' : ''}`}
+                    onClick={() => setActiveView('timeline')}
+                  >
+                    Timeline
+                  </button>
+                  <button
+                    className={`tab-button ${activeView === 'nutrients' ? 'active' : ''}`}
+                    onClick={() => setActiveView('nutrients')}
+                  >
+                    Nutrients by Hour
+                  </button>
+                  <div className={`tab-indicator tab-indicator-${activeView}`}></div>
+                </div>
+              </div>
+              {/* Timeline View */}
+              {activeView === 'timeline' && (
+                <div className="timeline-view">
+                  {/* Timeline Header */}
+                  <div className="timeline-header">
+                    <div className="timeline-info">
+                      <span className="item-count">{foodInstances.length} items</span>
+                    </div>
+                    <div className="timeline-actions">
+                      <button onClick={() => setIsFullscreen(true)} className="timeline-action-btn expanded">
+                        <i className="pi pi-window-maximize"></i>
+                        Expanded
+                      </button>
+                      <button onClick={() => handleClickHoldCreate(0)} className="timeline-action-btn add-item">
+                        <i className="pi pi-plus"></i>
+                        Add Item
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Legend */}
+                  <div className="timeline-legend">
+                    {Array.from(new Set(foodInstances.map(fi => fi.foodItem.category).filter(Boolean))).map(category => {
+                      const color = categoryColors.get(category!) || '#646cff';
+                      return (
+                        <div key={category} className="legend-item">
+                          <span className="legend-dot" style={{ backgroundColor: color }}></span>
+                          <span className="legend-text">
+                            {category!.charAt(0).toUpperCase() + category!.slice(1).toLowerCase().replace(/_/g, ' ')}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Timeline Grid */}
+                  <div className="event-timeline-container" ref={timelineContainerRef}>
+                    <EventTimeline
+                      event={selectedEvent}
+                      foodInstances={foodInstances}
+                      loadingInstances={loadingInstances}
+                      onDragOver={handleDragOver}
+                      onDrop={handleDrop}
+                      onDragStart={handleDragStart}
+                      onDragEnd={handleDragEnd}
+                      onUpdateInstance={handleUpdateInstance}
+                      onClickHoldCreate={handleClickHoldCreate}
+                      onInstanceClick={handleInstanceClick}
+                      timelineStyle={timelineStyle}
+                      categoryColors={categoryColors}
+                      viewOnly={isViewOnly}
+                      isMobile={isMobile}
+                      maxDisplayHours={5}
+                    />
+
+                    {!isMobile && (
+                      <NutritionSummary
+                        event={selectedEvent}
+                        foodInstances={foodInstances}
+                        timelineStyle={timelineStyle}
+                        userId={isViewOnly && eventOwnerAuth0Sub ? eventOwnerAuth0Sub : user.sub}
+                        goalsRefreshTrigger={goalsRefreshTrigger}
+                        scrollContainerRef={timelineContainerRef}
+                        maxDisplayHours={5}
+                      />
+                    )}
+                  </div>
+
+                  {/* See Full Event Button - Show when event is longer than 5 hours */}
+                  {selectedEvent.expected_duration > 5 * 3600 && (
+                    <div className="see-full-event-container">
+                      <div className="see-full-event-divider">
+                        <span className="see-full-event-text">+{Math.floor((selectedEvent.expected_duration - 5 * 3600) / 3600)} more hours</span>
+                      </div>
+                      <button onClick={() => setIsFullscreen(true)} className="see-full-event-button">
+                        <i className="pi pi-arrow-up-right"></i>
+                        See Full Event
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Nutrients by Hour View */}
+              {activeView === 'nutrients' && (
+                <div className="nutrients-view">
+                  {renderNutrientsByHour()}
+                </div>
+              )}
+
+              {/* Floating Expanded View Button - only show if no See Full Event button */}
+              {selectedEvent.expected_duration <= 5 * 3600 && (
+                <div className="floating-expanded-btn-container">
+                  <button onClick={() => setIsFullscreen(true)} className="floating-expanded-btn">
+                    <i className="pi pi-window-maximize"></i>
+                    Expanded View
+                  </button>
+                </div>
+              )}
+            </>
           )}
 
           {/* Fullscreen Mode */}
@@ -1175,33 +1195,55 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
                   <i className="pi pi-window-minimize"></i>
                 </button>
               </div>
-              <div className="event-timeline-container fullscreen" ref={timelineContainerRef}>
-                <EventTimeline
-                  event={selectedEvent}
-                  foodInstances={foodInstances}
-                  loadingInstances={loadingInstances}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                  onDragStart={handleDragStart}
-                  onDragEnd={handleDragEnd}
-                  onUpdateInstance={handleUpdateInstance}
-                  onClickHoldCreate={handleClickHoldCreate}
-                  onInstanceClick={handleInstanceClick}
-                  timelineStyle={timelineStyle}
-                  categoryColors={categoryColors}
-                  viewOnly={isViewOnly}
-                  isMobile={isMobile}
-                />
 
-                <NutritionSummary
-                  event={selectedEvent}
-                  foodInstances={foodInstances}
-                  timelineStyle={timelineStyle}
-                  userId={isViewOnly && eventOwnerAuth0Sub ? eventOwnerAuth0Sub : user.sub}
-                  goalsRefreshTrigger={goalsRefreshTrigger}
-                  scrollContainerRef={timelineContainerRef}
-                />
+              {/* View Tabs */}
+              <div className="view-tabs-container">
+                <div className="view-tabs">
+                  <button
+                    className={`tab-button ${activeView === 'timeline' ? 'active' : ''}`}
+                    onClick={() => setActiveView('timeline')}
+                  >
+                    Timeline
+                  </button>
+                  <button
+                    className={`tab-button ${activeView === 'nutrients' ? 'active' : ''}`}
+                    onClick={() => setActiveView('nutrients')}
+                  >
+                    Nutrients by Hour
+                  </button>
+                  <div className={`tab-indicator tab-indicator-${activeView}`}></div>
+                </div>
               </div>
+
+              {/* Timeline View */}
+              {activeView === 'timeline' && (
+                <div className="event-timeline-container fullscreen" ref={timelineContainerRef}>
+                  <EventTimeline
+                    event={selectedEvent}
+                    foodInstances={foodInstances}
+                    loadingInstances={loadingInstances}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    onUpdateInstance={handleUpdateInstance}
+                    onClickHoldCreate={handleClickHoldCreate}
+                    onInstanceClick={handleInstanceClick}
+                    timelineStyle={undefined}
+                    categoryColors={categoryColors}
+                    viewOnly={isViewOnly}
+                    isMobile={isMobile}
+                    useFixedHeight={true}
+                  />
+                </div>
+              )}
+
+              {/* Nutrients by Hour View */}
+              {activeView === 'nutrients' && (
+                <div className="nutrients-view fullscreen">
+                  {renderNutrientsByHour()}
+                </div>
+              )}
             </div>
           )}
         </div>
