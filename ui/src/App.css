@@ -1437,10 +1437,10 @@ tbody tr.selected {
 
 /* Y-axis with tick marks */
 .timeline-y-axis {
-  width: 80px;
+  width: 60px;
   position: relative;
-  background-color: #f3f4f6;
-  border-right: 2px solid rgba(100, 108, 255, 0.3);
+  background-color: transparent;
+  border-right: none;
   flex-shrink: 0;
   min-height: 600px;
 }
@@ -1456,19 +1456,15 @@ tbody tr.selected {
 }
 
 .tick-label {
-  color: #000000;
-  font-size: 1.1rem;
+  color: #6b7280;
+  font-size: 0.875rem;
   font-weight: 500;
   padding-right: 0.5rem;
   white-space: nowrap;
 }
 
 .tick-mark {
-  width: 8px;
-  height: 2px;
-  background-color: rgba(100, 108, 255, 0.6);
-  position: absolute;
-  right: -1px;
+  display: none;
 }
 
 /* Event timeline component */
@@ -1484,7 +1480,7 @@ tbody tr.selected {
 
 .timeline-divider {
   height: 1px;
-  background: rgba(100, 108, 255, 0.3);
+  background: #d1d5db;
   position: absolute;
   left: 0;
   right: 0;
@@ -1494,7 +1490,7 @@ tbody tr.selected {
 /* Race start line at timestamp 0 */
 .timeline-race-start {
   height: 1px;
-  background: rgba(100, 108, 255, 0.3);
+  background: #d1d5db;
   position: absolute;
   left: 0;
   right: 0;
@@ -2418,11 +2414,13 @@ tbody tr.selected {
 
   /* Normal timeline y-axis in fullscreen */
   .fullscreen-wrapper .timeline-y-axis {
-    width: 80px;
+    width: 60px;
   }
 
   .event-detail-content.mobile-condensed-view .tick-label {
     padding-right: 0.25rem;
+    font-size: 0.625rem;
+    color: #6b7280;
   }
 
   /* Nutrient summary table */
@@ -2580,14 +2578,10 @@ tbody tr.selected {
     max-height: none !important;
   }
 
-  /* Smaller tick labels (only in condensed view) */
-  .event-detail-content.mobile-condensed-view .tick-label {
-    font-size: 0.7rem;
-  }
-
   /* Normal tick labels in fullscreen */
   .fullscreen-wrapper .tick-label {
-    font-size: 1.1rem;
+    font-size: 0.875rem;
+    color: #6b7280;
   }
 
   /* Mobile timeline header with legend (only in condensed view) */
