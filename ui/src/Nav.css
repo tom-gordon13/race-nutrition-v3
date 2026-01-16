@@ -133,11 +133,13 @@
     background-color: #ffffff;
     border-top: 1px solid #e5e7eb;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    overflow: visible;
   }
 
   /* Bottom navigation TabMenu styling */
   .bottom-tabmenu {
     width: 100%;
+    overflow: visible !important;
   }
 
   .bottom-tabmenu .p-tabmenu-nav {
@@ -146,12 +148,14 @@
     gap: 0;
     border: none !important;
     background-color: #ffffff !important;
+    overflow: visible !important;
   }
 
   .bottom-tabmenu .p-tabmenuitem {
     flex: 1;
     border: none !important;
     background-color: #ffffff !important;
+    overflow: visible !important;
   }
 
   /* Strava-style bottom nav buttons */
@@ -165,11 +169,13 @@
     border: none !important;
     background-color: #ffffff !important;
     min-height: 75px !important;
+    overflow: visible !important;
   }
 
   .bottom-tabmenu .p-menuitem-icon {
     font-size: 1.5rem !important;
     margin: 0 !important;
+    position: relative !important;
   }
 
   .bottom-tabmenu .p-menuitem-text {
@@ -377,4 +383,38 @@ nav .custom-tabmenu .p-menuitem-link:focus,
 .user-dropdown-menu .p-menuitem-text {
   color: #646cff;
   font-weight: 500;
+}
+
+/* Users icon wrapper to ensure badge is visible */
+.users-icon-wrapper {
+  position: relative !important;
+  display: inline-flex !important;
+  overflow: visible !important;
+}
+
+/* Notification Badge */
+.notification-badge {
+  position: absolute !important;
+  top: -0.25rem !important;
+  right: -0.25rem !important;
+  min-width: 1rem !important;
+  height: 1rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #6366f1 !important;
+  color: white !important;
+  border-radius: 9999px !important;
+  font-size: 0.5625rem !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 0 2px white !important;
+  padding: 0 0.25rem !important;
+  animation: pulse-badge 2s ease-in-out infinite !important;
+  z-index: 999 !important;
+  pointer-events: none !important;
+}
+
+@keyframes pulse-badge {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.9; }
 }

@@ -12,9 +12,10 @@ import './Nav.css';
 
 interface NavProps {
   className?: string;
+  pendingConnectionsCount?: number;
 }
 
-const Nav = ({ className = "" }: NavProps) => {
+const Nav = ({ className = "", pendingConnectionsCount = 0 }: NavProps) => {
   const { logout, user } = useAuth0();
   const navigate = useNavigate();
   const location = useLocation();
@@ -49,7 +50,29 @@ const Nav = ({ className = "" }: NavProps) => {
     {
       label: 'Users',
       icon: 'pi pi-users',
-      command: () => navigate('/users')
+      command: () => navigate('/users'),
+      template: (item: any, options: any) => {
+        return (
+          <a
+            className={options.className}
+            onClick={(e) => {
+              e.preventDefault();
+              navigate('/users');
+            }}
+            style={{ position: 'relative', cursor: 'pointer' }}
+          >
+            <span className="users-icon-wrapper" style={{ position: 'relative', display: 'inline-flex', overflow: 'visible' }}>
+              <span className="p-menuitem-icon pi pi-users"></span>
+              {pendingConnectionsCount > 0 && (
+                <span className="notification-badge">
+                  {pendingConnectionsCount}
+                </span>
+              )}
+            </span>
+            <span className="p-menuitem-text">{item.label}</span>
+          </a>
+        );
+      }
     }
   ];
 

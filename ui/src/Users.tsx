@@ -27,7 +27,11 @@ interface User {
   lastActive?: string;
 }
 
-const Users = () => {
+interface UsersProps {
+  onPendingCountChange?: (count: number) => void;
+}
+
+const Users = ({ onPendingCountChange }: UsersProps) => {
   const { user } = useAuth0();
   const [activeTab, setActiveTab] = useState<TabType>('connections');
   const [users, setUsers] = useState<User[]>([]);
@@ -117,6 +121,56 @@ const Users = () => {
     console.log('Resending invitation for connection:', connectionId);
   };
 
+  // Handle accepting connection request
+  const handleAcceptRequest = async (connectionId: string) => {
+    try {
+      const response = await fetch(`${API_URL}/api/user-connections/${connectionId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'ACCEPTED'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to accept connection request');
+      }
+
+      // Refresh the users list
+      await fetchUsers();
+    } catch (err) {
+      console.error('Error accepting connection request:', err);
+      setError('Failed to accept request - please try again');
+    }
+  };
+
+  // Handle declining connection request
+  const handleDeclineRequest = async (connectionId: string) => {
+    try {
+      const response = await fetch(`${API_URL}/api/user-connections/${connectionId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'DENIED'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to decline connection request');
+      }
+
+      // Refresh the users list
+      await fetchUsers();
+    } catch (err) {
+      console.error('Error declining connection request:', err);
+      setError('Failed to decline request - please try again');
+    }
+  };
+
   // Format last active time
   const formatLastActive = (dateString?: string) => {
     if (!dateString) return 'Active now';
@@ -149,15 +203,44 @@ const Users = () => {
     return `Invited ${Math.floor(diffInDays / 7)}w ago`;
   };
 
+  // Format requested date for incoming requests
+  const formatRequestedDate = (dateString?: string) => {
+    if (!dateString) return 'Requested recently';
+
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    if (diffInHours < 1) return 'Requested just now';
+    if (diffInHours < 24) return `Requested ${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`;
+    if (diffInDays === 1) return 'Requested yesterday';
+    if (diffInDays < 7) return `Requested ${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago`;
+    return `Requested ${Math.floor(diffInDays / 7)} week${Math.floor(diffInDays / 7) !== 1 ? 's' : ''} ago`;
+  };
+
+  // Get pending incoming requests (RECEIVED + PENDING status)
+  const getPendingIncomingRequests = () => {
+    return users.filter(u =>
+      u.connection &&
+      u.connection.status === 'PENDING' &&
+      u.connection.type === 'RECEIVED'
+    );
+  };
+
   // Filter users based on active tab and search
   const getFilteredUsers = () => {
     let filtered = users;
 
     // Filter by tab
     if (activeTab === 'connections') {
-      // Show only connected users and pending invitations
+      // Show only connected users and pending outgoing invitations (but not incoming)
       filtered = filtered.filter(u =>
-        u.connection && (u.connection.status === 'ACCEPTED' || u.connection.status === 'PENDING')
+        u.connection && (
+          u.connection.status === 'ACCEPTED' ||
+          (u.connection.status === 'PENDING' && u.connection.type === 'INITIATED')
+        )
       );
     }
     // For community tab, show all users
@@ -172,8 +255,16 @@ const Users = () => {
     return filtered;
   };
 
+  const pendingIncomingRequests = getPendingIncomingRequests();
   const filteredUsers = getFilteredUsers();
   const userCount = filteredUsers.length;
+
+  // Notify parent component of pending count changes
+  useEffect(() => {
+    if (onPendingCountChange) {
+      onPendingCountChange(pendingIncomingRequests.length);
+    }
+  }, [pendingIncomingRequests.length, onPendingCountChange]);
 
   if (loading) {
     return <LoadingSpinner />;
@@ -236,6 +327,69 @@ const Users = () => {
           <i className="pi pi-user-plus"></i>
         </button> */}
       </div>
+
+      {/* Pending Incoming Requests Section */}
+      {activeTab === 'connections' && pendingIncomingRequests.length > 0 && (
+        <div className="pending-requests-section">
+          {/* Section Header */}
+          <div className="pending-requests-header">
+            <div className="pending-requests-header-left">
+              <div className="pending-count-badge">
+                {pendingIncomingRequests.length}
+              </div>
+              <span className="pending-requests-title">Pending Requests</span>
+            </div>
+            <span className="pending-requests-subtitle">Wants to connect</span>
+          </div>
+
+          {/* Pending Requests List */}
+          <div className="pending-requests-list">
+            {pendingIncomingRequests.map((userItem, index) => (
+              <div key={userItem.id}>
+                <div className="pending-request-card">
+                  {/* Avatar */}
+                  <div className="pending-request-avatar">
+                    <i className="pi pi-user"></i>
+                    <div className="pending-request-indicator">
+                      <i className="pi pi-plus"></i>
+                    </div>
+                  </div>
+
+                  {/* Info */}
+                  <div className="pending-request-info">
+                    <h3 className="pending-request-name">{userItem.first_name} {userItem.last_name}</h3>
+                    <p className="pending-request-time">{formatRequestedDate(userItem.connection?.created_at)}</p>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="pending-request-actions">
+                    <button
+                      className="pending-decline-btn"
+                      onClick={() => handleDeclineRequest(userItem.connection!.connectionId)}
+                      title="Decline"
+                    >
+                      <i className="pi pi-times"></i>
+                    </button>
+                    <button
+                      className="pending-accept-btn"
+                      onClick={() => handleAcceptRequest(userItem.connection!.connectionId)}
+                    >
+                      <i className="pi pi-check"></i>
+                      Accept
+                    </button>
+                  </div>
+                </div>
+                {index < pendingIncomingRequests.length - 1 && <div className="pending-request-divider" />}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Divider after pending requests */}
+      {activeTab === 'connections' && pendingIncomingRequests.length > 0 && (
+        <div className="pending-requests-divider-section" />
+      )}
 
       {/* User Count */}
       <div className="users-count">

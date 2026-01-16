@@ -12,9 +12,11 @@ import './Home.css';
 
 interface HomeProps {
   onFullscreenChange?: (isFullscreen: boolean) => void;
+  pendingConnectionsCount?: number;
+  onPendingConnectionsCountChange?: (count: number) => void;
 }
 
-function Home({ onFullscreenChange }: HomeProps) {
+function Home({ onFullscreenChange, pendingConnectionsCount = 0, onPendingConnectionsCountChange }: HomeProps) {
   const { user } = useAuth0();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -82,7 +84,7 @@ function Home({ onFullscreenChange }: HomeProps) {
         <Route path="/preferences" element={<div className="preferences-wrapper"><Preferences /></div>} />
         <Route path="/users" element={
           <div className="users-route-container" style={{ width: '100%', margin: '0', padding: '0', height: '100%', boxSizing: 'border-box' }}>
-            <Users />
+            <Users onPendingCountChange={onPendingConnectionsCountChange} />
           </div>
         } />
       </Routes>
