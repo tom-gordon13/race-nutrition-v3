@@ -22,6 +22,7 @@ import {
   ItemListDialog,
   FoodItemDetailsDialog
 } from './components/events';
+import { NutrientGoalsView } from './components/events/NutrientGoalsView';
 import { API_URL } from './config/api';
 import LoadingSpinner from './LoadingSpinner';
 
@@ -179,6 +180,11 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
 
   // State for plan options dropdown
   const [showPlanOptionsDropdown, setShowPlanOptionsDropdown] = useState(false);
+
+  // State for nutrient goals data
+  const [baseGoals, setBaseGoals] = useState<any[]>([]);
+  const [hourlyGoals, setHourlyGoals] = useState<any[]>([]);
+  const [allNutrients, setAllNutrients] = useState<any[]>([]);
 
   // Detect mobile screen size
   useEffect(() => {
@@ -442,6 +448,40 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
       setFoodInstances([]);
     }
   }, [selectedEvent]);
+
+  // Fetch nutrient goals and all nutrients
+  useEffect(() => {
+    const fetchGoalsAndNutrients = async () => {
+      if (!selectedEvent || !user?.sub) return;
+
+      try {
+        // Fetch all available nutrients
+        const nutrientsResponse = await fetch(`${API_URL}/api/nutrients`);
+        if (nutrientsResponse.ok) {
+          const nutrientsData = await nutrientsResponse.json();
+          setAllNutrients(nutrientsData.nutrients || []);
+        }
+
+        // Fetch base goals
+        const baseResponse = await fetch(`${API_URL}/api/event-goals/base?event_id=${selectedEvent.id}&user_id=${user.sub}`);
+        if (baseResponse.ok) {
+          const baseData = await baseResponse.json();
+          setBaseGoals(baseData.goals || []);
+        }
+
+        // Fetch hourly goals
+        const hourlyResponse = await fetch(`${API_URL}/api/event-goals/hourly?event_id=${selectedEvent.id}&user_id=${user.sub}`);
+        if (hourlyResponse.ok) {
+          const hourlyData = await hourlyResponse.json();
+          setHourlyGoals(hourlyData.goals || []);
+        }
+      } catch (err) {
+        console.error('Error fetching goals and nutrients:', err);
+      }
+    };
+
+    fetchGoalsAndNutrients();
+  }, [selectedEvent, user, goalsRefreshTrigger]);
 
   const handleDragStart = (e: React.DragEvent, instanceId: string, _currentTop: number) => {
 
@@ -818,90 +858,91 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
   const carbsPerHour = selectedEvent ? calculateCarbsPerHour() : 0;
   const sodiumPerHour = selectedEvent ? calculateSodiumPerHour() : 0;
 
+  // Get goal for a specific nutrient and hour
+  const getGoalForNutrient = (nutrientId: string, hour: number): { quantity: number; unit: string } | null => {
+    // Check for hourly override first
+    const hourlyGoal = hourlyGoals.find(g => g.nutrient_id === nutrientId && g.hour === hour);
+    if (hourlyGoal) {
+      return { quantity: hourlyGoal.quantity, unit: hourlyGoal.unit };
+    }
+
+    // Fall back to base goal
+    const baseGoal = baseGoals.find(g => g.nutrient_id === nutrientId);
+    if (baseGoal) {
+      return { quantity: baseGoal.quantity, unit: baseGoal.unit };
+    }
+
+    return null;
+  };
+
   // Render Nutrients by Hour view
   const renderNutrientsByHour = () => {
     if (!selectedEvent) return null;
 
     const durationInHours = Math.ceil(selectedEvent.expected_duration / 3600);
-    const hours = [];
+    const hoursData = [];
 
     for (let hour = 1; hour <= durationInHours; hour++) {
       const startTime = (hour - 1) * 3600;
-      const endTime = hour * 3600;
+      const endTime = Math.min(hour * 3600, selectedEvent.expected_duration);
 
       // Find instances in this hour
       const instancesInHour = foodInstances.filter(
         instance => instance.time_elapsed_at_consumption >= startTime && instance.time_elapsed_at_consumption < endTime
       );
 
-      // Calculate nutrients for this hour
-      const nutrients: { [key: string]: { actual: number; unit: string } } = {};
+      // Calculate actual nutrient totals for this hour
+      const actualNutrients: { [key: string]: { total: number; unit: string; nutrientId: string } } = {};
 
       instancesInHour.forEach(instance => {
         instance.foodItem.foodItemNutrients.forEach(nutrient => {
           const name = nutrient.nutrient.nutrient_name;
           const amount = nutrient.quantity * instance.servings;
 
-          if (!nutrients[name]) {
-            nutrients[name] = { actual: 0, unit: nutrient.unit };
+          if (!actualNutrients[name]) {
+            actualNutrients[name] = { total: 0, unit: nutrient.unit, nutrientId: nutrient.nutrient_id };
           }
-          nutrients[name].actual += amount;
+          actualNutrients[name].total += amount;
         });
       });
 
-      // Format time range
-      const startHours = Math.floor(startTime / 3600);
-      const startMins = Math.floor((startTime % 3600) / 60);
-      const endHours = Math.floor(endTime / 3600);
-      const endMins = Math.floor((endTime % 3600) / 60);
-      const timeRange = `${startHours}:${startMins.toString().padStart(2, '0')} - ${endHours}:${endMins.toString().padStart(2, '0')}`;
+      // Build nutrients array with goals - only show Carbs, Sodium, and Caffeine
+      const nutrientOrder = ['Carbohydrates', 'Sodium', 'Caffeine'];
+      const nutrients = nutrientOrder.map(nutrientName => {
+        const nutrient = allNutrients.find(n =>
+          n.nutrient_name === nutrientName ||
+          (nutrientName === 'Carbohydrates' && n.nutrient_name === 'Carbohydrate')
+        );
 
-      hours.push(
-        <div key={hour} className="hour-section">
-          <div className="hour-header">
-            <span className="hour-title">Hour {hour}</span>
-            <span className="hour-time">{timeRange}</span>
-          </div>
-          <div className="hour-content">
-            <div className="nutrients-table-header">
-              <span>Nutrient</span>
-              <span>Goal</span>
-              <span>Actual</span>
-            </div>
-            <div className="nutrients-rows">
-              {/* Carbs */}
-              <div className="nutrient-row">
-                <span className="nutrient-name">Carbs</span>
-                <span className="nutrient-goal">{carbsPerHour.toFixed(0)}g</span>
-                <span className="nutrient-actual">
-                  {(nutrients['Carbohydrates']?.actual || nutrients['Carbohydrate']?.actual || 0).toFixed(0)}g
-                </span>
-              </div>
-              {/* Sodium */}
-              <div className="nutrient-row">
-                <span className="nutrient-name">Sodium</span>
-                <span className="nutrient-goal">{sodiumPerHour.toFixed(0)}mg</span>
-                <span className="nutrient-actual">
-                  {(() => {
-                    const sodium = nutrients['Sodium']?.actual || 0;
-                    const unit = nutrients['Sodium']?.unit || 'mg';
-                    return unit === 'g' ? `${(sodium * 1000).toFixed(0)}mg` : `${sodium.toFixed(0)}mg`;
-                  })()}
-                </span>
-              </div>
-              {/* Caffeine */}
-              <div className="nutrient-row">
-                <span className="nutrient-name">Caffeine</span>
-                <span className="nutrient-goal">—</span>
-                <span className="nutrient-actual">{(nutrients['Caffeine']?.actual || 0).toFixed(0)}mg</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
+        if (!nutrient) {
+          return {
+            name: nutrientName === 'Carbohydrates' ? 'Carbs' : nutrientName,
+            goal: null,
+            actual: 0,
+            unit: nutrientName === 'Sodium' || nutrientName === 'Caffeine' ? 'mg' : 'g'
+          };
+        }
+
+        const goal = getGoalForNutrient(nutrient.id, hour - 1); // hour is 1-indexed, but goals are 0-indexed
+        const actualData = actualNutrients[nutrient.nutrient_name];
+
+        return {
+          name: nutrientName === 'Carbohydrates' ? 'Carbs' : nutrientName,
+          goal: goal ? goal.quantity : null,
+          actual: actualData ? actualData.total : 0,
+          unit: goal ? goal.unit : (actualData ? actualData.unit : (nutrientName === 'Sodium' || nutrientName === 'Caffeine' ? 'mg' : 'g'))
+        };
+      });
+
+      hoursData.push({
+        hour,
+        startTime,
+        endTime,
+        nutrients
+      });
     }
 
-    return <div className="hours-container">{hours}</div>;
+    return <NutrientGoalsView hours={hoursData} />;
   };
 
   return (

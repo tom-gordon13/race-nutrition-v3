@@ -140,6 +140,12 @@ router.post('/', async (req, res) => {
       }
     });
 
+    // Update the parent event's updated_at timestamp
+    await prisma.event.update({
+      where: { id: event_id },
+      data: { updated_at: new Date() }
+    });
+
     console.log(`Created food instance for item ${food_item_id} in event ${event_id} at time ${time_elapsed_at_consumption}`);
 
     return res.status(201).json({
@@ -243,6 +249,12 @@ router.put('/:instanceId', async (req, res) => {
       }
     });
 
+    // Update the parent event's updated_at timestamp
+    await prisma.event.update({
+      where: { id: existingInstance.event_id },
+      data: { updated_at: new Date() }
+    });
+
     const updateFields = Object.keys(updateData).join(', ');
     console.log(`Updated food instance ${instanceId} - fields: ${updateFields}`);
 
@@ -286,6 +298,12 @@ router.delete('/:instanceId', async (req, res) => {
     // Delete the food instance
     await prisma.foodInstance.delete({
       where: { id: instanceId }
+    });
+
+    // Update the parent event's updated_at timestamp
+    await prisma.event.update({
+      where: { id: existingInstance.event_id },
+      data: { updated_at: new Date() }
     });
 
     console.log(`Deleted food instance ${instanceId}`);

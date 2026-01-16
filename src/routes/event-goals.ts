@@ -134,6 +134,12 @@ router.post('/base', async (req, res) => {
       )
     );
 
+    // Update the parent event's updated_at timestamp
+    await prisma.event.update({
+      where: { id: event_id },
+      data: { updated_at: new Date() }
+    });
+
     return res.status(200).json({
       message: 'Base goals saved successfully',
       goals: createdGoals
@@ -192,6 +198,12 @@ router.post('/hourly', async (req, res) => {
       )
     );
 
+    // Update the parent event's updated_at timestamp
+    await prisma.event.update({
+      where: { id: event_id },
+      data: { updated_at: new Date() }
+    });
+
     return res.status(200).json({
       message: 'Hourly goals saved successfully',
       goals: createdGoals
@@ -209,8 +221,25 @@ router.delete('/base/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Get the event_id before deleting
+    const goalToDelete = await prisma.eventGoalsBase.findUnique({
+      where: { id }
+    });
+
+    if (!goalToDelete) {
+      return res.status(404).json({
+        error: 'Base goal not found'
+      });
+    }
+
     await prisma.eventGoalsBase.delete({
       where: { id }
+    });
+
+    // Update the parent event's updated_at timestamp
+    await prisma.event.update({
+      where: { id: goalToDelete.event_id },
+      data: { updated_at: new Date() }
     });
 
     return res.status(200).json({
@@ -229,8 +258,25 @@ router.delete('/hourly/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Get the event_id before deleting
+    const goalToDelete = await prisma.eventGoalsHourly.findUnique({
+      where: { id }
+    });
+
+    if (!goalToDelete) {
+      return res.status(404).json({
+        error: 'Hourly goal not found'
+      });
+    }
+
     await prisma.eventGoalsHourly.delete({
       where: { id }
+    });
+
+    // Update the parent event's updated_at timestamp
+    await prisma.event.update({
+      where: { id: goalToDelete.event_id },
+      data: { updated_at: new Date() }
     });
 
     return res.status(200).json({
