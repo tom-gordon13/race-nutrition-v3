@@ -5,8 +5,6 @@ import './ShareEventDialog.css';
 import '../shared/ModalSheet.css';
 import { API_URL } from '../../config/api';
 
-
-
 interface User {
   id: string;
   first_name: string;
@@ -37,13 +35,16 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
   const [connectedUsers, setConnectedUsers] = useState<User[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null); // Database user ID
   const [loading, setLoading] = useState(false);
-  const [sharingUserId, setSharingUserId] = useState<string | null>(null);
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [sharingInProgress, setSharingInProgress] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [event, setEvent] = useState<Event | null>(null);
   const [privateEventAlert, setPrivateEventAlert] = useState<boolean>(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [copySuccess, setCopySuccess] = useState(false);
 
   // Handle animation timing for smooth slide-up and slide-down
   useEffect(() => {
@@ -74,6 +75,9 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
       setSuccess(null);
       setEvent(null);
       setPrivateEventAlert(false);
+      setSelectedUserIds(new Set());
+      setSearchTerm('');
+      setCopySuccess(false);
     }
   }, [visible, userId, eventId]);
 
@@ -91,11 +95,6 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
       }
 
       const data = await response.json();
-      console.log('ShareEventDialog - Fetched connections:', {
-        currentUserId: data.currentUserId,
-        connectedUsersCount: data.users?.length,
-        currentUserId_type: typeof data.currentUserId
-      });
       setConnectedUsers(data.users);
       setCurrentUserId(data.currentUserId); // Save the database user ID
     } catch (err) {
@@ -130,7 +129,7 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
 
     try {
       await navigator.clipboard.writeText(eventUrl);
-      setSuccess('Link copied to clipboard!');
+      setCopySuccess(true);
 
       // Check if event is private and show warning
       if (event?.private) {
@@ -141,12 +140,12 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
         }, 5000);
       }
 
-      // Hide success message after 3 seconds
+      // Reset copy button after 2 seconds
       setTimeout(() => {
-        setSuccess(null);
-      }, 3000);
+        setCopySuccess(false);
+      }, 2000);
     } catch (err) {
-      setError('Failed to load - please try again in a few minutes');
+      setError('Failed to copy link');
       console.error('Error copying to clipboard:', err);
       setTimeout(() => {
         setError(null);
@@ -154,40 +153,47 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
     }
   };
 
-  const handleShareEvent = async (receiverId: string) => {
-    if (!eventId || !currentUserId) return;
+  const toggleUserSelection = (userId: string) => {
+    const newSelection = new Set(selectedUserIds);
+    if (newSelection.has(userId)) {
+      newSelection.delete(userId);
+    } else {
+      newSelection.add(userId);
+    }
+    setSelectedUserIds(newSelection);
+  };
 
-    console.log('ShareEventDialog - Sharing event:', {
-      event_id: eventId,
-      sender_id: currentUserId,
-      receiver_id: receiverId,
-      sender_id_type: typeof currentUserId
-    });
+  const handleShareWithSelected = async () => {
+    if (!eventId || !currentUserId || selectedUserIds.size === 0) return;
 
-    setSharingUserId(receiverId);
+    setSharingInProgress(true);
     setError(null);
-    setSuccess(null);
 
     try {
-      const response = await fetch(`${API_URL}/api/shared-events`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          event_id: eventId,
-          sender_id: currentUserId, // Use the database user ID
-          receiver_id: receiverId,
-        }),
-      });
+      // Share with all selected users
+      const sharePromises = Array.from(selectedUserIds).map(receiverId =>
+        fetch(`${API_URL}/api/shared-events`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            event_id: eventId,
+            sender_id: currentUserId,
+            receiver_id: receiverId,
+          }),
+        })
+      );
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to share event');
+      const results = await Promise.all(sharePromises);
+      const allSuccessful = results.every(res => res.ok);
+
+      if (!allSuccessful) {
+        throw new Error('Some shares failed');
       }
 
-      const receiver = connectedUsers.find(u => u.id === receiverId);
-      setSuccess(`Event shared successfully with ${receiver?.first_name} ${receiver?.last_name}!`);
+      const count = selectedUserIds.size;
+      setSuccess(`Event shared successfully with ${count} ${count === 1 ? 'person' : 'people'}!`);
 
       // Call onShare callback
       onShare();
@@ -197,17 +203,35 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
         onHide();
       }, 1500);
     } catch (err) {
-      setError('Failed to load - please try again in a few minutes');
+      setError('Failed to share - please try again');
       console.error('Error sharing event:', err);
     } finally {
-      setSharingUserId(null);
+      setSharingInProgress(false);
     }
   };
+
+  const filteredUsers = connectedUsers.filter(user => {
+    const fullName = `${user.first_name} ${user.last_name}`.toLowerCase();
+    const email = user.email?.toLowerCase() || '';
+    const search = searchTerm.toLowerCase();
+    return fullName.includes(search) || email.includes(search);
+  });
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       onHide();
     }
+  };
+
+  const getShareButtonText = () => {
+    if (selectedUserIds.size === 0) {
+      return 'Select a Connection';
+    }
+    if (selectedUserIds.size === 1) {
+      const selectedUser = connectedUsers.find(u => selectedUserIds.has(u.id));
+      return `Share with ${selectedUser?.first_name}`;
+    }
+    return `Share with ${selectedUserIds.size} people`;
   };
 
   if (!shouldRender) return null;
@@ -217,41 +241,38 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
       className={`modal-sheet-overlay ${isAnimating ? 'active' : ''}`}
       onClick={handleOverlayClick}
     >
-      <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-sheet share-modal-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="modal-handle"></div>
 
         {/* Modal Header */}
-        <div className="modal-header">
-          <div className="modal-header-content">
-            <p className="modal-header-label">SHARING</p>
-            <h2 className="modal-header-title">Share Event</h2>
+        <div className="share-modal-header">
+          <div className="share-modal-header-text">
+            <p className="share-modal-label">SHARING</p>
+            <h2 className="share-modal-title">Share Plan</h2>
           </div>
-          <button
-            onClick={onHide}
-            className="modal-close-button"
-          >
+          <button onClick={onHide} className="modal-close-button">
             ✕
           </button>
         </div>
 
-        <div className="modal-content">
+        <div className="share-modal-content">
           {/* Error Message */}
           {error && (
-            <div style={{ padding: '0 1.25rem' }}>
+            <div className="share-message-wrapper">
               <Message severity="error" text={error} style={{ width: '100%', marginBottom: '0.5rem' }} />
             </div>
           )}
 
           {/* Success Message */}
           {success && (
-            <div style={{ padding: '0 1.25rem' }}>
+            <div className="share-message-wrapper">
               <Message severity="success" text={success} style={{ width: '100%', marginBottom: '0.5rem' }} />
             </div>
           )}
 
           {/* Private Plan Alert */}
           {privateEventAlert && (
-            <div style={{ padding: '0 1.25rem' }}>
+            <div className="share-message-wrapper">
               <Message
                 severity="warn"
                 text="This plan is private. Other users will not be able to see it unless you mark it as public."
@@ -261,120 +282,161 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
           )}
 
           {/* Copy Link Section */}
-          <div className="form-section">
+          <div className="share-copy-section">
             <button
               onClick={handleCopyLink}
-              style={{
-                width: '100%',
-                padding: '1rem',
-                backgroundColor: '#6366f1',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.75rem',
-                cursor: 'pointer',
-                fontSize: '1.0625rem',
-                fontWeight: 600,
-                transition: 'all 0.2s ease',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#5558e3';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#6366f1';
-              }}
+              className={`share-copy-button ${copySuccess ? 'copied' : ''}`}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-              </svg>
-              Copy Link
+              {!copySuccess ? (
+                <>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                  </svg>
+                  <span>Copy Link</span>
+                </>
+              ) : (
+                <>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span>Link Copied!</span>
+                </>
+              )}
             </button>
+            <p className="share-copy-hint">Anyone with the link can view this plan</p>
           </div>
 
           {/* User List Section */}
-          <div className="form-section">
+          <div className="share-users-section">
+            <label className="share-section-label">SHARE WITH CONNECTION</label>
+
             {loading ? (
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '3rem'
-              }}>
+              <div className="share-loading">
                 <ProgressSpinner style={{ width: '50px', height: '50px' }} />
-                <p style={{ marginTop: '1rem', color: '#6b7280', fontSize: '1rem' }}>Loading connected users...</p>
+                <p>Loading connected users...</p>
               </div>
             ) : connectedUsers.length === 0 ? (
-              <div style={{
-                textAlign: 'center',
-                padding: '3rem',
-                color: '#6b7280'
-              }}>
-                <p style={{ marginBottom: '0.5rem', fontSize: '1rem' }}>You don't have any connected users yet.</p>
-                <p style={{ fontSize: '1rem' }}>Connect with other users to share events with them.</p>
+              <div className="share-empty">
+                <p>You don't have any connected users yet.</p>
+                <p>Connect with other users to share plans with them.</p>
               </div>
             ) : (
               <>
-                <label className="form-label">Select A User</label>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  {connectedUsers.map((user) => (
-                    <div
-                      key={user.id}
-                      onClick={() => !sharingUserId && handleShareEvent(user.id)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '1rem',
-                        backgroundColor: '#f3f4f6',
-                        borderRadius: '0.75rem',
-                        cursor: sharingUserId ? 'not-allowed' : 'pointer',
-                        opacity: sharingUserId && sharingUserId !== user.id ? 0.5 : 1,
-                        transition: 'background-color 0.2s',
-                        border: '1px solid #e5e7eb'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!sharingUserId) {
-                          e.currentTarget.style.backgroundColor = '#e5e7eb';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '#f3f4f6';
-                      }}
-                    >
-                      <div style={{ textAlign: 'left' }}>
-                        <div style={{
-                          fontWeight: 600,
-                          fontSize: '1.0625rem',
-                          color: '#000',
-                          marginBottom: '0.25rem'
-                        }}>
-                          {user.first_name} {user.last_name}
-                        </div>
-                        {user.email && (
-                          <div style={{
-                            fontSize: '0.9375rem',
-                            color: '#6b7280'
-                          }}>
-                            {user.email}
-                          </div>
-                        )}
-                      </div>
-                      {sharingUserId === user.id && (
-                        <ProgressSpinner style={{ width: '24px', height: '24px' }} />
-                      )}
-                    </div>
-                  ))}
+                {/* Search Input */}
+                <div className="share-search-wrapper">
+                  <svg className="share-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Search connections..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="share-search-input"
+                  />
                 </div>
+
+                {/* Connection Count */}
+                <div className="share-count-row">
+                  <span className="share-connection-count">
+                    {filteredUsers.length} {filteredUsers.length === 1 ? 'connection' : 'connections'}
+                  </span>
+                  {selectedUserIds.size > 0 && (
+                    <span className="share-selected-count">
+                      {selectedUserIds.size} selected
+                    </span>
+                  )}
+                </div>
+
+                {/* User List */}
+                {filteredUsers.length === 0 ? (
+                  <div className="share-no-results">
+                    <div className="share-no-results-icon">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.3-4.3" />
+                      </svg>
+                    </div>
+                    <p className="share-no-results-title">No connections found</p>
+                    <p className="share-no-results-subtitle">Try a different search term</p>
+                  </div>
+                ) : (
+                  <div className="share-user-list">
+                    {filteredUsers.map((user) => {
+                      const isSelected = selectedUserIds.has(user.id);
+                      const initials = `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`.toUpperCase();
+
+                      return (
+                        <div
+                          key={user.id}
+                          onClick={() => !sharingInProgress && toggleUserSelection(user.id)}
+                          className={`share-user-card ${isSelected ? 'selected' : ''}`}
+                        >
+                          <div className="share-user-avatar-wrapper">
+                            <div className="share-user-avatar">
+                              <span>{initials}</span>
+                            </div>
+                            <div className="share-user-connected-badge">
+                              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            </div>
+                          </div>
+
+                          <div className="share-user-info">
+                            <h3 className="share-user-name">
+                              {user.first_name} {user.last_name}
+                            </h3>
+                            {user.email && (
+                              <p className="share-user-email">{user.email}</p>
+                            )}
+                          </div>
+
+                          <div className="share-select-indicator">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </>
             )}
           </div>
         </div>
+
+        {/* Action Button */}
+        {connectedUsers.length > 0 && (
+          <div className="share-modal-footer">
+            <button
+              onClick={handleShareWithSelected}
+              disabled={selectedUserIds.size === 0 || sharingInProgress}
+              className={`share-submit-button ${selectedUserIds.size > 0 ? 'active' : ''}`}
+            >
+              {sharingInProgress ? (
+                <>
+                  <ProgressSpinner style={{ width: '18px', height: '18px' }} />
+                  <span>Sharing...</span>
+                </>
+              ) : (
+                <>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="18" cy="5" r="3" />
+                    <circle cx="6" cy="12" r="3" />
+                    <circle cx="18" cy="19" r="3" />
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                  </svg>
+                  <span>{getShareButtonText()}</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
