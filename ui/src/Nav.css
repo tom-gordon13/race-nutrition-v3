@@ -385,8 +385,9 @@ nav .custom-tabmenu .p-menuitem-link:focus,
   font-weight: 500;
 }
 
-/* Users icon wrapper to ensure badge is visible */
-.users-icon-wrapper {
+/* Icon wrappers to ensure badge is visible */
+.users-icon-wrapper,
+.plans-icon-wrapper {
   position: relative !important;
   display: inline-flex !important;
   overflow: visible !important;
@@ -412,6 +413,14 @@ nav .custom-tabmenu .p-menuitem-link:focus,
   animation: pulse-badge 2s ease-in-out infinite !important;
   z-index: 999 !important;
   pointer-events: none !important;
+}
+
+/* Desktop: Position badge to the left of the icon */
+@media (min-width: 769px) {
+  .notification-badge {
+    left: -0.5rem !important;
+    right: auto !important;
+  }
 }
 
 @keyframes pulse-badge {

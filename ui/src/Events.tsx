@@ -8,7 +8,6 @@ import 'primeicons/primeicons.css';
 import {
   EventsTable,
   EventTimeline,
-  NutritionSummary,
   FoodItemSelectionModal,
   type ItemFilterMode,
   NutrientGoalsDialog,
@@ -1168,18 +1167,6 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
                       isMobile={isMobile}
                       maxDisplayHours={5}
                     />
-
-                    {!isMobile && (
-                      <NutritionSummary
-                        event={selectedEvent}
-                        foodInstances={foodInstances}
-                        timelineStyle={timelineStyle}
-                        userId={isViewOnly && eventOwnerAuth0Sub ? eventOwnerAuth0Sub : user.sub}
-                        goalsRefreshTrigger={goalsRefreshTrigger}
-                        scrollContainerRef={timelineContainerRef}
-                        maxDisplayHours={5}
-                      />
-                    )}
                   </div>
 
                   {/* See Full Event Button - Show when event is longer than 5 hours */}
