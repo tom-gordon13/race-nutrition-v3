@@ -14,6 +14,7 @@ const App = () => {
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pendingConnectionsCount, setPendingConnectionsCount] = useState(0);
+  const [pendingSharedEventsCount, setPendingSharedEventsCount] = useState(0);
   const touchStartY = useRef(0);
   const appRef = useRef<HTMLDivElement>(null);
 
@@ -95,12 +96,13 @@ const App = () => {
               )}
             </div>
           )}
-          {!isFullscreen && <Nav pendingConnectionsCount={pendingConnectionsCount} />}
+          {!isFullscreen && <Nav pendingConnectionsCount={pendingConnectionsCount} pendingSharedEventsCount={pendingSharedEventsCount} />}
           <main className="main-content">
             <Home
               key={refreshKey}
               onFullscreenChange={setIsFullscreen}
               onPendingConnectionsCountChange={setPendingConnectionsCount}
+              onPendingSharedEventsCountChange={setPendingSharedEventsCount}
             />
           </main>
         </>

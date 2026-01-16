@@ -13,9 +13,10 @@ import './Home.css';
 interface HomeProps {
   onFullscreenChange?: (isFullscreen: boolean) => void;
   onPendingConnectionsCountChange?: (count: number) => void;
+  onPendingSharedEventsCountChange?: (count: number) => void;
 }
 
-function Home({ onFullscreenChange, onPendingConnectionsCountChange }: HomeProps) {
+function Home({ onFullscreenChange, onPendingConnectionsCountChange, onPendingSharedEventsCountChange }: HomeProps) {
   const { user } = useAuth0();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -63,7 +64,7 @@ function Home({ onFullscreenChange, onPendingConnectionsCountChange }: HomeProps
         } />
         <Route path="/plans" element={
           <div className="plans-route-container" style={{ width: '100%', margin: '0', padding: '0', height: '100%', boxSizing: 'border-box' }}>
-            <Plans />
+            <Plans onPendingSharedEventsCountChange={onPendingSharedEventsCountChange} />
           </div>
         } />
         <Route path="/plans/:eventId" element={

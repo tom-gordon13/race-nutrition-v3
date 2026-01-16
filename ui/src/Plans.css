@@ -88,6 +88,230 @@
   left: 55%;
 }
 
+/* Pending Shared Plans Section */
+.pending-shared-section {
+  background-color: #ffffff;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.pending-shared-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid #f3f4f6;
+  background: rgba(99, 102, 241, 0.03);
+}
+
+.pending-shared-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pending-count-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background-color: #6366f1;
+}
+
+.pending-count-badge span {
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.pending-section-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+  text-align: left;
+}
+
+/* Pending Plan Card */
+.pending-plan-card {
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.06) 0%, rgba(168, 85, 247, 0.03) 100%);
+  border-left: 3px solid #6366f1;
+}
+
+.pending-plan-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Sender Avatar */
+.pending-sender-avatar-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.pending-sender-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #a78bfa 0%, #ec4899 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pending-sender-avatar span {
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.pending-share-badge {
+  position: absolute;
+  bottom: -0.125rem;
+  right: -0.125rem;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background-color: #6366f1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px #ffffff;
+}
+
+/* Plan Info */
+.pending-plan-info {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.pending-plan-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 0.125rem 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.pending-plan-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.pending-plan-duration {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  text-align: left;
+}
+
+.pending-plan-sender {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0.25rem 0 0 0;
+  text-align: left;
+}
+
+.pending-sender-name {
+  font-weight: 500;
+  color: #374151;
+}
+
+/* Plan Stats */
+.pending-plan-stats {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  margin-left: 3.25rem;
+}
+
+.pending-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.pending-stat-label {
+  font-size: 0.8125rem;
+  color: #9ca3af;
+  text-align: left;
+}
+
+.pending-stat-value {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #374151;
+  text-align: left;
+}
+
+/* Action Buttons */
+.pending-plan-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 3.25rem;
+}
+
+.pending-decline-button,
+.pending-accept-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  height: 2.25rem;
+  padding: 0 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pending-decline-button {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.pending-decline-button:hover {
+  background-color: #e5e7eb;
+}
+
+.pending-decline-button:active {
+  transform: scale(0.95);
+  opacity: 0.9;
+}
+
+.pending-accept-button {
+  background-color: #6366f1;
+  color: #ffffff;
+}
+
+.pending-accept-button:hover {
+  background-color: #5558e3;
+}
+
+.pending-accept-button:active {
+  transform: scale(0.95);
+  opacity: 0.9;
+}
+
+/* Separator between pending plans */
+.pending-plan-separator {
+  height: 1px;
+  background-color: #f3f4f6;
+  margin: 0 1.25rem;
+}
+
 /* Plan Count - Gray background starts here */
 .plans-count {
   background-color: #f2f3f5;

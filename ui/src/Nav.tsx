@@ -13,9 +13,10 @@ import './Nav.css';
 interface NavProps {
   className?: string;
   pendingConnectionsCount?: number;
+  pendingSharedEventsCount?: number;
 }
 
-const Nav = ({ className = "", pendingConnectionsCount = 0 }: NavProps) => {
+const Nav = ({ className = "", pendingConnectionsCount = 0, pendingSharedEventsCount = 0 }: NavProps) => {
   const { logout, user } = useAuth0();
   const navigate = useNavigate();
   const location = useLocation();
@@ -45,7 +46,29 @@ const Nav = ({ className = "", pendingConnectionsCount = 0 }: NavProps) => {
     {
       label: 'Plans',
       icon: 'pi pi-calendar',
-      command: () => navigate('/plans')
+      command: () => navigate('/plans'),
+      template: (item: any, options: any) => {
+        return (
+          <a
+            className={options.className}
+            onClick={(e) => {
+              e.preventDefault();
+              navigate('/plans');
+            }}
+            style={{ position: 'relative', cursor: 'pointer' }}
+          >
+            <span className="plans-icon-wrapper" style={{ position: 'relative', display: 'inline-flex', overflow: 'visible' }}>
+              <span className="p-menuitem-icon pi pi-calendar"></span>
+              {pendingSharedEventsCount > 0 && (
+                <span className="notification-badge">
+                  {pendingSharedEventsCount}
+                </span>
+              )}
+            </span>
+            <span className="p-menuitem-text">{item.label}</span>
+          </a>
+        );
+      }
     },
     {
       label: 'Users',
