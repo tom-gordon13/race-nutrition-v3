@@ -100,7 +100,6 @@ const App = () => {
             <Home
               key={refreshKey}
               onFullscreenChange={setIsFullscreen}
-              pendingConnectionsCount={pendingConnectionsCount}
               onPendingConnectionsCountChange={setPendingConnectionsCount}
             />
           </main>

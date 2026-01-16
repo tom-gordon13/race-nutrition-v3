@@ -12,11 +12,10 @@ import './Home.css';
 
 interface HomeProps {
   onFullscreenChange?: (isFullscreen: boolean) => void;
-  pendingConnectionsCount?: number;
   onPendingConnectionsCountChange?: (count: number) => void;
 }
 
-function Home({ onFullscreenChange, pendingConnectionsCount = 0, onPendingConnectionsCountChange }: HomeProps) {
+function Home({ onFullscreenChange, onPendingConnectionsCountChange }: HomeProps) {
   const { user } = useAuth0();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
