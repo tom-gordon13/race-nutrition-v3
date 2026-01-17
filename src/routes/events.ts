@@ -387,4 +387,92 @@ router.post('/:id/duplicate', async (req, res) => {
   }
 });
 
+// DELETE an event
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { auth0_sub } = req.query;
+
+    console.log('Received event deletion request:', { id, auth0_sub });
+
+    if (!auth0_sub || typeof auth0_sub !== 'string') {
+      return res.status(400).json({
+        error: 'Missing required query parameter: auth0_sub'
+      });
+    }
+
+    // Look up the user by their Auth0 ID
+    const user = await prisma.user.findUnique({
+      where: { auth0_sub }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'User not found. Please ensure you are logged in.'
+      });
+    }
+
+    // Check if event exists
+    const event = await prisma.event.findUnique({
+      where: { id }
+    });
+
+    if (!event) {
+      return res.status(404).json({
+        error: 'Event not found'
+      });
+    }
+
+    // Check if user is the owner of the event
+    if (event.event_user_id !== user.id) {
+      return res.status(403).json({
+        error: 'You do not have permission to delete this event'
+      });
+    }
+
+    // Delete related records first (due to foreign key constraints)
+    // Delete food instances
+    await prisma.foodInstance.deleteMany({
+      where: { event_id: id }
+    });
+
+    // Delete triathlon attributes if they exist
+    await prisma.triathlonAttributes.deleteMany({
+      where: { event_id: id }
+    });
+
+    // Delete event goals (base and hourly)
+    await prisma.eventGoalsBase.deleteMany({
+      where: { event_id: id }
+    });
+
+    await prisma.eventGoalsHourly.deleteMany({
+      where: { event_id: id }
+    });
+
+    // Delete shared events
+    await prisma.sharedEvent.deleteMany({
+      where: { event_id: id }
+    });
+
+    // Finally, delete the event itself
+    await prisma.event.delete({
+      where: { id }
+    });
+
+    console.log('Event deleted:', id, 'by user:', user.id);
+
+    return res.status(200).json({
+      message: 'Event deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Error deleting event:', error);
+    return res.status(500).json({
+      error: 'Failed to delete event',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 export default router;

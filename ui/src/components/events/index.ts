@@ -10,6 +10,7 @@ export { EditFoodInstanceDialog } from './EditFoodInstanceDialog';
 export { CreateEventDialog } from './CreateEventDialog';
 export { EventAnalyticsDialog } from './EventAnalyticsDialog';
 export { ShareEventDialog } from './ShareEventDialog';
+export { DeleteEventDialog } from './DeleteEventDialog';
 export { PendingEventsTable } from './PendingEventsTable';
 export { AcceptSharedEventDialog } from './AcceptSharedEventDialog';
 export { ItemListDialog } from './ItemListDialog';

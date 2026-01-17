@@ -3116,6 +3116,24 @@ tbody tr.selected {
   color: #374151;
 }
 
+/* Delete option styling */
+.plan-option-item.delete-option {
+  color: #dc2626;
+}
+
+.plan-option-item.delete-option i {
+  color: #dc2626;
+}
+
+.plan-option-item.delete-option:hover {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.plan-option-item.delete-option:hover i {
+  color: #991b1b;
+}
+
 /* Plan Title Section */
 .plan-title-section {
   background-color: white;

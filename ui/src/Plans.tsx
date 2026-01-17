@@ -5,7 +5,7 @@ import { Button } from 'primereact/button';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
-import { CreateEventDialog, EditEventDialog } from './components/events';
+import { CreateEventDialog, EditEventDialog, DeleteEventDialog } from './components/events';
 import { API_URL } from './config/api';
 import './Plans.css';
 import LoadingSpinner from './LoadingSpinner';
@@ -116,6 +116,9 @@ const Plans = ({ onPendingSharedEventsCountChange }: PlansProps) => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [eventToEdit, setEventToEdit] = useState<Event | null>(null);
+  const [showPlanOptionsDropdown, setShowPlanOptionsDropdown] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<EventWithStats | null>(null);
 
   const fetchMyPlans = async () => {
     if (!user || !user.sub) {
@@ -328,6 +331,21 @@ const Plans = ({ onPendingSharedEventsCountChange }: PlansProps) => {
     fetchPendingSharedEvents();
   }, [user]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (showPlanOptionsDropdown && !target.closest('.plan-options-dropdown-wrapper')) {
+        setShowPlanOptionsDropdown(null);
+      }
+    };
+
+    if (showPlanOptionsDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showPlanOptionsDropdown]);
+
   useEffect(() => {
     if (onPendingSharedEventsCountChange) {
       onPendingSharedEventsCountChange(pendingSharedEvents.length);
@@ -391,6 +409,37 @@ const Plans = ({ onPendingSharedEventsCountChange }: PlansProps) => {
       await fetchMyPlans();
     } catch (err) {
       console.error('Error duplicating event:', err);
+    }
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent, plan: EventWithStats) => {
+    e.stopPropagation();
+    setEventToDelete(plan);
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!eventToDelete || !user?.sub) return;
+
+    try {
+      const response = await fetch(`${API_URL}/api/events/${eventToDelete.id}?auth0_sub=${encodeURIComponent(user.sub)}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete event');
+      }
+
+      // Close dialog
+      setShowDeleteDialog(false);
+      setEventToDelete(null);
+
+      // Refresh plans
+      await fetchMyPlans();
+    } catch (err) {
+      console.error('Error deleting event:', err);
+      throw err; // Re-throw to be handled by dialog
     }
   };
 
@@ -653,22 +702,52 @@ const Plans = ({ onPendingSharedEventsCountChange }: PlansProps) => {
                   </div>
                   <div className="plan-actions">
                     {activeTab === 'my_plans' ? (
-                      <>
+                      <div className="plan-options-dropdown-wrapper">
                         <button
-                          className="icon-button edit-button"
-                          onClick={(e) => handleEditClick(e, plan)}
-                          title="Edit plan"
+                          className="icon-button plan-options-button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowPlanOptionsDropdown(showPlanOptionsDropdown === plan.id ? null : plan.id);
+                          }}
+                          title="More options"
                         >
-                          <i className="pi pi-pencil"></i>
+                          <i className="pi pi-ellipsis-h"></i>
                         </button>
-                        <button
-                          className="icon-button copy-button"
-                          onClick={(e) => handleCopyClick(e, plan)}
-                          title="Copy plan"
-                        >
-                          <i className="pi pi-copy"></i>
-                        </button>
-                      </>
+                        {showPlanOptionsDropdown === plan.id && (
+                          <div className="plan-options-dropdown">
+                            <button
+                              className="plan-option-item"
+                              onClick={(e) => {
+                                handleEditClick(e, plan);
+                                setShowPlanOptionsDropdown(null);
+                              }}
+                            >
+                              <i className="pi pi-pencil"></i>
+                              <span>Edit Plan</span>
+                            </button>
+                            <button
+                              className="plan-option-item"
+                              onClick={(e) => {
+                                handleCopyClick(e, plan);
+                                setShowPlanOptionsDropdown(null);
+                              }}
+                            >
+                              <i className="pi pi-copy"></i>
+                              <span>Copy Plan</span>
+                            </button>
+                            <button
+                              className="plan-option-item delete-option"
+                              onClick={(e) => {
+                                handleDeleteClick(e, plan);
+                                setShowPlanOptionsDropdown(null);
+                              }}
+                            >
+                              <i className="pi pi-trash"></i>
+                              <span>Delete Plan</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     ) : (
                       <button
                         className="icon-button download-button"
@@ -741,6 +820,18 @@ const Plans = ({ onPendingSharedEventsCountChange }: PlansProps) => {
         }}
         onSave={handleSaveEditedEvent}
       />
+
+      {eventToDelete && (
+        <DeleteEventDialog
+          visible={showDeleteDialog}
+          event={eventToDelete}
+          onHide={() => {
+            setShowDeleteDialog(false);
+            setEventToDelete(null);
+          }}
+          onConfirmDelete={handleConfirmDelete}
+        />
+      )}
     </div>
   );
 };

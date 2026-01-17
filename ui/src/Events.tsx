@@ -16,6 +16,7 @@ import {
   CreateEventDialog,
   EventAnalyticsDialog,
   ShareEventDialog,
+  DeleteEventDialog,
   PendingEventsTable,
   AcceptSharedEventDialog,
   ItemListDialog,
@@ -164,6 +165,9 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
   // State for share event dialog
   const [showShareEventDialog, setShowShareEventDialog] = useState(false);
 
+  // State for delete event dialog
+  const [showDeleteEventDialog, setShowDeleteEventDialog] = useState(false);
+
   // State for edit food instance dialog
   const [showEditFoodInstanceDialog, setShowEditFoodInstanceDialog] = useState(false);
   const [instanceToEdit, setInstanceToEdit] = useState<FoodInstance | null>(null);
@@ -185,7 +189,7 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
 
   // State for view-only mode (when viewing someone else's non-private event)
   const [isViewOnly, setIsViewOnly] = useState(false);
-  const [eventOwnerAuth0Sub, setEventOwnerAuth0Sub] = useState<string | null>(null);
+  const [_eventOwnerAuth0Sub, setEventOwnerAuth0Sub] = useState<string | null>(null);
 
   // State for tab view (Timeline vs Nutrients by Hour)
   const [activeView, setActiveView] = useState<'timeline' | 'nutrients'>('timeline');
@@ -777,6 +781,42 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
     setTimeout(() => setSuccess(null), 3000);
   };
 
+  // Handler for deleting an event
+  const handleDeleteEvent = async () => {
+    if (!selectedEvent || !user?.sub) return;
+
+    try {
+      console.log('Deleting event:', selectedEvent.id, 'User:', user.sub);
+      const response = await fetch(`${API_URL}/api/events/${selectedEvent.id}?auth0_sub=${encodeURIComponent(user.sub)}`, {
+        method: 'DELETE',
+      });
+
+      console.log('Delete response status:', response.status);
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Delete error response:', error);
+        throw new Error(error.error || 'Failed to delete event');
+      }
+
+      // Close the dialog
+      setShowDeleteEventDialog(false);
+
+      // Navigate back to plans list
+      navigate('/plans');
+
+      // Refresh events list
+      await fetchEvents();
+
+      // Show success message
+      setSuccess('Plan deleted successfully!');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      console.error('Error deleting event:', err);
+      throw err; // Re-throw to be handled by the dialog
+    }
+  };
+
   if (loading) {
     return <LoadingSpinner message="Loading events..." />;
   }
@@ -1049,6 +1089,18 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
                         >
                           <i className="pi pi-share-alt"></i>
                           <span>Share Plan</span>
+                        </button>
+                      )}
+                      {!isViewOnly && (
+                        <button
+                          className="plan-option-item delete-option"
+                          onClick={() => {
+                            setShowPlanOptionsDropdown(false);
+                            setShowDeleteEventDialog(true);
+                          }}
+                        >
+                          <i className="pi pi-trash"></i>
+                          <span>Delete Plan</span>
                         </button>
                       )}
                     </div>
@@ -1388,6 +1440,16 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
             setSuccess('Event shared successfully!');
             setTimeout(() => setSuccess(null), 3000);
           }}
+        />
+      )}
+
+      {/* Delete Event Dialog */}
+      {selectedEvent && (
+        <DeleteEventDialog
+          visible={showDeleteEventDialog}
+          event={selectedEvent}
+          onHide={() => setShowDeleteEventDialog(false)}
+          onConfirmDelete={handleDeleteEvent}
         />
       )}
 
