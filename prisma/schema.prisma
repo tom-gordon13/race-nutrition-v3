@@ -82,19 +82,33 @@ model FoodItem {
 }
 
 model Event {
-  id                String             @id @default(uuid())
-  event_user_id     String
-  created_at        DateTime           @default(now())
-  updated_at        DateTime           @updatedAt
-  expected_duration Int
-  name              String
-  event_type        EventType
-  private           Boolean            @default(true)
-  user              User               @relation(fields: [event_user_id], references: [id])
-  foodInstances     FoodInstance[]
-  eventGoalsBase    EventGoalsBase[]
-  eventGoalsHourly  EventGoalsHourly[]
-  sharedEvents      SharedEvent[]
+  id                  String               @id @default(uuid())
+  event_user_id       String
+  created_at          DateTime             @default(now())
+  updated_at          DateTime             @updatedAt
+  expected_duration   Int
+  name                String
+  event_type          EventType
+  private             Boolean              @default(true)
+  user                User                 @relation(fields: [event_user_id], references: [id])
+  foodInstances       FoodInstance[]
+  eventGoalsBase      EventGoalsBase[]
+  eventGoalsHourly    EventGoalsHourly[]
+  sharedEvents        SharedEvent[]
+  triathlonAttributes TriathlonAttributes?
+}
+
+model TriathlonAttributes {
+  id                    String   @id @default(uuid())
+  event_id              String   @unique
+  swim_duration_seconds Int
+  bike_duration_seconds Int
+  run_duration_seconds  Int
+  t1_duration_seconds   Int?
+  t2_duration_seconds   Int?
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+  event                 Event    @relation(fields: [event_id], references: [id], onDelete: Cascade)
 }
 
 model FoodInstance {

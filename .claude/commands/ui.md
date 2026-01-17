@@ -19,29 +19,38 @@ You are a specialized UI/frontend agent for this race nutrition application. You
 ui/
 ├── src/
 │   ├── main.tsx                 # App entry point with providers
-│   ├── App.tsx                  # Main app component with auth logic
+│   ├── App.tsx                  # Main app component with auth & pull-to-refresh
 │   ├── App.css                  # App-level styles
 │   ├── index.css                # Global styles and theme variables
 │   ├── Nav.tsx                  # Navigation component with TabMenu
 │   ├── Nav.css                  # Navigation styles
 │   ├── Home.tsx                 # Main router component
 │   ├── Home.css                 # Home layout styles
-│   ├── [Page].tsx               # Page-level components (FoodItems, Events, etc.)
+│   ├── [Page].tsx               # Page-level components
 │   ├── [Page].css               # Page-specific styles
-│   ├── components/              # Reusable/shared components
-│   │   └── events/              # Feature-specific components
-│   │       ├── EventForm.tsx
-│   │       ├── EditEventDialog.tsx
-│   │       ├── EditEventDialog.css
-│   │       └── [more components...]
+│   ├── components/              # Feature-specific components
+│   │   ├── events/              # Event-related (16+ components)
+│   │   │   ├── EventTimeline.tsx
+│   │   │   ├── CreateEventDialog.tsx
+│   │   │   ├── EditEventDialog.tsx
+│   │   │   ├── NutrientGoalsDialog.tsx
+│   │   │   ├── ShareEventDialog.tsx
+│   │   │   ├── FoodInstanceDialog.tsx
+│   │   │   └── [more components...]
+│   │   ├── food-items/          # Food item components
+│   │   │   └── CreateFoodItemDialog.tsx
+│   │   └── shared/              # Shared UI components
+│   │       └── ModalSheet.css   # 1200+ line modal sheet system
+│   ├── config/                  # Configuration files
+│   │   └── api.ts               # API URL configuration
 │   ├── hooks/                   # Custom React hooks
-│   │   └── useUserSync.ts
+│   │   └── useUserSync.ts       # Auth0 user sync hook
 │   └── assets/                  # Static assets
-├── public/                      # Public static files
+├── public/                      # Public static files & PWA assets
 ├── index.html                   # HTML entry point
-├── vite.config.ts               # Vite configuration
+├── vite.config.ts               # Vite configuration with PWA plugin
 ├── tsconfig.json                # TypeScript configuration
-└── package.json                 # Dependencies
+└── package.json                 # Dependencies (35+ TypeScript files total)
 ```
 
 ## Application Architecture
@@ -75,26 +84,53 @@ ui/
 - Brand name: "RaceFuel"
 
 ### Routing (Home.tsx)
-- Uses React Router `<Routes>` and `<Route>`
+- Uses React Router v7 `<Routes>` and `<Route>`
 - Default route redirects to `/food-items`
 - Routes:
-  - `/food-items` - Food items management
-  - `/events` - Events list and detail
-  - `/events/:eventId` - Specific event detail
-  - `/nutrients` - Nutrients management
+  - `/` - Redirects to `/food-items`
+  - `/food-items` - Food items list view
+  - `/food-items/:id` - Food item detail view (with modal)
+  - `/plans` - Plans list (My Plans and Community Plans tabs)
+  - `/plans/:eventId` - Event detail with timeline
+  - `/nutrients` - Nutrients reference data
   - `/preferences` - User preferences (color settings)
-  - `/users` - User connections and social features
+  - `/users` - User connections and sharing
 - Handles mobile vs desktop layouts
-- Manages dialogs for mobile (bottom sheets)
-- Slide-in animations for side panels
+- Uses modal sheets for dialogs
+- Programmatic navigation with `useNavigate()` hook
+- URL parameters for dynamic content
 
 ### Pages
-1. **FoodItems.tsx** - Manage food items with nutrition info
-2. **Events.tsx** - Plan and track race/training events
-3. **Nutrients.tsx** - Manage nutrient types
-4. **Preferences.tsx** - User color preferences for food categories
-5. **Users.tsx** - User connections and shared events
-6. **CreateFoodItem.tsx** - Form for creating new food items
+1. **FoodItems.tsx** - Browse and manage food items
+   - Search functionality
+   - Favorite items
+   - Create/edit food items with nutrition info
+   - Modal sheet detail view
+   - Decimal servings support
+
+2. **Plans.tsx** - View and manage nutrition plans
+   - Tabbed interface (My Plans / Community Plans)
+   - Event cards with nutrition summaries
+   - Navigate to event timeline
+   - Handle pending shared plans
+
+3. **EventTimeline.tsx** - Detailed event planning view
+   - Vertical timeline with drag-and-drop
+   - Food instance management
+   - Nutrient goal tracking
+   - Share functionality
+   - Fullscreen mode option
+
+4. **Nutrients.tsx** - Reference data for nutrient types
+
+5. **Preferences.tsx** - User customization
+   - Category color selection
+   - Per-user color preferences
+
+6. **Users.tsx** - Social features
+   - User connections
+   - Share events with connections
+   - View connected users
 
 ## PrimeReact Integration
 
@@ -147,23 +183,26 @@ PrimeReact uses `pt` (passThrough) prop for custom styling:
 ## Styling System
 
 ### Color Palette
-**Primary Color**: `#646cff` (purple-blue)
-- Hover: `#535bf2`
-- Light mode variant: `#535bf2`
-- Light mode hover: `#4349d8`
+**Primary Color**: `#6366f1` (indigo)
+- Used for primary buttons, active states, and brand elements
+- Previous color `#646cff` has been updated to indigo
 
-**Background Colors (Dark Mode)**:
-- Base: `#242424`
-- Subtle overlays: `rgba(255, 255, 255, 0.03)` - `rgba(255, 255, 255, 0.05)`
+**User-Customizable Category Colors**:
+- Food categories use user-defined colors (set in Preferences)
+- Default colors include various hues for visual categorization
+- Colors are stored per-user and sync across devices
 
-**Text Colors (Dark Mode)**:
-- Primary: `rgba(255, 255, 255, 0.87)`
-- Secondary: `rgba(255, 255, 255, 0.7)`
-- Tertiary: `rgba(255, 255, 255, 0.6)`
+**Nav Bar**:
+- Background: `#f3f0ff` (light purple tint)
+- Responsive sticky positioning
 
-**Special Backgrounds**:
-- Nav: `#f3f0ff` (light purple tint)
-- Cards: `rgba(255, 255, 255, 0.03)`
+**Backgrounds**:
+- Main app background: System-dependent (light/dark mode support)
+- Cards and panels use subtle elevation
+
+**Borders and Shadows**:
+- Border radius: `0.75rem` for cards/buttons, `0.5rem` for inputs
+- Elevation system for modals and interactive elements
 
 ### CSS Architecture
 1. **Global Styles** (`index.css`):
@@ -184,23 +223,26 @@ PrimeReact uses `pt` (passThrough) prop for custom styling:
    - Component-specific classes
 
 ### Responsive Design
-**Breakpoint**: `768px`
+**Breakpoint**: `769px` (`@media (min-width: 769px)`)
 
-Mobile-first considerations:
-- Navigation collapses to stacked layout
-- Dialogs use bottom sheet positioning (`position="bottom"`)
+Mobile-first approach:
+- Base styles target mobile devices
+- Desktop enhancements at 769px+
+- Navigation collapses to stacked layout on mobile
+- Dialogs use slide-up "modal sheet" pattern on mobile (see Modal Sheet Pattern below)
 - Full-width layouts on mobile
-- Reduced padding on small screens
-- Flex direction changes (column on mobile)
+- Responsive padding and spacing
+- Touch-optimized interactive elements
 
-Example mobile pattern:
-```css
-@media (max-width: 768px) {
-  .nav-content {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-}
+**Mobile Detection Pattern**:
+```typescript
+const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+useEffect(() => {
+  const handleResize = () => setIsMobile(window.innerWidth <= 768);
+  window.addEventListener('resize', handleResize);
+  return () => window.removeEventListener('resize', handleResize);
+}, []);
 ```
 
 ### Dark/Light Mode
@@ -218,19 +260,49 @@ Both dark and light modes are fully supported throughout the app.
 
 ## Component Patterns
 
-### Dialog Pattern
+### Modal Sheet Pattern (Primary Dialog Pattern)
+The app uses a custom modal sheet system (`ModalSheet.css`) instead of standard PrimeReact dialogs. This provides a consistent iOS/Material-inspired slide-up experience:
+
+**Structure**:
+```typescript
+const [isOpen, setIsOpen] = useState(false);
+
+<div className={`modal-sheet-overlay ${isOpen ? 'active' : ''}`} onClick={() => setIsOpen(false)}>
+  <div className={`modal-sheet ${isOpen ? 'active' : ''}`} onClick={(e) => e.stopPropagation()}>
+    <div className="modal-sheet-handle" />
+    <div className="modal-sheet-header">
+      <h2>Title</h2>
+      <button className="modal-sheet-close" onClick={() => setIsOpen(false)}>
+        <i className="pi pi-times" />
+      </button>
+    </div>
+    <div className="modal-sheet-content">
+      {/* Content */}
+    </div>
+  </div>
+</div>
+```
+
+**Key Features**:
+- Slide-up animation with 0.4s cubic-bezier timing
+- Mobile: 90-95vh height, full width
+- Desktop: Centered, max-width 672px
+- Draggable handle at top
+- Overlay dismissal
+- Smooth animations for open/close states
+
+**CSS Classes**:
+- `.modal-sheet-overlay` - Dark backdrop
+- `.modal-sheet` - Main container
+- `.modal-sheet-handle` - Visual drag indicator
+- `.modal-sheet-header` - Title area with close button
+- `.modal-sheet-content` - Scrollable content area
+- `.modal-sheet-footer` - Action buttons area
+
+### PrimeReact Dialog Pattern (Legacy)
+Some older components may still use PrimeReact dialogs:
 ```typescript
 import { Dialog } from 'primereact/dialog';
-
-const [visible, setVisible] = useState(false);
-const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-
-// Detect mobile
-useEffect(() => {
-  const handleResize = () => setIsMobile(window.innerWidth <= 768);
-  window.addEventListener('resize', handleResize);
-  return () => window.removeEventListener('resize', handleResize);
-}, []);
 
 <Dialog
   header="Title"
@@ -263,21 +335,38 @@ toast.current?.show({
 ```
 
 ### API Calls Pattern
+Uses native `fetch` API with centralized configuration:
+
 ```typescript
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
+// Import from centralized config
+import { API_URL } from './config/api';
 
 const fetchData = async () => {
   try {
-    const response = await fetch(`${API_URL}/api/endpoint`);
+    const response = await fetch(`${API_URL}/api/endpoint`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
     if (!response.ok) throw new Error('Failed to fetch');
     const data = await response.json();
     // Handle data
   } catch (error) {
     console.error('Error:', error);
-    // Show toast notification
+    toast.current?.show({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to load data',
+      life: 3000
+    });
   }
 };
 ```
+
+**API Configuration** (`/ui/src/config/api.ts`):
+- Automatically detects environment (localhost vs production)
+- Falls back to `http://localhost:3001` for local development
+- Use `VITE_API_URL` environment variable to override
 
 ### Custom Hooks Pattern
 Located in `src/hooks/`:
@@ -325,29 +414,38 @@ if (loading) {
 
 ## Animation Patterns
 
-### Slide-in Transitions
+### Modal Sheet Animations
+Primary animation system using custom cubic-bezier:
 ```css
-.slide-panel {
-  transform: translateX(0);
-  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-  opacity: 1;
+.modal-sheet {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(100%);
+  opacity: 0;
 }
 
-.slide-panel.hidden {
-  transform: translateX(-100%);
-  opacity: 0;
+.modal-sheet.active {
+  transform: translateY(0);
+  opacity: 1;
 }
 ```
 
-### Pulse Animation (for unsaved indicators)
+### Pull-to-Refresh Animation
+Custom implementation in App.tsx:
+- Touch event handlers track pull distance
+- Animated spinner and icon during refresh
+- Threshold: 60px pull triggers refresh
+- Smooth spring-like animation on release
+
+### Fade and Scale Effects
 ```css
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
 }
 
-.unsaved-indicator {
-  animation: pulse 2s ease-in-out infinite;
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 ```
 
@@ -454,35 +552,62 @@ Full icon list: https://primereact.org/icons/
 
 ## Common UI Patterns in This App
 
-### 1. Food Item Card
-- Uses PrimeReact `Card`
-- Shows nutrient info with icons
+### 1. Food Item Cards with Modals
+- Card-based layout with nutrition summary
+- Click to open detailed modal sheet
 - Edit/delete actions
-- Color-coded by category (user preferences)
+- Color-coded by category (user-customizable in Preferences)
+- Favorite functionality (star icon)
+- Search filtering support
+- Decimal servings support
 
-### 2. Event Timeline
-- Recharts for visualization
-- Time-based nutrition consumption
-- Interactive timeline with markers
-- Responsive chart sizing
+### 2. Event Timeline with Drag-and-Drop
+- Vertical timeline with time markers (HH:MM format)
+- Drag-and-drop food items onto timeline
+- Collision detection with horizontal offsets for overlapping items
+- Fullscreen mode for detailed editing
+- Category color coding from user preferences
+- Real-time nutrient calculations
+- Share functionality with view-only mode
 
-### 3. User Avatar Menu
-- Hover-triggered dropdown
+### 3. Plans View (My Plans & Community)
+- Tabbed interface (My Plans / Community Plans)
+- Event cards showing nutrition summary
+- "Pending plans" state handling for shared events
+- Click to navigate to detailed timeline view
+
+### 4. User Avatar Menu
+- Hover-triggered dropdown in Nav
 - Mouse enter/leave event handling
 - Delayed hide with timeout management
 - Uses PrimeReact `Menu` with popup mode
+- Options: Nutrients, Preferences, Sign Out
 
-### 4. Color Selection (Preferences)
-- Circular color buttons
-- Selected state with ring indicator
-- Dirty field tracking for unsaved changes
-- Save button enabled only when changes exist
+### 5. Color Selection (Preferences)
+- Circular color buttons for category customization
+- Selected state with visual indicator
+- Per-category color selection
+- Saves to user preferences in backend
 
-### 5. Mobile Dialogs
-- Bottom sheet positioning (`position="bottom"`)
-- Full viewport width on mobile
-- Dismissable mask overlay
-- Slide-up animation
+### 6. Modal Sheet Dialogs
+- Custom slide-up sheet system (`ModalSheet.css`)
+- Mobile: Full-width, 90-95vh height
+- Desktop: Centered, max 672px width
+- Draggable handle visual indicator
+- Overlay dismissal
+- Smooth 0.4s cubic-bezier animations
+
+### 7. User Connections & Sharing
+- Connect with other users
+- Share events/plans with connections
+- View shared plans from community
+- Collaborative race nutrition planning
+
+### 8. Pull-to-Refresh (Mobile)
+- Custom implementation with touch handlers
+- Visual feedback with animated spinner
+- 60px threshold triggers refresh
+- Works on main app container
 
 ## Accessibility Considerations
 
@@ -495,17 +620,25 @@ Full icon list: https://primereact.org/icons/
 
 ## Performance Patterns
 
-### Lazy Loading
-Not currently implemented but consider for:
-- Route-level code splitting
-- Heavy chart components
-- Large dialogs
+### PWA (Progressive Web App)
+- **vite-plugin-pwa** configured for offline support
+- **Workbox** runtime caching for API responses
+- Service worker for background sync
+- Installable as native app on mobile devices
+- Manifest.json for PWA metadata
 
-### Optimization Opportunities
-- Memoization of expensive calculations
-- `useMemo` for filtered/sorted lists
-- `useCallback` for event handlers passed to children
-- Virtualization for long lists (PrimeReact `VirtualScroller`)
+### Current Optimizations
+- Refresh triggers using numeric state for efficient re-renders
+- Controlled components with minimal re-renders
+- Event handler optimization in timeline drag-and-drop
+
+### Future Optimization Opportunities
+- Route-level code splitting with `React.lazy()`
+- Memoization of expensive timeline calculations
+- `useMemo` for filtered/sorted food item lists
+- `useCallback` for event handlers in timeline components
+- Virtualization for long food item lists (PrimeReact `VirtualScroller`)
+- Image lazy loading for food item photos
 
 ## TypeScript Patterns
 
@@ -595,24 +728,70 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
 ## Key Design Decisions
 
-1. **No state management library** - Using React local state and props
-2. **Co-located styles** - CSS files next to components
-3. **PrimeReact for UI** - Consistent component library
-4. **Mobile-first responsive** - 768px breakpoint
-5. **Auth0 for authentication** - Social login and user management
-6. **Vite for builds** - Fast development and optimized production builds
-7. **TypeScript strict mode** - Type safety throughout
+1. **No state management library** - Using React local state and props (no Redux, Zustand, etc.)
+2. **Custom modal sheet system** - `ModalSheet.css` provides consistent, native-feeling dialogs
+3. **Co-located styles** - Traditional CSS files next to components (not CSS-in-JS or CSS modules)
+4. **PrimeReact for UI components** - Consistent component library for forms, tables, etc.
+5. **Mobile-first responsive** - 769px breakpoint with mobile-optimized patterns
+6. **Auth0 for authentication** - Social login and user management
+7. **Vite for builds** - Fast development with HMR, optimized production builds
+8. **TypeScript strict mode** - Type safety throughout
+9. **PWA-ready** - Offline support and installable as native app
+10. **Native fetch API** - No axios or other HTTP libraries
+11. **Feature-based organization** - Components organized by feature (events, food-items, etc.)
+
+## Recent Major Updates (Last 2 Weeks)
+
+### Styling Overhaul
+- Major styling updates across the application
+- Timeline styling refinements (multiple iterations)
+- Desktop layout improvements with better responsive behavior
+- Login screen redesign
+- Dialog system rework to use modal sheets
+- Nav bar styling improvements
+
+### New Features
+- **Share Event Dialog** - Share plans with connected users
+- **User Connections** - Connect with other users for collaboration
+- **Favorite Food Items** - Star/favorite functionality
+- **Search on Food Items** - Filter food items by search term
+- **Decimal Servings** - Support for fractional serving sizes
+- **Event Sharing View-Only Mode** - Shared events can be viewed but not edited
+- **Pending Plans Handling** - Better UX for shared events pending acceptance
+
+### Bug Fixes & Improvements
+- Multiple build error fixes
+- Header alignment corrections
+- Food instance dialog fixes
+- Table styling fixes
+- Better handling for pending shared plans
 
 ## Task Instructions
 
 When asked to perform UI tasks:
 1. **Understand the context** - Read relevant component files
 2. **Follow existing patterns** - Match the app's conventions
-3. **Use PrimeReact components** - Don't create custom versions of existing components
-4. **Style consistently** - Use the color palette and patterns
-5. **Consider responsive design** - Always think about mobile layout
-6. **Handle errors gracefully** - Use toast notifications for user feedback
-7. **Type everything** - Use TypeScript interfaces for props and data
-8. **Test mobile behavior** - Check 768px breakpoint
+3. **Use modal sheets for dialogs** - Prefer `ModalSheet.css` system over PrimeReact Dialog
+4. **Use PrimeReact for form components** - InputText, InputNumber, Dropdown, Button, etc.
+5. **Style consistently** - Use the indigo color palette and 0.4s cubic-bezier animations
+6. **Mobile-first responsive design** - Base styles for mobile, enhance at 769px+ breakpoint
+7. **Handle errors gracefully** - Use toast notifications for user feedback
+8. **Type everything** - Use TypeScript interfaces for props and data
+9. **Test mobile behavior** - Verify modal sheets, pull-to-refresh, touch interactions
+10. **Import API_URL from config** - Use centralized `config/api.ts` for API calls
+11. **Consider PWA capabilities** - Offline support, service workers, installability
 
-Remember: This is a nutrition tracking app for endurance athletes. Components should support tracking food items, planning race nutrition, visualizing consumption over time, and collaborating with other users.
+### Common Component Locations
+- Event components: `/ui/src/components/events/`
+- Food item components: `/ui/src/components/food-items/`
+- Shared components: `/ui/src/components/shared/`
+- Page-level components: `/ui/src/[PageName].tsx`
+- Hooks: `/ui/src/hooks/`
+- Config: `/ui/src/config/`
+
+Remember: This is **RaceFuel**, a nutrition tracking app for endurance athletes. Components should support:
+- Tracking food items with detailed nutrition data
+- Planning race nutrition on timelines
+- Visualizing consumption over time
+- Collaborating with other users via sharing
+- Mobile-first UX with PWA capabilities

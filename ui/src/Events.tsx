@@ -25,6 +25,18 @@ import { NutrientGoalsView } from './components/events/NutrientGoalsView';
 import { API_URL } from './config/api';
 import LoadingSpinner from './LoadingSpinner';
 
+interface TriathlonAttributes {
+  id: string;
+  event_id: string;
+  swim_duration_seconds: number;
+  bike_duration_seconds: number;
+  run_duration_seconds: number;
+  t1_duration_seconds: number | null;
+  t2_duration_seconds: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
 interface Event {
   id: string;
   event_user_id: string;
@@ -34,6 +46,7 @@ interface Event {
   created_at: string;
   updated_at: string;
   private: boolean;
+  triathlonAttributes?: TriathlonAttributes | null;
 }
 
 interface FoodItemNutrient {
@@ -690,12 +703,21 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
 
   // Handler for saving edited event
   const handleSaveEditedEvent = async (updatedEvent: Event) => {
-    // Update the selectedEvent immediately with the fresh data from the API
-    if (selectedEvent && selectedEvent.id === updatedEvent.id) {
-      setSelectedEvent(updatedEvent);
-    }
-    // Also refresh the events list in the background
+    // Refresh the events list
     await fetchEvents();
+
+    // Fetch the updated event with all its attributes from the API
+    if (selectedEvent && selectedEvent.id === updatedEvent.id && user?.sub) {
+      try {
+        const response = await fetch(`${API_URL}/api/events/${updatedEvent.id}?auth0_sub=${encodeURIComponent(user.sub)}`);
+        if (response.ok) {
+          const data = await response.json();
+          setSelectedEvent(data.event);
+        }
+      } catch (err) {
+        console.error('Error refreshing event after edit:', err);
+      }
+    }
   };
 
   // Handler for duplicating an event

@@ -10,6 +10,18 @@ import { API_URL } from './config/api';
 import './Plans.css';
 import LoadingSpinner from './LoadingSpinner';
 
+interface TriathlonAttributes {
+  id: string;
+  event_id: string;
+  swim_duration_seconds: number;
+  bike_duration_seconds: number;
+  run_duration_seconds: number;
+  t1_duration_seconds: number | null;
+  t2_duration_seconds: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
 interface Event {
   id: string;
   event_user_id: string;
@@ -19,6 +31,7 @@ interface Event {
   created_at: string;
   updated_at: string;
   private: boolean;
+  triathlonAttributes?: TriathlonAttributes | null;
 }
 
 interface FoodItemNutrient {

@@ -31,6 +31,9 @@ router.get('/', async (req, res) => {
       where: {
         event_user_id: user.id
       },
+      include: {
+        triathlonAttributes: true
+      },
       orderBy: {
         updated_at: 'desc'
       }
@@ -108,7 +111,8 @@ router.get('/community', async (req, res) => {
             last_name: true,
             email: true
           }
-        }
+        },
+        triathlonAttributes: true
       },
       orderBy: {
         created_at: 'desc'
@@ -151,7 +155,8 @@ router.get('/:id', async (req, res) => {
           select: {
             auth0_sub: true
           }
-        }
+        },
+        triathlonAttributes: true
       }
     });
 
@@ -303,7 +308,10 @@ router.post('/:id/duplicate', async (req, res) => {
 
     // Find the original event
     const originalEvent = await prisma.event.findUnique({
-      where: { id }
+      where: { id },
+      include: {
+        triathlonAttributes: true
+      }
     });
 
     if (!originalEvent) {
@@ -336,6 +344,20 @@ router.post('/:id/duplicate', async (req, res) => {
           time_elapsed_at_consumption: instance.time_elapsed_at_consumption,
           servings: instance.servings
         }))
+      });
+    }
+
+    // Copy triathlon attributes if they exist
+    if (originalEvent.triathlonAttributes) {
+      await prisma.triathlonAttributes.create({
+        data: {
+          event_id: newEvent.id,
+          swim_duration_seconds: originalEvent.triathlonAttributes.swim_duration_seconds,
+          bike_duration_seconds: originalEvent.triathlonAttributes.bike_duration_seconds,
+          run_duration_seconds: originalEvent.triathlonAttributes.run_duration_seconds,
+          t1_duration_seconds: originalEvent.triathlonAttributes.t1_duration_seconds,
+          t2_duration_seconds: originalEvent.triathlonAttributes.t2_duration_seconds
+        }
       });
     }
 

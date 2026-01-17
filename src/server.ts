@@ -11,6 +11,7 @@ import sharedEventsRoutes from './routes/shared-events.js';
 import preferencesRoutes from './routes/preferences.js';
 import favoriteFoodItemsRoutes from './routes/favorite-food-items.js';
 import userPreferencesRoutes from './routes/user-preferences.js';
+import triathlonAttributesRoutes from './routes/triathlon-attributes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -30,6 +31,7 @@ app.use('/api/shared-events', sharedEventsRoutes);
 app.use('/api/preferences', preferencesRoutes);
 app.use('/api/favorite-food-items', favoriteFoodItemsRoutes);
 app.use('/api/user-preferences', userPreferencesRoutes);
+app.use('/api/triathlon-attributes', triathlonAttributesRoutes);
 
 app.listen(PORT, () => {
   console.log(`API server running on http://localhost:${PORT}`);

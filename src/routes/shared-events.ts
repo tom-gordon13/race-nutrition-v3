@@ -320,6 +320,24 @@ router.put('/:sharedEventId', async (req, res) => {
           }))
         });
       }
+
+      // Copy triathlon attributes if they exist
+      const originalTriathlonAttributes = await prisma.triathlonAttributes.findUnique({
+        where: { event_id: sharedEvent.event_id }
+      });
+
+      if (originalTriathlonAttributes) {
+        await prisma.triathlonAttributes.create({
+          data: {
+            event_id: copiedEvent!.id,
+            swim_duration_seconds: originalTriathlonAttributes.swim_duration_seconds,
+            bike_duration_seconds: originalTriathlonAttributes.bike_duration_seconds,
+            run_duration_seconds: originalTriathlonAttributes.run_duration_seconds,
+            t1_duration_seconds: originalTriathlonAttributes.t1_duration_seconds,
+            t2_duration_seconds: originalTriathlonAttributes.t2_duration_seconds
+          }
+        });
+      }
     }
 
     // Update the shared event status

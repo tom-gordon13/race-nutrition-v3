@@ -7,12 +7,25 @@ import './EditEventDialog.css';
 import '../shared/ModalSheet.css';
 import { API_URL } from '../../config/api';
 
+interface TriathlonAttributes {
+  id: string;
+  event_id: string;
+  swim_duration_seconds: number;
+  bike_duration_seconds: number;
+  run_duration_seconds: number;
+  t1_duration_seconds: number | null;
+  t2_duration_seconds: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
 interface Event {
   id: string;
   name: string;
   event_type: string;
   expected_duration: number;
   private: boolean;
+  triathlonAttributes?: TriathlonAttributes | null;
 }
 
 interface CreateEventDialogProps {
@@ -42,9 +55,20 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
   const [eventName, setEventName] = useState('');
   const [eventType, setEventType] = useState('OTHER');
   const [showEventTypeDropdown, setShowEventTypeDropdown] = useState(false);
+
+  // Simple duration (when toggle is off or not triathlon)
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
-  const [seconds, setSeconds] = useState(0);
+
+  // Triathlon-specific durations (when toggle is on)
+  const [useTriathlonSegments, setUseTriathlonSegments] = useState(true);
+  const [swimHours, setSwimHours] = useState(0);
+  const [swimMinutes, setSwimMinutes] = useState(0);
+  const [bikeHours, setBikeHours] = useState(0);
+  const [bikeMinutes, setBikeMinutes] = useState(0);
+  const [runHours, setRunHours] = useState(0);
+  const [runMinutes, setRunMinutes] = useState(0);
+
   const [isPrivate, setIsPrivate] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,20 +78,16 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
   // Handle animation timing for smooth slide-up and slide-down
   useEffect(() => {
     if (visible) {
-      // Start rendering immediately
       setShouldRender(true);
-      // Small delay to ensure the browser calculates the initial state
       const timer = setTimeout(() => {
         setIsAnimating(true);
       }, 10);
       return () => clearTimeout(timer);
     } else {
-      // Start slide-out animation
       setIsAnimating(false);
-      // Wait for animation to complete before unmounting
       const timer = setTimeout(() => {
         setShouldRender(false);
-      }, 400); // Match the CSS transition duration
+      }, 400);
       return () => clearTimeout(timer);
     }
   }, [visible]);
@@ -80,8 +100,20 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
       const totalSeconds = existingEvent.expected_duration || 0;
       setHours(Math.floor(totalSeconds / 3600));
       setMinutes(Math.floor((totalSeconds % 3600) / 60));
-      setSeconds(totalSeconds % 60);
       setIsPrivate(existingEvent.private ?? true);
+
+      // Load existing triathlon attributes if they exist
+      if (existingEvent.event_type === 'TRIATHLON' && existingEvent.triathlonAttributes) {
+        setUseTriathlonSegments(true);
+        setSwimHours(Math.floor(existingEvent.triathlonAttributes.swim_duration_seconds / 3600));
+        setSwimMinutes(Math.floor((existingEvent.triathlonAttributes.swim_duration_seconds % 3600) / 60));
+        setBikeHours(Math.floor(existingEvent.triathlonAttributes.bike_duration_seconds / 3600));
+        setBikeMinutes(Math.floor((existingEvent.triathlonAttributes.bike_duration_seconds % 3600) / 60));
+        setRunHours(Math.floor(existingEvent.triathlonAttributes.run_duration_seconds / 3600));
+        setRunMinutes(Math.floor((existingEvent.triathlonAttributes.run_duration_seconds % 3600) / 60));
+      } else {
+        setUseTriathlonSegments(false);
+      }
     }
   }, [mode, existingEvent]);
 
@@ -92,7 +124,13 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
       setEventType('OTHER');
       setHours(0);
       setMinutes(0);
-      setSeconds(0);
+      setSwimHours(0);
+      setSwimMinutes(0);
+      setBikeHours(0);
+      setBikeMinutes(0);
+      setRunHours(0);
+      setRunMinutes(0);
+      setUseTriathlonSegments(true);
       setIsPrivate(true);
       setError(null);
     }
@@ -122,19 +160,33 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
   };
 
   const handleClose = () => {
-    // Reset form
     setEventName('');
     setEventType('OTHER');
     setHours(0);
     setMinutes(0);
-    setSeconds(0);
+    setSwimHours(0);
+    setSwimMinutes(0);
+    setBikeHours(0);
+    setBikeMinutes(0);
+    setRunHours(0);
+    setRunMinutes(0);
+    setUseTriathlonSegments(true);
     setIsPrivate(true);
     setError(null);
     onHide();
   };
 
   const handleCreate = async () => {
-    const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+    let totalSeconds: number;
+
+    if (eventType === 'TRIATHLON' && useTriathlonSegments) {
+      totalSeconds =
+        (swimHours * 3600 + swimMinutes * 60) +
+        (bikeHours * 3600 + bikeMinutes * 60) +
+        (runHours * 3600 + runMinutes * 60);
+    } else {
+      totalSeconds = hours * 3600 + minutes * 60;
+    }
 
     if (!eventName.trim()) {
       setError('Plan name is required');
@@ -163,7 +215,6 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
         private: isPrivate,
       };
 
-      // Only include auth0_sub for create mode
       if (mode === 'create') {
         payload.auth0_sub = auth0Sub;
       }
@@ -181,6 +232,34 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
         throw new Error(data.error || `Failed to ${mode} plan`);
       }
 
+      const result = await response.json();
+      const eventId = mode === 'edit' ? existingEvent?.id : result.event?.id;
+
+      // If triathlon with segments enabled, save triathlon attributes
+      if (eventType === 'TRIATHLON' && useTriathlonSegments && eventId) {
+        const triathlonPayload = {
+          event_id: eventId,
+          swim_duration_seconds: swimHours * 3600 + swimMinutes * 60,
+          bike_duration_seconds: bikeHours * 3600 + bikeMinutes * 60,
+          run_duration_seconds: runHours * 3600 + runMinutes * 60,
+          t1_duration_seconds: null,
+          t2_duration_seconds: null,
+        };
+
+        const triathlonResponse = await fetch(`${API_URL}/api/triathlon-attributes`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(triathlonPayload),
+        });
+
+        if (!triathlonResponse.ok) {
+          const errorData = await triathlonResponse.json();
+          console.error('Failed to save triathlon attributes:', errorData);
+        }
+      }
+
       onCreate();
       handleClose();
     } catch (err) {
@@ -190,12 +269,25 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
     }
   };
 
-  const totalSeconds = hours * 3600 + minutes * 60 + seconds;
-  const hoursDisplay = Math.floor(totalSeconds / 3600);
-  const minutesDisplay = Math.floor((totalSeconds % 3600) / 60);
-  const secondsDisplay = totalSeconds % 60;
+  const calculateTotalDuration = () => {
+    if (eventType === 'TRIATHLON' && useTriathlonSegments) {
+      const totalMinutes =
+        (swimHours * 60 + swimMinutes) +
+        (bikeHours * 60 + bikeMinutes) +
+        (runHours * 60 + runMinutes);
+      const h = Math.floor(totalMinutes / 60);
+      const m = totalMinutes % 60;
+      return { hours: h, minutes: m };
+    } else {
+      return { hours, minutes };
+    }
+  };
+
+  const totalDuration = calculateTotalDuration();
 
   if (!shouldRender) return null;
+
+  const isTriathlon = eventType === 'TRIATHLON';
 
   return (
     <div
@@ -209,7 +301,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
         <div className="modal-header">
           <div className="modal-header-content">
             <p className="modal-header-label">{mode === 'edit' ? 'EDIT' : 'CREATE NEW'}</p>
-            <h2 className="modal-header-title">{eventName || 'Plan'}</h2>
+            <h2 className="modal-header-title">Plan</h2>
           </div>
           <button
             onClick={handleClose}
@@ -236,7 +328,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
                 className="input-field"
                 value={eventName}
                 onChange={(e) => setEventName(e.target.value)}
-                placeholder="e.g., Marathon, Half Marathon"
+                placeholder="e.g., Ironman Lake Placid"
                 disabled={loading}
                 style={{
                   fontSize: '1.0625rem',
@@ -263,7 +355,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
                   style={{
                     width: '100%',
                     fontSize: '1.0625rem',
-                    fontWeight: 400,
+                    fontWeight: 500,
                     border: 'none',
                     borderBottom: '2px solid #e5e7eb',
                     borderRadius: 0,
@@ -274,11 +366,12 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    textAlign: 'left'
+                    textAlign: 'left',
+                    color: '#a855f7'
                   }}
                 >
                   <span style={{ textAlign: 'left' }}>{eventTypeOptions.find(o => o.value === eventType)?.label || 'Other'}</span>
-                  <span style={{ fontSize: '0.875rem', color: '#9ca3af' }}>▼</span>
+                  <span style={{ fontSize: '0.875rem', color: '#a855f7' }}>▼</span>
                 </div>
 
                 {showEventTypeDropdown && (
@@ -336,132 +429,347 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
 
             {/* Duration Section */}
             <div className="form-section">
-              <label className="form-label">Expected Duration</label>
-
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{
-                    fontSize: '0.8125rem',
-                    color: '#6b7280',
-                    marginBottom: '0.5rem',
-                    fontWeight: 600,
-                    textAlign: 'left'
-                  }}>
-                    Hours
+              {/* Header with Toggle (only show for triathlon) */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <label className="form-label" style={{ marginBottom: 0 }}>Expected Duration</label>
+                {isTriathlon && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>By discipline</span>
+                    <InputSwitch
+                      checked={useTriathlonSegments}
+                      onChange={(e) => setUseTriathlonSegments(e.value)}
+                      disabled={loading}
+                      style={{ transform: 'scale(0.8)' }}
+                    />
                   </div>
-                  <InputText
-                    type="number"
-                    value={hours.toString()}
-                    onChange={(e) => setHours(Math.max(0, parseInt(e.target.value) || 0))}
-                    min="0"
-                    disabled={loading}
-                    style={{
-                      width: '100%',
-                      backgroundColor: '#f3f4f6',
-                      border: 'none',
-                      borderRadius: '6px',
-                      padding: '0.75rem',
-                      fontSize: '1.0625rem',
-                      textAlign: 'left'
-                    }}
-                  />
-                </div>
-
-                <div style={{ flex: 1 }}>
-                  <div style={{
-                    fontSize: '0.8125rem',
-                    color: '#6b7280',
-                    marginBottom: '0.5rem',
-                    fontWeight: 600,
-                    textAlign: 'left'
-                  }}>
-                    Minutes
-                  </div>
-                  <InputText
-                    type="number"
-                    value={minutes.toString()}
-                    onChange={(e) => setMinutes(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
-                    min="0"
-                    max="59"
-                    disabled={loading}
-                    style={{
-                      width: '100%',
-                      backgroundColor: '#f3f4f6',
-                      border: 'none',
-                      borderRadius: '6px',
-                      padding: '0.75rem',
-                      fontSize: '1.0625rem',
-                      textAlign: 'left'
-                    }}
-                  />
-                </div>
-
-                <div style={{ flex: 1 }}>
-                  <div style={{
-                    fontSize: '0.8125rem',
-                    color: '#6b7280',
-                    marginBottom: '0.5rem',
-                    fontWeight: 600,
-                    textAlign: 'left'
-                  }}>
-                    Seconds
-                  </div>
-                  <InputText
-                    type="number"
-                    value={seconds.toString()}
-                    onChange={(e) => setSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
-                    min="0"
-                    max="59"
-                    disabled={loading}
-                    style={{
-                      width: '100%',
-                      backgroundColor: '#f3f4f6',
-                      border: 'none',
-                      borderRadius: '6px',
-                      padding: '0.75rem',
-                      fontSize: '1.0625rem',
-                      textAlign: 'left'
-                    }}
-                  />
-                </div>
+                )}
               </div>
 
+              {/* Triathlon Segments (only show when triathlon and toggle is ON) */}
+              {isTriathlon && useTriathlonSegments ? (
+                <div style={{
+                  borderRadius: '12px',
+                  border: '1px solid #e5e7eb',
+                  overflow: 'hidden',
+                  backgroundColor: 'rgba(168, 85, 247, 0.02)'
+                }}>
+                  {/* Swim */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    padding: '0.75rem 1rem',
+                    borderBottom: '1px solid #f3f4f6'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '8px',
+                      backgroundColor: 'rgba(14, 165, 233, 0.08)'
+                    }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="2">
+                        <path d="M2 12h1c1.5 0 3-1 3-1s1.5 1 3 1 3-1 3-1 1.5 1 3 1 3-1 3-1 1.5 1 3 1h1"/>
+                        <path d="M2 18h1c1.5 0 3-1 3-1s1.5 1 3 1 3-1 3-1 1.5 1 3 1 3-1 3-1 1.5 1 3 1h1"/>
+                        <circle cx="12" cy="7" r="3"/>
+                      </svg>
+                    </div>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#374151', width: '48px' }}>Swim</span>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                      <input
+                        type="number"
+                        value={swimHours}
+                        onChange={(e) => setSwimHours(Math.max(0, parseInt(e.target.value) || 0))}
+                        min="0"
+                        disabled={loading}
+                        style={{
+                          width: '48px',
+                          padding: '0.5rem',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          textAlign: 'center',
+                          fontSize: '0.875rem',
+                          fontWeight: 600
+                        }}
+                      />
+                      <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>h</span>
+                      <input
+                        type="number"
+                        value={swimMinutes}
+                        onChange={(e) => setSwimMinutes(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
+                        min="0"
+                        max="59"
+                        disabled={loading}
+                        style={{
+                          width: '48px',
+                          padding: '0.5rem',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          textAlign: 'center',
+                          fontSize: '0.875rem',
+                          fontWeight: 600
+                        }}
+                      />
+                      <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>m</span>
+                    </div>
+                  </div>
+
+                  {/* Bike */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    padding: '0.75rem 1rem',
+                    borderBottom: '1px solid #f3f4f6'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '8px',
+                      backgroundColor: 'rgba(34, 197, 94, 0.08)'
+                    }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2">
+                        <circle cx="5" cy="17" r="3"/>
+                        <circle cx="19" cy="17" r="3"/>
+                        <path d="M12 17V5l4 6h5"/>
+                        <path d="m8 17 4-8"/>
+                      </svg>
+                    </div>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#374151', width: '48px' }}>Bike</span>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                      <input
+                        type="number"
+                        value={bikeHours}
+                        onChange={(e) => setBikeHours(Math.max(0, parseInt(e.target.value) || 0))}
+                        min="0"
+                        disabled={loading}
+                        style={{
+                          width: '48px',
+                          padding: '0.5rem',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          textAlign: 'center',
+                          fontSize: '0.875rem',
+                          fontWeight: 600
+                        }}
+                      />
+                      <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>h</span>
+                      <input
+                        type="number"
+                        value={bikeMinutes}
+                        onChange={(e) => setBikeMinutes(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
+                        min="0"
+                        max="59"
+                        disabled={loading}
+                        style={{
+                          width: '48px',
+                          padding: '0.5rem',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          textAlign: 'center',
+                          fontSize: '0.875rem',
+                          fontWeight: 600
+                        }}
+                      />
+                      <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>m</span>
+                    </div>
+                  </div>
+
+                  {/* Run */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    padding: '0.75rem 1rem'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '8px',
+                      backgroundColor: 'rgba(249, 115, 22, 0.08)'
+                    }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="2">
+                        <circle cx="17" cy="5" r="2"/>
+                        <path d="M9 20H4l4-8 3 3 4-6 4 1"/>
+                        <path d="m14 17-2-2"/>
+                      </svg>
+                    </div>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#374151', width: '48px' }}>Run</span>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                      <input
+                        type="number"
+                        value={runHours}
+                        onChange={(e) => setRunHours(Math.max(0, parseInt(e.target.value) || 0))}
+                        min="0"
+                        disabled={loading}
+                        style={{
+                          width: '48px',
+                          padding: '0.5rem',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          textAlign: 'center',
+                          fontSize: '0.875rem',
+                          fontWeight: 600
+                        }}
+                      />
+                      <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>h</span>
+                      <input
+                        type="number"
+                        value={runMinutes}
+                        onChange={(e) => setRunMinutes(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
+                        min="0"
+                        max="59"
+                        disabled={loading}
+                        style={{
+                          width: '48px',
+                          padding: '0.5rem',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          textAlign: 'center',
+                          fontSize: '0.875rem',
+                          fontWeight: 600
+                        }}
+                      />
+                      <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>m</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Simple Duration Input */
+                <div>
+                  <div style={{ display: 'flex', gap: '1rem' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{
+                        fontSize: '0.75rem',
+                        color: '#6b7280',
+                        marginBottom: '0.375rem',
+                        textAlign: 'left'
+                      }}>
+                        Hours
+                      </div>
+                      <InputText
+                        type="number"
+                        value={hours.toString()}
+                        onChange={(e) => setHours(Math.max(0, parseInt(e.target.value) || 0))}
+                        min="0"
+                        disabled={loading}
+                        style={{
+                          width: '100%',
+                          backgroundColor: '#f9fafb',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '12px',
+                          padding: '0.75rem 1rem',
+                          fontSize: '1.5rem',
+                          fontWeight: 700,
+                          textAlign: 'center'
+                        }}
+                      />
+                    </div>
+
+                    <div style={{ flex: 1 }}>
+                      <div style={{
+                        fontSize: '0.75rem',
+                        color: '#6b7280',
+                        marginBottom: '0.375rem',
+                        textAlign: 'left'
+                      }}>
+                        Minutes
+                      </div>
+                      <InputText
+                        type="number"
+                        value={minutes.toString()}
+                        onChange={(e) => setMinutes(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
+                        min="0"
+                        max="59"
+                        disabled={loading}
+                        style={{
+                          width: '100%',
+                          backgroundColor: '#f9fafb',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '12px',
+                          padding: '0.75rem 1rem',
+                          fontSize: '1.5rem',
+                          fontWeight: 700,
+                          textAlign: 'center'
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {isTriathlon && (
+                    <p style={{
+                      fontSize: '0.75rem',
+                      color: '#9ca3af',
+                      textAlign: 'center',
+                      marginTop: '0.75rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.25rem'
+                    }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 16v-4"/>
+                        <path d="M12 8h.01"/>
+                      </svg>
+                      Turn on "By discipline" to set swim, bike, and run times separately
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Total Duration Display */}
+            <div className="form-section">
               <div style={{
-                fontSize: '1rem',
-                color: '#6b7280',
-                paddingTop: '0.75rem',
-                marginTop: '0.75rem',
-                borderTop: '1px solid #e5e7eb',
-                textAlign: 'left'
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                borderRadius: '12px',
+                backgroundColor: isTriathlon && useTriathlonSegments ? 'rgba(99, 102, 241, 0.05)' : '#f9fafb',
+                padding: '0.75rem 1rem'
               }}>
-                <span style={{ fontWeight: 600 }}>Total:</span> {hoursDisplay}h {minutesDisplay}m {secondsDisplay}s
+                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#6b7280' }}>Total Duration</span>
+                <span style={{
+                  fontSize: '1.25rem',
+                  fontWeight: 700,
+                  color: isTriathlon && useTriathlonSegments ? '#6366f1' : '#111827'
+                }}>
+                  {totalDuration.hours}h {totalDuration.minutes}m
+                </span>
               </div>
             </div>
 
             {/* Privacy Section */}
             <div className="form-section">
-              <label className="form-label">Privacy</label>
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '0.75rem 0',
                 gap: '1rem'
               }}>
-                <div style={{ textAlign: 'left', flex: 1, paddingRight: '1rem' }}>
+                <div style={{ textAlign: 'left', flex: 1 }}>
                   <div style={{
-                    fontSize: '1.0625rem',
-                    fontWeight: 500,
-                    color: '#000000',
-                    marginBottom: '0.25rem'
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: '#111827',
+                    marginBottom: '0.125rem'
                   }}>
                     {isPrivate ? 'Private' : 'Public'}
                   </div>
                   <div style={{
-                    fontSize: '0.875rem',
+                    fontSize: '0.75rem',
                     color: '#6b7280'
                   }}>
-                    {isPrivate ? 'Only you can see this plan' : 'Anyone with the link can view, and connections will be able to see this plan in the Community Plans tab.'}
+                    {isPrivate ? 'Only you can see this plan' : 'Anyone with the link can view'}
                   </div>
                 </div>
                 <InputSwitch

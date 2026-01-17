@@ -14,3 +14,4 @@ export { PendingEventsTable } from './PendingEventsTable';
 export { AcceptSharedEventDialog } from './AcceptSharedEventDialog';
 export { ItemListDialog } from './ItemListDialog';
 export { FoodItemDetailsDialog } from './FoodItemDetailsDialog';
+export { default as TriathlonTimeBlocks } from './TriathlonTimeBlocks';
