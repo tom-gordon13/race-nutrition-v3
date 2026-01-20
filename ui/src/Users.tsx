@@ -38,9 +38,10 @@ const Users = ({ onPendingCountChange }: UsersProps) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Fetch current user's UUID
+  // Fetch current user's UUID and email
   useEffect(() => {
     const fetchCurrentUser = async () => {
       if (!user || !user.sub) return;
@@ -50,6 +51,7 @@ const Users = ({ onPendingCountChange }: UsersProps) => {
         if (response.ok) {
           const data = await response.json();
           setCurrentUserId(data.user?.id || null);
+          setCurrentUserEmail(data.user?.email || null);
         } else {
           console.error('Failed to fetch current user:', response.status, response.statusText);
         }
@@ -65,7 +67,19 @@ const Users = ({ onPendingCountChange }: UsersProps) => {
     if (!currentUserId) return;
 
     try {
-      const response = await fetch(`${API_URL}/api/users/all?current_user_id=${encodeURIComponent(currentUserId)}`);
+      // Check if current user is a test user
+      const isTestUser = currentUserEmail && currentUserEmail.includes('+test');
+
+      // Build URL with optional exclude_test_users parameter
+      const url = new URL(`${API_URL}/api/users/all`);
+      url.searchParams.append('current_user_id', currentUserId);
+
+      // Only add exclude_test_users if the current user is NOT a test user
+      if (!isTestUser) {
+        url.searchParams.append('exclude_test_users', 'true');
+      }
+
+      const response = await fetch(url.toString());
 
       if (!response.ok) {
         throw new Error('Failed to fetch users');
@@ -79,7 +93,7 @@ const Users = ({ onPendingCountChange }: UsersProps) => {
     } finally {
       setLoading(false);
     }
-  }, [currentUserId]);
+  }, [currentUserId, currentUserEmail]);
 
   useEffect(() => {
     if (currentUserId) {

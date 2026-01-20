@@ -29,6 +29,7 @@ data/
 
 # Planning and documentation
 future-plans/
+development-plans/
 
 # Editor directories and files
 .vscode/*

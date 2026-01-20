@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 router.get('/users/all', async (req, res) => {
   try {
-    const { current_user_id } = req.query;
+    const { current_user_id, exclude_test_users } = req.query;
 
     if (!current_user_id || typeof current_user_id !== 'string') {
       return res.status(400).json({
@@ -24,7 +24,8 @@ router.get('/users/all', async (req, res) => {
       select: {
         id: true,
         first_name: true,
-        last_name: true
+        last_name: true,
+        email: true
       },
       orderBy: {
         first_name: 'asc'
@@ -77,6 +78,7 @@ router.get('/users/all', async (req, res) => {
     });
 
     // Filter out users where the connection was denied by them
+    // and optionally filter out test users
     // and attach connection info and event count to each user
     const usersWithConnections = users
       .filter(user => {
@@ -85,13 +87,19 @@ router.get('/users/all', async (req, res) => {
         if (connection && connection.type === 'INITIATED' && connection.status === 'DENIED') {
           return false;
         }
+        // Exclude test users if requested
+        if (exclude_test_users === 'true' && user.email && user.email.includes('+test')) {
+          return false;
+        }
         return true;
       })
       .map(user => {
         const connection = connectionMap.get(user.id);
         const sharedPlansCount = eventCountMap.get(user.id) || 0;
+        // Remove email from response for security
+        const { email, ...userWithoutEmail } = user;
         return {
-          ...user,
+          ...userWithoutEmail,
           connection: connection || null,
           sharedPlansCount
         };
