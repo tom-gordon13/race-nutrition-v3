@@ -45,12 +45,6 @@ enum EventType {
   OTHER
 }
 
-enum EventVisibility {
-  PRIVATE      // Owner only - not visible to anyone else
-  CONNECTIONS  // Visible to connected users only
-  COMMUNITY    // Visible to everyone in community feed (public)
-}
-
 model User {
   id                      String                  @id @default(uuid())
   auth0_sub               String                  @unique
@@ -95,7 +89,7 @@ model Event {
   expected_duration   Int
   name                String
   event_type          EventType
-  visibility          EventVisibility      @default(PRIVATE)
+  private             Boolean              @default(true)
   user                User                 @relation(fields: [event_user_id], references: [id])
   foodInstances       FoodInstance[]
   eventGoalsBase      EventGoalsBase[]
