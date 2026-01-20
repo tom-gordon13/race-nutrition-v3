@@ -46,56 +46,12 @@ const Nav = ({ className = "", pendingConnectionsCount = 0, pendingSharedEventsC
     {
       label: 'Plans',
       icon: 'pi pi-calendar',
-      command: () => navigate('/plans'),
-      template: (item: any, options: any) => {
-        return (
-          <a
-            className={options.className}
-            onClick={(e) => {
-              e.preventDefault();
-              navigate('/plans');
-            }}
-            style={{ position: 'relative', cursor: 'pointer' }}
-          >
-            <span className="plans-icon-wrapper" style={{ position: 'relative', display: 'inline-flex', overflow: 'visible' }}>
-              <span className="p-menuitem-icon pi pi-calendar"></span>
-              {pendingSharedEventsCount > 0 && (
-                <span className="notification-badge">
-                  {pendingSharedEventsCount}
-                </span>
-              )}
-            </span>
-            <span className="p-menuitem-text">{item.label}</span>
-          </a>
-        );
-      }
+      command: () => navigate('/plans')
     },
     {
       label: 'Users',
       icon: 'pi pi-users',
-      command: () => navigate('/users'),
-      template: (item: any, options: any) => {
-        return (
-          <a
-            className={options.className}
-            onClick={(e) => {
-              e.preventDefault();
-              navigate('/users');
-            }}
-            style={{ position: 'relative', cursor: 'pointer' }}
-          >
-            <span className="users-icon-wrapper" style={{ position: 'relative', display: 'inline-flex', overflow: 'visible' }}>
-              <span className="p-menuitem-icon pi pi-users"></span>
-              {pendingConnectionsCount > 0 && (
-                <span className="notification-badge">
-                  {pendingConnectionsCount}
-                </span>
-              )}
-            </span>
-            <span className="p-menuitem-text">{item.label}</span>
-          </a>
-        );
-      }
+      command: () => navigate('/users')
     }
   ];
 
@@ -188,6 +144,70 @@ const Nav = ({ className = "", pendingConnectionsCount = 0, pendingSharedEventsC
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Add notification badges to the Plans and Users tabs
+  useEffect(() => {
+    // Find the Plans tab (index 1) and Users tab (index 2)
+    const tabMenus = document.querySelectorAll('.custom-tabmenu');
+
+    tabMenus.forEach(menu => {
+      const menuItems = menu.querySelectorAll('.p-tabmenuitem');
+
+      // Plans tab (index 1)
+      if (menuItems[1]) {
+        const plansIcon = menuItems[1].querySelector('.p-menuitem-icon');
+        if (plansIcon && pendingSharedEventsCount > 0) {
+          // Remove existing badge if any
+          const existingBadge = plansIcon.parentElement?.querySelector('.notification-badge');
+          if (existingBadge) existingBadge.remove();
+
+          // Create and add badge
+          const badge = document.createElement('span');
+          badge.className = 'notification-badge';
+          badge.textContent = pendingSharedEventsCount.toString();
+          plansIcon.parentElement?.appendChild(badge);
+
+          // Ensure parent has relative positioning
+          if (plansIcon.parentElement) {
+            (plansIcon.parentElement as HTMLElement).style.position = 'relative';
+            (plansIcon.parentElement as HTMLElement).style.display = 'inline-flex';
+            (plansIcon.parentElement as HTMLElement).style.overflow = 'visible';
+          }
+        } else if (plansIcon) {
+          // Remove badge if count is 0
+          const existingBadge = plansIcon.parentElement?.querySelector('.notification-badge');
+          if (existingBadge) existingBadge.remove();
+        }
+      }
+
+      // Users tab (index 2)
+      if (menuItems[2]) {
+        const usersIcon = menuItems[2].querySelector('.p-menuitem-icon');
+        if (usersIcon && pendingConnectionsCount > 0) {
+          // Remove existing badge if any
+          const existingBadge = usersIcon.parentElement?.querySelector('.notification-badge');
+          if (existingBadge) existingBadge.remove();
+
+          // Create and add badge
+          const badge = document.createElement('span');
+          badge.className = 'notification-badge';
+          badge.textContent = pendingConnectionsCount.toString();
+          usersIcon.parentElement?.appendChild(badge);
+
+          // Ensure parent has relative positioning
+          if (usersIcon.parentElement) {
+            (usersIcon.parentElement as HTMLElement).style.position = 'relative';
+            (usersIcon.parentElement as HTMLElement).style.display = 'inline-flex';
+            (usersIcon.parentElement as HTMLElement).style.overflow = 'visible';
+          }
+        } else if (usersIcon) {
+          // Remove badge if count is 0
+          const existingBadge = usersIcon.parentElement?.querySelector('.notification-badge');
+          if (existingBadge) existingBadge.remove();
+        }
+      }
+    });
+  }, [pendingSharedEventsCount, pendingConnectionsCount, location.pathname]);
 
   return (
     <>
