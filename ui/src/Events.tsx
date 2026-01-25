@@ -744,6 +744,14 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
     }
   };
 
+  // Handler for creating repeated instances from modal
+  const handleFoodItemRepeat = async (foodItemId: string, startTime: number, servings: number, repeatConfig: RepeatConfig) => {
+    if (!selectedEvent) return;
+
+    await handleRepeatInstance(foodItemId, startTime, servings, repeatConfig);
+    setShowFoodItemModal(false);
+  };
+
   const handleCreateEvent = async () => {
     setError(null);
     setSuccess('Event created successfully!');
@@ -1417,6 +1425,7 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
           itemFilterMode={itemFilterMode}
           onClose={() => setShowFoodItemModal(false)}
           onSelect={handleFoodItemSelect}
+          onRepeat={handleFoodItemRepeat}
           onCategoryFilterChange={setCategoryFilter}
           onMyItemsOnlyChange={setMyItemsOnly}
           onItemFilterModeChange={setItemFilterMode}

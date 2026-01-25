@@ -3,7 +3,7 @@ export { EventsTable } from './EventsTable';
 export { FoodItemsList } from './FoodItemsList';
 export { EventTimeline } from './EventTimeline';
 export { NutritionSummary } from './NutritionSummary';
-export { FoodItemSelectionModal, type ItemFilterMode } from './FoodItemSelectionModal';
+export { FoodItemSelectionModal, type ItemFilterMode, type RepeatConfig as FoodItemSelectionRepeatConfig } from './FoodItemSelectionModal';
 export { NutrientGoalsDialog } from './NutrientGoalsDialog';
 export { EditEventDialog } from './EditEventDialog';
 export { EditFoodInstanceDialog, type RepeatConfig } from './EditFoodInstanceDialog';

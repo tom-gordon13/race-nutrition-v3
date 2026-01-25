@@ -1,8 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Message } from 'primereact/message';
+import { InputSwitch } from 'primereact/inputswitch';
 import '../shared/ModalSheet.css';
 
 export type ItemFilterMode = 'my_items' | 'favorites' | 'all_items';
+
+export interface RepeatConfig {
+  enabled: boolean;
+  cadenceMinutes: number;
+  endTime: number | null;
+}
 
 interface FoodItemNutrient {
   id: string;
@@ -36,6 +43,7 @@ interface FoodItemSelectionModalProps {
   itemFilterMode: ItemFilterMode;
   onClose: () => void;
   onSelect: (foodItemId: string, servings: number, timeInSeconds: number) => void;
+  onRepeat?: (foodItemId: string, startTime: number, servings: number, repeatConfig: RepeatConfig) => void;
   onCategoryFilterChange: (category: string) => void;
   onMyItemsOnlyChange: (myItemsOnly: boolean) => void;
   onItemFilterModeChange: (mode: ItemFilterMode) => void;
@@ -66,6 +74,7 @@ export const FoodItemSelectionModal = ({
   itemFilterMode,
   onClose,
   onSelect,
+  onRepeat,
   onCategoryFilterChange,
   onMyItemsOnlyChange,
   onItemFilterModeChange,
@@ -79,6 +88,13 @@ export const FoodItemSelectionModal = ({
   const [shouldRender, setShouldRender] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+
+  // Repeat functionality state
+  const [repeatEnabled, setRepeatEnabled] = useState(false);
+  const [cadenceMinutes, setCadenceMinutes] = useState<number>(15);
+  const [cadenceInput, setCadenceInput] = useState<string>('15');
+  const [endTimeInput, setEndTimeInput] = useState<string>('');
+  const [showRepeatPreview, setShowRepeatPreview] = useState(false);
 
   // Handle animation timing for smooth slide-up and slide-down
   useEffect(() => {
@@ -114,6 +130,11 @@ export const FoodItemSelectionModal = ({
       setError(null);
       setSelectedItemId(null);
       setShowCategoryDropdown(false);
+      setRepeatEnabled(false);
+      setCadenceMinutes(15);
+      setCadenceInput('15');
+      setEndTimeInput('');
+      setShowRepeatPreview(false);
     }
   }, [isOpen]);
 
@@ -135,7 +156,41 @@ export const FoodItemSelectionModal = ({
     setSelectedItemId(foodItemId);
   };
 
+  const calculateRepeatInstances = () => {
+    if (!repeatEnabled) return [];
+
+    const timeSeconds = parseTimeHHMM(editedTime);
+    const endTime = endTimeInput ? parseTimeHHMM(endTimeInput) : eventDuration;
+    const cadenceSeconds = cadenceMinutes * 60;
+
+    const instances = [];
+    let currentTime = timeSeconds;
+
+    while (currentTime <= endTime && currentTime <= eventDuration) {
+      instances.push({
+        time: currentTime,
+        timeFormatted: formatTimeHHMM(currentTime),
+        servings: typeof servings === 'string' ? parseFloat(servings) : servings,
+      });
+      currentTime += cadenceSeconds;
+    }
+
+    return instances;
+  };
+
+  const isRepeatButtonDisabled = () => {
+    if (!repeatEnabled) return false;
+    if (cadenceInput === '' || parseInt(cadenceInput) <= 0) return true;
+    if (parseInt(cadenceInput) < 10) return true;
+    return false;
+  };
+
   const handleAddToTimeline = () => {
+    // Don't allow click if repeat is enabled but cadence is invalid
+    if (isRepeatButtonDisabled()) {
+      return;
+    }
+
     // Clear any previous errors
     setError(null);
 
@@ -168,9 +223,61 @@ export const FoodItemSelectionModal = ({
       return;
     }
 
+    // Validate repeat settings if enabled
+    if (repeatEnabled) {
+      if (cadenceMinutes < 10) {
+        setError('Repeat cadence must be at least 10 minutes');
+        return;
+      }
+
+      if (endTimeInput) {
+        const endTimeSeconds = parseTimeHHMM(endTimeInput);
+        if (isNaN(endTimeSeconds)) {
+          setError('Please enter valid end time in HH:MM format');
+          return;
+        }
+        if (endTimeSeconds <= timeSeconds) {
+          setError('End time must be after start time');
+          return;
+        }
+        if (endTimeSeconds > eventDuration) {
+          const maxTime = formatTimeHHMM(eventDuration);
+          setError(`End time cannot exceed event duration of ${maxTime}`);
+          return;
+        }
+      }
+
+      // Show preview before creating repeated instances
+      setShowRepeatPreview(true);
+      return;
+    }
+
     onSelect(selectedItemId, servingsNum, timeSeconds);
     setSelectedItemId(null);
     setError(null);
+  };
+
+  const handleConfirmRepeat = async () => {
+    if (!selectedItemId || !onRepeat) return;
+
+    const timeSeconds = parseTimeHHMM(editedTime);
+    const endTime = endTimeInput ? parseTimeHHMM(endTimeInput) : null;
+    const servingsNum = typeof servings === 'string' ? parseFloat(servings) : servings;
+
+    try {
+      await onRepeat(selectedItemId, timeSeconds, servingsNum, {
+        enabled: true,
+        cadenceMinutes,
+        endTime,
+      });
+      setSelectedItemId(null);
+      setError(null);
+      setShowRepeatPreview(false);
+      onClose();
+    } catch (err) {
+      setError('Failed to create repeated instances');
+      setShowRepeatPreview(false);
+    }
   };
 
   const incrementServings = () => {
@@ -303,6 +410,125 @@ export const FoodItemSelectionModal = ({
               </div>
             </div>
           </div>
+
+          {/* Repeat Functionality Section */}
+          {onRepeat && (
+            <div style={{ padding: '0 1.25rem', marginTop: '0.75rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <label className="form-label" style={{ marginBottom: 0 }}>REPEAT ITEM</label>
+                <InputSwitch
+                  checked={repeatEnabled}
+                  onChange={(e) => {
+                    setRepeatEnabled(e.value);
+                    setError(null);
+                  }}
+                  style={{ transform: 'scale(0.8)' }}
+                />
+              </div>
+
+              {repeatEnabled && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {/* Cadence Input */}
+                  <div style={{
+                    backgroundColor: '#f9fafb',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '0.75rem',
+                    padding: '1rem'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase' }}>Repeat every</span>
+                      <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>minutes</span>
+                    </div>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={cadenceInput}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // Allow empty string or valid numbers
+                        if (value === '' || /^\d+$/.test(value)) {
+                          setCadenceInput(value);
+                          const numValue = parseInt(value);
+                          if (!isNaN(numValue) && numValue > 0) {
+                            setCadenceMinutes(numValue);
+                          }
+                          setError(null);
+                        }
+                      }}
+                      onBlur={() => {
+                        // If empty or invalid on blur, reset to 15
+                        const value = parseInt(cadenceInput);
+                        if (cadenceInput === '' || isNaN(value) || value < 10) {
+                          setCadenceInput('15');
+                          setCadenceMinutes(15);
+                        }
+                      }}
+                      style={{
+                        width: '100%',
+                        border: 'none',
+                        background: 'transparent',
+                        fontSize: '1.25rem',
+                        fontWeight: 700,
+                        color: '#111827',
+                        padding: 0,
+                        outline: 'none',
+                        fontFamily: 'inherit',
+                        lineHeight: 1.5
+                      }}
+                    />
+                  </div>
+
+                  {/* End Time Input (Optional) */}
+                  <div style={{
+                    backgroundColor: '#f9fafb',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '0.75rem',
+                    padding: '1rem'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase' }}>End time (optional)</span>
+                      <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>HH:MM</span>
+                    </div>
+                    <input
+                      type="text"
+                      value={endTimeInput}
+                      onChange={(e) => {
+                        setEndTimeInput(e.target.value);
+                        setError(null);
+                      }}
+                      placeholder={formatTimeHHMM(eventDuration)}
+                      style={{
+                        width: '100%',
+                        border: 'none',
+                        background: 'transparent',
+                        fontSize: '1.25rem',
+                        fontWeight: 700,
+                        color: '#111827',
+                        padding: 0,
+                        outline: 'none',
+                        fontFamily: 'inherit',
+                        lineHeight: 1.5
+                      }}
+                    />
+                  </div>
+
+                  <div style={{
+                    fontSize: '0.8125rem',
+                    color: '#6b7280',
+                    textAlign: 'left'
+                  }}>
+                    {cadenceInput === '' || parseInt(cadenceInput) < 10 ? (
+                      <span style={{ color: '#dc2626' }}>Minimum cadence is 10 minutes</span>
+                    ) : endTimeInput ? (
+                      `Will repeat from ${editedTime} to ${endTimeInput} every ${cadenceMinutes} minutes`
+                    ) : (
+                      `Will repeat from ${editedTime} until end of event every ${cadenceMinutes} minutes`
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Search Bar with Filter */}
           <div className="search-section">
@@ -479,12 +705,167 @@ export const FoodItemSelectionModal = ({
 
         {/* Sticky Footer Button */}
         <div className="modal-footer-sticky">
-          <button onClick={handleAddToTimeline} className="add-to-timeline-btn">
+          <button
+            onClick={handleAddToTimeline}
+            className="add-to-timeline-btn"
+            disabled={isRepeatButtonDisabled()}
+            style={{
+              opacity: isRepeatButtonDisabled() ? 0.5 : 1,
+              cursor: isRepeatButtonDisabled() ? 'not-allowed' : 'pointer'
+            }}
+          >
             <i className="pi pi-check"></i>
-            <span>Add to Timeline</span>
+            <span>{repeatEnabled ? 'Preview Repeat' : 'Add to Timeline'}</span>
           </button>
         </div>
       </div>
+
+      {/* Repeat Preview/Confirmation Dialog */}
+      {showRepeatPreview && (
+        <div
+          className="modal-sheet-overlay active"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowRepeatPreview(false);
+            }
+          }}
+          style={{ zIndex: 16000 }}
+        >
+          <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-handle"></div>
+
+            {/* Modal Header */}
+            <div className="modal-header">
+              <div className="modal-header-content">
+                <p className="modal-header-label">CONFIRM REPEAT</p>
+                <h2 className="modal-header-title">Review Items to Create</h2>
+              </div>
+              <button
+                onClick={() => setShowRepeatPreview(false)}
+                className="modal-close-button"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="modal-content" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {/* Summary */}
+              <div style={{
+                backgroundColor: '#f0f9ff',
+                border: '1px solid #bae6fd',
+                borderRadius: '0.75rem',
+                padding: '1rem'
+              }}>
+                <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0369a1', marginBottom: '0.5rem' }}>
+                  {selectedItemId && foodItems.find(item => item.id === selectedItemId)?.item_name}
+                </div>
+                <div style={{ fontSize: '0.8125rem', color: '#0c4a6e' }}>
+                  {calculateRepeatInstances().length} instances will be created
+                </div>
+              </div>
+
+              {/* List of instances */}
+              <div style={{
+                maxHeight: '300px',
+                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.5rem'
+              }}>
+                {calculateRepeatInstances().map((instance, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '0.75rem 1rem',
+                      backgroundColor: '#f9fafb',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '0.5rem'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        color: '#6366f1',
+                        backgroundColor: '#eef2ff',
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '0.375rem'
+                      }}>
+                        #{index + 1}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111827' }}>
+                          {instance.timeFormatted}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                          {instance.servings} {instance.servings === 1 ? 'serving' : 'servings'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{
+                display: 'flex',
+                gap: '0.75rem',
+                marginTop: '0.5rem'
+              }}>
+                <button
+                  onClick={() => setShowRepeatPreview(false)}
+                  style={{
+                    flex: 1,
+                    padding: '1rem',
+                    fontSize: '1.0625rem',
+                    fontWeight: 600,
+                    borderRadius: '0.75rem',
+                    backgroundColor: '#f3f4f6',
+                    border: '1px solid #e5e7eb',
+                    color: '#374151',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#e5e7eb';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f3f4f6';
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmRepeat}
+                  style={{
+                    flex: 2,
+                    padding: '1rem',
+                    fontSize: '1.0625rem',
+                    fontWeight: 600,
+                    borderRadius: '0.75rem',
+                    backgroundColor: '#6366f1',
+                    border: 'none',
+                    color: 'white',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#5558e3';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#6366f1';
+                  }}
+                >
+                  Create {calculateRepeatInstances().length} Items
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
