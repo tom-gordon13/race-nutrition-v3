@@ -6,7 +6,7 @@ export { NutritionSummary } from './NutritionSummary';
 export { FoodItemSelectionModal, type ItemFilterMode } from './FoodItemSelectionModal';
 export { NutrientGoalsDialog } from './NutrientGoalsDialog';
 export { EditEventDialog } from './EditEventDialog';
-export { EditFoodInstanceDialog } from './EditFoodInstanceDialog';
+export { EditFoodInstanceDialog, type RepeatConfig } from './EditFoodInstanceDialog';
 export { CreateEventDialog } from './CreateEventDialog';
 export { EventAnalyticsDialog } from './EventAnalyticsDialog';
 export { ShareEventDialog } from './ShareEventDialog';

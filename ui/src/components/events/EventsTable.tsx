@@ -12,6 +12,7 @@ interface Event {
   created_at: string;
   updated_at: string;
   private: boolean;
+  privacy_type?: 'PRIVATE' | 'SHARABLE_LIMITED' | 'SHARABLE_COMMUNITY';
 }
 
 interface EventsTableProps {

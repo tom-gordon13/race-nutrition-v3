@@ -55,7 +55,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET community events (public events from connected users)
+// GET community events (includes own events, connected users' limited/community events, and all SHARABLE_COMMUNITY events)
 router.get('/community', async (req, res) => {
   try {
     const { auth0_sub } = req.query;
@@ -95,13 +95,24 @@ router.get('/community', async (req, res) => {
 
     console.log(`User ${currentUser.id} has ${connectedUserIds.length} connected users`);
 
-    // Fetch all public events from connected users
+    // Fetch events based on the new logic:
+    // 1. All SHARABLE_COMMUNITY events from any user (including current user)
+    // 2. SHARABLE_LIMITED events from connected users only (including current user's own)
     const events = await prisma.event.findMany({
       where: {
-        event_user_id: {
-          in: connectedUserIds
-        },
-        private: false
+        OR: [
+          // All SHARABLE_COMMUNITY events from any user
+          {
+            privacy_type: 'SHARABLE_COMMUNITY'
+          },
+          // SHARABLE_LIMITED events from connected users
+          {
+            privacy_type: 'SHARABLE_LIMITED',
+            event_user_id: {
+              in: [...connectedUserIds, currentUser.id] // Include current user's events
+            }
+          }
+        ]
       },
       include: {
         user: {
@@ -119,16 +130,29 @@ router.get('/community', async (req, res) => {
       }
     });
 
-    // Transform to include owner info in the expected format
-    const eventsWithOwner = events.map(event => ({
-      ...event,
-      owner: event.user
-    }));
+    // Transform to include owner info and event type indicator
+    const eventsWithMetadata = events.map(event => {
+      let eventType: 'own' | 'connection' | 'community';
 
-    console.log(`Fetched ${events.length} public community events for user ${currentUser.id}`);
+      if (event.event_user_id === currentUser.id) {
+        eventType = 'own';
+      } else if (connectedUserIds.includes(event.event_user_id)) {
+        eventType = 'connection';
+      } else {
+        eventType = 'community';
+      }
+
+      return {
+        ...event,
+        owner: event.user,
+        eventType
+      };
+    });
+
+    console.log(`Fetched ${events.length} community events for user ${currentUser.id} (own: ${eventsWithMetadata.filter(e => e.eventType === 'own').length}, connections: ${eventsWithMetadata.filter(e => e.eventType === 'connection').length}, community: ${eventsWithMetadata.filter(e => e.eventType === 'community').length})`);
 
     return res.status(200).json({
-      events: eventsWithOwner,
+      events: eventsWithMetadata,
       count: events.length
     });
 
@@ -198,7 +222,7 @@ router.get('/:id', async (req, res) => {
 // POST create a new event
 router.post('/', async (req, res) => {
   try {
-    const { auth0_sub, expected_duration, name, event_type } = req.body;
+    const { auth0_sub, expected_duration, name, event_type, privacy_type } = req.body;
 
     console.log('Received event creation request:', req.body);
 
@@ -226,11 +250,12 @@ router.post('/', async (req, res) => {
         event_user_id: user.id,
         expected_duration: parseInt(expected_duration),
         name,
-        event_type
+        event_type,
+        ...(privacy_type && { privacy_type })
       }
     });
 
-    console.log('Event created:', event.id, 'Name:', event.name, 'Type:', event.event_type);
+    console.log('Event created:', event.id, 'Name:', event.name, 'Type:', event.event_type, 'Privacy:', event.privacy_type);
 
     return res.status(201).json({
       message: 'Event created successfully',
@@ -250,14 +275,14 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, event_type, expected_duration, private: isPrivate } = req.body;
+    const { name, event_type, expected_duration, private: isPrivate, privacy_type } = req.body;
 
-    console.log('Received event update request:', { id, name, event_type, expected_duration, private: isPrivate });
+    console.log('Received event update request:', { id, name, event_type, expected_duration, private: isPrivate, privacy_type });
 
     // Validate required fields
-    if (!name && !event_type && !expected_duration && isPrivate === undefined) {
+    if (!name && !event_type && !expected_duration && isPrivate === undefined && !privacy_type) {
       return res.status(400).json({
-        error: 'At least one field (name, event_type, expected_duration, or private) must be provided'
+        error: 'At least one field (name, event_type, expected_duration, private, or privacy_type) must be provided'
       });
     }
 
@@ -279,11 +304,12 @@ router.put('/:id', async (req, res) => {
         ...(name && { name }),
         ...(event_type && { event_type }),
         ...(expected_duration && { expected_duration: parseInt(expected_duration) }),
-        ...(isPrivate !== undefined && { private: isPrivate })
+        ...(isPrivate !== undefined && { private: isPrivate }),
+        ...(privacy_type && { privacy_type })
       }
     });
 
-    console.log('Event updated:', updatedEvent.id, 'Name:', updatedEvent.name, 'Type:', updatedEvent.event_type, 'Private:', updatedEvent.private);
+    console.log('Event updated:', updatedEvent.id, 'Name:', updatedEvent.name, 'Type:', updatedEvent.event_type, 'Private:', updatedEvent.private, 'Privacy:', updatedEvent.privacy_type);
 
     return res.status(200).json({
       message: 'Event updated successfully',

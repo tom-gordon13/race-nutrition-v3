@@ -13,6 +13,7 @@ import {
   NutrientGoalsDialog,
   EditEventDialog,
   EditFoodInstanceDialog,
+  type RepeatConfig,
   CreateEventDialog,
   EventAnalyticsDialog,
   ShareEventDialog,
@@ -47,6 +48,7 @@ interface Event {
   created_at: string;
   updated_at: string;
   private: boolean;
+  privacy_type?: 'PRIVATE' | 'SHARABLE_LIMITED' | 'SHARABLE_COMMUNITY';
   triathlonAttributes?: TriathlonAttributes | null;
 }
 
@@ -641,6 +643,58 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
     } catch (err) {
       console.error('Error updating food instance:', err);
       setError('Failed to load - please try again in a few minutes');
+      throw err;
+    }
+  };
+
+  const handleRepeatInstance = async (foodItemId: string, startTime: number, servings: number, repeatConfig: RepeatConfig) => {
+    if (!selectedEvent) return;
+
+    try {
+      const endTime = repeatConfig.endTime || selectedEvent.expected_duration;
+      const cadenceSeconds = repeatConfig.cadenceMinutes * 60;
+
+      // Calculate all instance times
+      const instances = [];
+      let currentTime = startTime;
+
+      while (currentTime <= endTime && currentTime <= selectedEvent.expected_duration) {
+        instances.push({
+          food_item_id: foodItemId,
+          event_id: selectedEvent.id,
+          time_elapsed_at_consumption: currentTime,
+          servings: servings
+        });
+        currentTime += cadenceSeconds;
+      }
+
+      // Create all instances
+      const promises = instances.map(instance =>
+        fetch(`${API_URL}/api/food-instances`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(instance),
+        })
+      );
+
+      const responses = await Promise.all(promises);
+
+      // Check if all requests succeeded
+      const failedResponses = responses.filter(r => !r.ok);
+      if (failedResponses.length > 0) {
+        throw new Error(`Failed to create ${failedResponses.length} of ${instances.length} instances`);
+      }
+
+      // Refresh food instances to show the new ones
+      await fetchFoodInstances(selectedEvent.id);
+      setSuccess(`Successfully created ${instances.length} repeated instances!`);
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      console.error('Error creating repeated instances:', err);
+      setError(err instanceof Error ? err.message : 'Failed to create repeated instances');
+      setTimeout(() => setError(null), 5000);
       throw err;
     }
   };
@@ -1419,6 +1473,7 @@ const Events = ({ showCreateDialog = false, onHideCreateDialog, onFullscreenChan
           }}
           onSave={handleUpdateInstance}
           onDelete={handleDeleteInstance}
+          onRepeat={handleRepeatInstance}
           viewOnly={isViewOnly}
         />
       )}

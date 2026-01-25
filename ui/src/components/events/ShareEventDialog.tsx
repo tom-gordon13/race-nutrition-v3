@@ -15,6 +15,7 @@ interface User {
 interface Event {
   id: string;
   private: boolean;
+  privacy_type?: 'PRIVATE' | 'SHARABLE_LIMITED' | 'SHARABLE_COMMUNITY';
 }
 
 interface ShareEventDialogProps {
@@ -132,7 +133,7 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
       setCopySuccess(true);
 
       // Check if event is private and show warning
-      if (event?.private) {
+      if (event?.privacy_type === 'PRIVATE' || (!event?.privacy_type && event?.private)) {
         setPrivateEventAlert(true);
         // Hide the alert after 5 seconds
         setTimeout(() => {
@@ -166,6 +167,12 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
   const handleShareWithSelected = async () => {
     if (!eventId || !currentUserId || selectedUserIds.size === 0) return;
 
+    // Check if event is shareable
+    if (event?.privacy_type === 'PRIVATE' || (!event?.privacy_type && event?.private)) {
+      setError('This plan is private. Please change the privacy setting to "Sharable" or "Open to Community" before sharing.');
+      return;
+    }
+
     setSharingInProgress(true);
     setError(null);
 
@@ -186,10 +193,24 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
       );
 
       const results = await Promise.all(sharePromises);
-      const allSuccessful = results.every(res => res.ok);
 
-      if (!allSuccessful) {
-        throw new Error('Some shares failed');
+      // Check if any failed and get error messages
+      const failedResults = await Promise.all(
+        results.map(async (res, index) => {
+          if (!res.ok) {
+            const errorData = await res.json();
+            return { index, error: errorData.error };
+          }
+          return null;
+        })
+      );
+
+      const failures = failedResults.filter(r => r !== null);
+
+      if (failures.length > 0) {
+        // Show the first error message from the backend
+        setError(failures[0]?.error || 'Failed to share - please try again');
+        return;
       }
 
       const count = selectedUserIds.size;
@@ -275,7 +296,7 @@ export const ShareEventDialog: React.FC<ShareEventDialogProps> = ({
             <div className="share-message-wrapper">
               <Message
                 severity="warn"
-                text="This plan is private. Other users will not be able to see it unless you mark it as public."
+                text="This plan is private. Other users will not be able to see it unless you change the privacy setting to 'Sharable' or 'Open to Community'."
                 style={{ width: '100%', marginBottom: '0.5rem' }}
               />
             </div>

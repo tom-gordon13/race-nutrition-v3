@@ -64,6 +64,13 @@ const Nav = ({ className = "", pendingConnectionsCount = 0, pendingSharedEventsC
       }
     },
     {
+      label: 'Help',
+      icon: 'pi pi-question-circle',
+      command: () => {
+        navigate('/help');
+      }
+    },
+    {
       separator: true
     },
     {

@@ -7,6 +7,7 @@ import Events from "./Events";
 import Plans from "./Plans";
 import Preferences from "./Preferences";
 import Users from "./Users";
+import Help from "./Help";
 import { CreateFoodItemDialog } from './components/food-items/CreateFoodItemDialog';
 import './Home.css';
 
@@ -82,6 +83,11 @@ function Home({ onFullscreenChange, onPendingConnectionsCountChange, onPendingSh
           </div>
         } />
         <Route path="/preferences" element={<div className="preferences-wrapper"><Preferences /></div>} />
+        <Route path="/help" element={
+          <div className="help-route-container" style={{ width: '100%', margin: '0', padding: '0', height: '100%', boxSizing: 'border-box' }}>
+            <Help />
+          </div>
+        } />
         <Route path="/users" element={
           <div className="users-route-container" style={{ width: '100%', margin: '0', padding: '0', height: '100%', boxSizing: 'border-box' }}>
             <Users onPendingCountChange={onPendingConnectionsCountChange} />

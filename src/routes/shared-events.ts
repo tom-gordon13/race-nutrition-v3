@@ -175,7 +175,8 @@ router.post('/', async (req, res) => {
       sender_id: sender_id,
       are_equal: event.event_user_id === sender_id,
       event_user_id_type: typeof event.event_user_id,
-      sender_id_type: typeof sender_id
+      sender_id_type: typeof sender_id,
+      privacy_type: event.privacy_type
     });
 
     // Verify the sender owns the event
@@ -186,6 +187,13 @@ router.post('/', async (req, res) => {
           event_user_id: event.event_user_id,
           sender_id: sender_id
         }
+      });
+    }
+
+    // Verify the event is shareable (privacy_type must be SHARABLE_LIMITED or SHARABLE_COMMUNITY)
+    if (event.privacy_type !== 'SHARABLE_LIMITED' && event.privacy_type !== 'SHARABLE_COMMUNITY') {
+      return res.status(403).json({
+        error: 'This event cannot be shared. Please change the privacy setting to "Sharable" or "Open to Community" first.'
       });
     }
 

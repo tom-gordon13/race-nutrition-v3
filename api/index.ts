@@ -12,6 +12,7 @@ import sharedEventsRoutes from '../src/routes/shared-events.js';
 import preferencesRoutes from '../src/routes/preferences.js';
 import favoriteFoodItemsRoutes from '../src/routes/favorite-food-items.js';
 import userPreferencesRoutes from '../src/routes/user-preferences.js';
+import pushSubscriptionsRoutes from '../src/routes/push-subscriptions.js';
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use('/api/shared-events', sharedEventsRoutes);
 app.use('/api/preferences', preferencesRoutes);
 app.use('/api/favorite-food-items', favoriteFoodItemsRoutes);
 app.use('/api/user-preferences', userPreferencesRoutes);
+app.use('/api/push-subscriptions', pushSubscriptionsRoutes);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

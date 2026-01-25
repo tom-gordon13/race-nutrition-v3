@@ -36,7 +36,8 @@ router.get('/', async (req, res) => {
       userPreferences = await prisma.userPreferences.create({
         data: {
           user_id: user.id,
-          dark_mode: false
+          dark_mode: false,
+          push_notifications_enabled: false
         }
       });
     }
@@ -57,7 +58,7 @@ router.get('/', async (req, res) => {
 // PUT/update user preferences
 router.put('/', async (req, res) => {
   try {
-    const { auth0_sub, dark_mode } = req.body;
+    const { auth0_sub, dark_mode, push_notifications_enabled } = req.body;
 
     if (!auth0_sub || typeof auth0_sub !== 'string') {
       return res.status(400).json({
@@ -65,9 +66,30 @@ router.put('/', async (req, res) => {
       });
     }
 
-    if (typeof dark_mode !== 'boolean') {
+    // Build update data object with only provided fields
+    const updateData: { dark_mode?: boolean; push_notifications_enabled?: boolean } = {};
+
+    if (dark_mode !== undefined) {
+      if (typeof dark_mode !== 'boolean') {
+        return res.status(400).json({
+          error: 'dark_mode must be a boolean'
+        });
+      }
+      updateData.dark_mode = dark_mode;
+    }
+
+    if (push_notifications_enabled !== undefined) {
+      if (typeof push_notifications_enabled !== 'boolean') {
+        return res.status(400).json({
+          error: 'push_notifications_enabled must be a boolean'
+        });
+      }
+      updateData.push_notifications_enabled = push_notifications_enabled;
+    }
+
+    if (Object.keys(updateData).length === 0) {
       return res.status(400).json({
-        error: 'dark_mode must be a boolean'
+        error: 'At least one preference field must be provided'
       });
     }
 
@@ -85,10 +107,11 @@ router.put('/', async (req, res) => {
     // Upsert user preferences
     const userPreferences = await prisma.userPreferences.upsert({
       where: { user_id: user.id },
-      update: { dark_mode },
+      update: updateData,
       create: {
         user_id: user.id,
-        dark_mode
+        dark_mode: dark_mode ?? false,
+        push_notifications_enabled: push_notifications_enabled ?? false
       }
     });
 

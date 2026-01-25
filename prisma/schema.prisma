@@ -45,6 +45,12 @@ enum EventType {
   OTHER
 }
 
+enum EventPrivacy {
+  PRIVATE
+  SHARABLE_LIMITED
+  SHARABLE_COMMUNITY
+}
+
 model User {
   id                      String                  @id @default(uuid())
   auth0_sub               String                  @unique
@@ -90,6 +96,7 @@ model Event {
   name                String
   event_type          EventType
   private             Boolean              @default(true)
+  privacy_type        EventPrivacy         @default(PRIVATE)
   user                User                 @relation(fields: [event_user_id], references: [id])
   foodInstances       FoodInstance[]
   eventGoalsBase      EventGoalsBase[]
@@ -251,10 +258,24 @@ model FavoriteFoodItem {
 }
 
 model UserPreferences {
+  id                        String   @id @default(uuid())
+  user_id                   String   @unique
+  dark_mode                 Boolean  @default(false)
+  push_notifications_enabled Boolean  @default(false)
+  created_at                DateTime @default(now())
+  updated_at                DateTime @updatedAt
+  user                      User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model PushSubscription {
   id         String   @id @default(uuid())
-  user_id    String   @unique
-  dark_mode  Boolean  @default(false)
+  user_id    String
+  endpoint   String   @unique
+  p256dh_key String
+  auth_key   String
+  user_agent String?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
 }

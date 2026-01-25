@@ -9,6 +9,7 @@ interface EditEventDialogProps {
     event_type: string;
     expected_duration: number;
     private: boolean;
+    privacy_type?: 'PRIVATE' | 'SHARABLE_LIMITED' | 'SHARABLE_COMMUNITY';
   } | null;
   onHide: () => void;
   onSave: (updatedEvent: any) => void;

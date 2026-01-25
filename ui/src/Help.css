@@ -1,0 +1,796 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+
+.help-container {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #f2f3f5;
+  min-height: 100vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.help-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Header - Exact Tailwind: bg-white px-5 pb-4 pt-14 */
+.help-header {
+  background: white;
+  padding: 1.25rem; /* px-5 = 1.25rem */
+  padding-bottom: 1rem; /* pb-4 = 1rem */
+  padding-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* gap-3 = 0.75rem */
+  margin-bottom: 0.25rem; /* mb-1 = 0.25rem */
+}
+
+/* Exact Tailwind: h-10 w-10 rounded-xl */
+.help-header-icon {
+  display: flex;
+  height: 2.5rem; /* h-10 = 2.5rem */
+  width: 2.5rem; /* w-10 = 2.5rem */
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem; /* rounded-xl = 0.75rem */
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  flex-shrink: 0;
+}
+
+/* Larger font for better readability */
+.help-title {
+  font-size: 1.5rem; /* Increased from 1.25rem */
+  line-height: 2rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  text-align: left;
+}
+
+/* Larger subtitle font */
+.help-subtitle {
+  font-size: 0.875rem; /* Increased from 0.75rem */
+  line-height: 1.25rem;
+  color: #9ca3af;
+  margin: 0;
+  text-align: left;
+}
+
+/* Quick Start Section - Exact Tailwind: bg-white px-5 pb-5 */
+.help-section {
+  background: white;
+  padding: 0;
+}
+
+/* Exact Tailwind: rounded-2xl p-4 */
+.quick-start-card {
+  border-radius: 1rem; /* rounded-2xl = 1rem */
+  padding: 1rem; /* p-4 = 1rem */
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  margin: 1.25rem; /* px-5 = 1.25rem */
+  margin-top: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem; /* gap-3 = 0.75rem */
+}
+
+/* Exact Tailwind: h-10 w-10 rounded-xl bg-white/20 */
+.quick-start-icon {
+  display: flex;
+  height: 2.5rem; /* h-10 = 2.5rem */
+  width: 2.5rem; /* w-10 = 2.5rem */
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem; /* rounded-xl = 0.75rem */
+  background: rgba(255, 255, 255, 0.2); /* bg-white/20 */
+  flex-shrink: 0;
+}
+
+.quick-start-content {
+  flex: 1;
+}
+
+/* Exact Tailwind: text-sm font-bold text-white mb-1 */
+.quick-start-title {
+  font-size: 0.875rem; /* text-sm = 0.875rem */
+  line-height: 1.25rem;
+  font-weight: 700; /* font-bold = 700 */
+  color: white;
+  margin: 0 0 0.25rem 0; /* mb-1 = 0.25rem */
+}
+
+/* Exact Tailwind: text-xs text-white/70 mb-3 */
+.quick-start-description {
+  font-size: 0.75rem; /* text-xs = 0.75rem */
+  line-height: 1rem;
+  color: rgba(255, 255, 255, 0.7); /* text-white/70 */
+  margin: 0 0 0.75rem 0; /* mb-3 = 0.75rem */
+}
+
+/* Exact Tailwind: rounded-lg bg-white/20 px-3 py-1.5 text-xs font-semibold */
+.quick-start-button {
+  border-radius: 0.5rem; /* rounded-lg = 0.5rem */
+  background: rgba(255, 255, 255, 0.2); /* bg-white/20 */
+  padding: 0.375rem 0.75rem; /* py-1.5 px-3 */
+  font-size: 0.75rem; /* text-xs = 0.75rem */
+  line-height: 1rem;
+  font-weight: 600; /* font-semibold = 600 */
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.quick-start-button:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+/* Dividers - Exact Tailwind: h-2 bg-[#f2f3f5] */
+.help-divider {
+  height: 0.5rem; /* h-2 = 0.5rem */
+  background: #f2f3f5;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* Exact Tailwind: h-px bg-gray-100 */
+.help-separator {
+  height: 1px; /* h-px = 1px */
+  background: #f3f4f6; /* bg-gray-100 */
+}
+
+/* Accordion - Exact Tailwind: px-5 py-4 */
+.accordion-button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem; /* py-4 px-5 */
+  text-align: left;
+  background: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.accordion-button:hover {
+  background-color: #f9fafb;
+}
+
+/* Exact Tailwind: gap-3 */
+.accordion-header-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* gap-3 = 0.75rem */
+}
+
+/* Exact Tailwind: h-8 w-8 rounded-lg */
+.accordion-icon-wrapper {
+  display: flex;
+  height: 2rem; /* h-8 = 2rem */
+  width: 2rem; /* w-8 = 2rem */
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem; /* rounded-lg = 0.5rem */
+  flex-shrink: 0;
+}
+
+/* Larger accordion title */
+.accordion-title {
+  font-size: 1rem; /* Increased from 0.875rem */
+  line-height: 1.5rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+  text-align: left;
+}
+
+/* Larger accordion subtitle */
+.accordion-subtitle {
+  font-size: 0.8125rem; /* Increased from 11px */
+  line-height: 1.125rem;
+  color: #9ca3af;
+  margin: 0;
+  text-align: left;
+}
+
+.chevron-icon {
+  color: #9ca3af; /* text-gray-400 */
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
+.chevron-icon.open {
+  transform: rotate(180deg);
+}
+
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out, padding 0.3s ease-out, margin 0.3s ease-out, box-shadow 0.3s ease-out;
+  padding: 0 1.25rem; /* px-5 = 1.25rem */
+  background: white;
+}
+
+.accordion-content.open {
+  max-height: 800px;
+  padding-bottom: 1.5rem; /* Increased from 1rem for more spacing */
+  margin-bottom: 0.5rem; /* Add space after expanded section */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  border-bottom: 1px solid #f3f4f6;
+}
+
+/* Steps - Exact Tailwind: gap-3 mb-4 */
+.step-item {
+  display: flex;
+  gap: 0.75rem; /* gap-3 = 0.75rem */
+  margin-bottom: 1rem; /* mb-4 = 1rem */
+}
+
+.step-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Exact from CSS: width: 24px; height: 24px; font-size: 11px; */
+.step-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  background: #6366f1;
+  color: white;
+}
+
+.step-dot.complete {
+  background: #22c55e;
+}
+
+.step-content {
+  flex: 1;
+}
+
+/* Larger step title */
+.step-title {
+  font-size: 1rem; /* Increased from 0.875rem */
+  line-height: 1.5rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 0.25rem 0;
+  text-align: left;
+}
+
+/* Larger step description */
+.step-description {
+  font-size: 0.875rem; /* Increased from 0.75rem */
+  line-height: 1.25rem;
+  color: #6b7280;
+  margin: 0 0 0.5rem 0;
+  text-align: left;
+}
+
+/* Exact Tailwind: rounded-lg bg-gray-50 p-3 */
+.step-example {
+  border-radius: 0.5rem; /* rounded-lg = 0.5rem */
+  background: #f9fafb; /* bg-gray-50 */
+  padding: 0.75rem; /* p-3 = 0.75rem */
+}
+
+/* Exact Tailwind: rounded-lg bg-[#6366f1] py-2.5 text-xs font-semibold */
+.example-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem; /* gap-2 = 0.5rem */
+  border-radius: 0.5rem; /* rounded-lg = 0.5rem */
+  background: #6366f1;
+  padding: 0.625rem; /* py-2.5 = 0.625rem */
+  color: white;
+  font-size: 0.75rem; /* text-xs = 0.75rem */
+  line-height: 1rem;
+  font-weight: 600; /* font-semibold = 600 */
+}
+
+/* Larger content description */
+.content-description {
+  font-size: 0.875rem; /* Increased from 0.75rem */
+  line-height: 1.25rem;
+  color: #6b7280;
+  margin: 0 0 1rem 0;
+  text-align: left;
+}
+
+/* Category Grid - Exact Tailwind: grid grid-cols-2 gap-2 mb-4 */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem; /* gap-2 = 0.5rem */
+  margin-bottom: 1rem; /* mb-4 = 1rem */
+}
+
+/* Larger category item text */
+.category-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  background: #f9fafb;
+  padding: 0.5rem;
+  font-size: 0.875rem; /* Increased from 0.75rem */
+  line-height: 1.25rem;
+  color: #4b5563;
+  text-align: left;
+}
+
+.category-dot {
+  width: 0.625rem; /* w-2.5 but from custom CSS it's 10px */
+  height: 0.625rem;
+  border-radius: 0.1875rem; /* rounded-sm equivalent */
+  flex-shrink: 0;
+}
+
+/* Example Timeline Item - Exact Tailwind: rounded-lg border border-gray-200 p-3 mb-3 */
+.example-timeline-item {
+  border-radius: 0.5rem; /* rounded-lg = 0.5rem */
+  border: 1px solid #e5e7eb; /* border-gray-200 */
+  padding: 0.75rem; /* p-3 = 0.75rem */
+  margin-bottom: 0.75rem; /* mb-3 = 0.75rem */
+}
+
+/* Exact Tailwind: text-[10px] font-medium text-gray-400 uppercase tracking-wide mb-2 */
+.example-label {
+  font-size: 10px; /* text-[10px] = 10px */
+  line-height: 1rem;
+  font-weight: 500; /* font-medium = 500 */
+  color: #9ca3af; /* text-gray-400 */
+  text-transform: uppercase;
+  letter-spacing: 0.025em; /* tracking-wide */
+  margin: 0 0 0.5rem 0; /* mb-2 = 0.5rem */
+}
+
+/* Exact Tailwind: inline-flex items-center gap-2 rounded-lg px-3 py-2 */
+.timeline-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem; /* gap-2 = 0.5rem */
+  border-radius: 0.5rem; /* rounded-lg = 0.5rem */
+  padding: 0.5rem 0.75rem; /* py-2 px-3 */
+  color: white;
+  background: #14b8a6;
+}
+
+/* Exact Tailwind: text-xs font-semibold */
+.badge-name {
+  font-size: 0.75rem; /* text-xs = 0.75rem */
+  line-height: 1rem;
+  font-weight: 600; /* font-semibold = 600 */
+}
+
+/* Exact Tailwind: text-[10px] opacity-70 */
+.badge-time {
+  font-size: 10px; /* text-[10px] = 10px */
+  line-height: 1rem;
+  opacity: 0.7;
+}
+
+/* Exact Tailwind: text-[11px] text-gray-500 mt-2 */
+.example-description {
+  font-size: 11px; /* text-[11px] = 11px */
+  line-height: 1rem;
+  color: #6b7280; /* text-gray-500 */
+  margin: 0.5rem 0 0 0; /* mt-2 = 0.5rem */
+}
+
+/* Tip Callout - Exact Tailwind: rounded-lg p-3 */
+.tip-callout {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(99, 102, 241, 0.02) 100%);
+  border-left: 3px solid #6366f1;
+  border-radius: 0.5rem; /* rounded-lg = 0.5rem */
+  padding: 0.75rem; /* p-3 = 0.75rem */
+}
+
+/* Exact Tailwind: gap-2 */
+.tip-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem; /* gap-2 = 0.5rem */
+}
+
+.tip-content svg {
+  flex-shrink: 0;
+  margin-top: 0.125rem; /* mt-0.5 = 0.125rem */
+}
+
+/* Larger tip text */
+.tip-content p {
+  font-size: 0.875rem; /* Increased from 11px */
+  line-height: 1.25rem;
+  color: #4b5563;
+  margin: 0;
+  text-align: left;
+}
+
+/* Status Colors - Exact Tailwind: space-y-2 mb-4 */
+.status-colors {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem; /* space-y-2 = 0.5rem */
+  margin-bottom: 1rem; /* mb-4 = 1rem */
+}
+
+/* Exact Tailwind: gap-3 rounded-lg p-2 */
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* gap-3 = 0.75rem */
+  border-radius: 0.5rem; /* rounded-lg = 0.5rem */
+  padding: 0.5rem; /* p-2 = 0.5rem */
+}
+
+/* Exact Tailwind: w-3 h-3 rounded-full */
+.status-dot {
+  width: 0.75rem; /* w-3 = 0.75rem */
+  height: 0.75rem; /* h-3 = 0.75rem */
+  border-radius: 50%; /* rounded-full */
+  flex-shrink: 0;
+}
+
+/* Exact Tailwind: text-xs text-gray-700 flex-1 */
+.status-label {
+  font-size: 0.75rem; /* text-xs = 0.75rem */
+  line-height: 1rem;
+  color: #374151; /* text-gray-700 */
+  flex: 1;
+}
+
+/* Exact Tailwind: text-[10px] font-medium px-1.5 py-0.5 rounded */
+.status-range {
+  font-size: 10px; /* text-[10px] = 10px */
+  line-height: 1rem;
+  font-weight: 500; /* font-medium = 500 */
+  padding: 0.125rem 0.375rem; /* py-0.5 px-1.5 */
+  border-radius: 0.25rem; /* rounded = 0.25rem */
+}
+
+/* Progress Example - Exact Tailwind: rounded-xl p-3 mb-3 */
+.progress-example {
+  border-radius: 0.75rem; /* rounded-xl = 0.75rem */
+  padding: 0.75rem; /* p-3 = 0.75rem */
+  background: rgba(34, 197, 94, 0.05);
+  margin-bottom: 0.75rem; /* mb-3 = 0.75rem */
+}
+
+/* Exact Tailwind: mb-2 */
+.progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem; /* mb-2 = 0.5rem */
+}
+
+/* Exact Tailwind: text-xs font-semibold text-gray-800 */
+.progress-name {
+  font-size: 0.75rem; /* text-xs = 0.75rem */
+  line-height: 1rem;
+  font-weight: 600; /* font-semibold = 600 */
+  color: #1f2937; /* text-gray-800 */
+}
+
+/* Exact Tailwind: gap-2 */
+.progress-values {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; /* gap-2 = 0.5rem */
+}
+
+/* Exact Tailwind: text-[10px] font-medium px-1.5 py-0.5 rounded */
+.progress-goal {
+  font-size: 10px; /* text-[10px] = 10px */
+  line-height: 1rem;
+  font-weight: 500; /* font-medium = 500 */
+  padding: 0.125rem 0.375rem; /* py-0.5 px-1.5 */
+  border-radius: 0.25rem; /* rounded = 0.25rem */
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.12);
+}
+
+/* Exact Tailwind: text-xs font-bold */
+.progress-current {
+  font-size: 0.75rem; /* text-xs = 0.75rem */
+  line-height: 1rem;
+  font-weight: 700; /* font-bold = 700 */
+  color: #22c55e;
+}
+
+/* Exact Tailwind: gap-2 */
+.progress-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; /* gap-2 = 0.5rem */
+}
+
+/* Exact Tailwind: flex-1 h-1.5 bg-gray-200 rounded-full */
+.progress-bar-bg {
+  flex: 1;
+  height: 0.375rem; /* h-1.5 = 0.375rem */
+  background: #e5e7eb; /* bg-gray-200 */
+  border-radius: 9999px; /* rounded-full */
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: #22c55e;
+}
+
+/* Exact Tailwind: text-[9px] */
+.progress-percentage {
+  font-size: 9px; /* text-[9px] = 9px */
+  line-height: 1rem;
+  color: #22c55e;
+}
+
+/* Food Items Content - Exact Tailwind: space-y-4 */
+.food-items-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem; /* space-y-4 = 1rem */
+}
+
+.content-block {
+  margin: 0;
+}
+
+/* Larger content block title */
+.content-block-title {
+  font-size: 0.9375rem; /* Increased from 0.75rem */
+  line-height: 1.375rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 0.5rem 0;
+  text-align: left;
+}
+
+/* Larger content block text */
+.content-block-text {
+  font-size: 0.875rem; /* Increased from 11px */
+  line-height: 1.25rem;
+  color: #6b7280;
+  margin: 0 0 0.5rem 0;
+  text-align: left;
+}
+
+/* Favorite Example - Exact Tailwind: gap-3 rounded-lg bg-gray-50 p-3 */
+.favorite-example {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* gap-3 = 0.75rem */
+  border-radius: 0.5rem; /* rounded-lg = 0.5rem */
+  background: #f9fafb; /* bg-gray-50 */
+  padding: 0.75rem; /* p-3 = 0.75rem */
+}
+
+/* Exact Tailwind: w-1 h-8 rounded-full */
+.favorite-indicator {
+  width: 0.25rem; /* w-1 = 0.25rem */
+  height: 2rem; /* h-8 = 2rem */
+  border-radius: 9999px; /* rounded-full */
+  background: #14b8a6;
+  flex-shrink: 0;
+}
+
+.favorite-info {
+  flex: 1;
+}
+
+/* Exact Tailwind: text-xs font-semibold text-gray-900 */
+.favorite-name {
+  font-size: 0.75rem; /* text-xs = 0.75rem */
+  line-height: 1rem;
+  font-weight: 600; /* font-semibold = 600 */
+  color: #111827; /* text-gray-900 */
+  display: block;
+}
+
+/* Exact Tailwind: gap-1.5 mt-0.5 */
+.favorite-details {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem; /* gap-1.5 = 0.375rem */
+  margin-top: 0.125rem; /* mt-0.5 = 0.125rem */
+}
+
+/* Exact Tailwind: rounded px-1 py-0.5 text-[9px] font-medium */
+.favorite-category {
+  border-radius: 0.25rem; /* rounded = 0.25rem */
+  padding: 0.125rem 0.25rem; /* py-0.5 px-1 */
+  font-size: 9px; /* text-[9px] = 9px */
+  line-height: 1rem;
+  font-weight: 500; /* font-medium = 500 */
+  background: #14b8a620;
+  color: #14b8a6;
+}
+
+/* Exact Tailwind: text-[10px] text-gray-400 */
+.favorite-carbs {
+  font-size: 10px; /* text-[10px] = 10px */
+  line-height: 1rem;
+  color: #9ca3af; /* text-gray-400 */
+}
+
+/* Tabs Example - Exact Tailwind: gap-1 text-[10px] */
+.tabs-example {
+  display: flex;
+  gap: 0.25rem; /* gap-1 = 0.25rem */
+  font-size: 10px; /* text-[10px] = 10px */
+  line-height: 1rem;
+  margin-top: 0.5rem; /* mt-2 = 0.5rem */
+}
+
+/* Exact Tailwind: rounded-full px-2.5 py-1 font-medium */
+.tab-example {
+  border-radius: 9999px; /* rounded-full */
+  padding: 0.25rem 0.625rem; /* py-1 px-2.5 */
+  font-weight: 500; /* font-medium = 500 */
+  background: #f3f4f6; /* bg-gray-100 */
+  color: #6b7280; /* text-gray-500 */
+}
+
+.tab-example.active {
+  background: #6366f1;
+  color: white;
+}
+
+/* Sharing Content - Exact Tailwind: space-y-4 */
+.sharing-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem; /* space-y-4 = 1rem */
+}
+
+/* Exact Tailwind: gap-2 mt-2 */
+.shared-badge-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; /* gap-2 = 0.5rem */
+  margin-top: 0.5rem; /* mt-2 = 0.5rem */
+}
+
+/* Exact Tailwind: gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600 */
+.shared-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem; /* gap-1 = 0.25rem */
+  border-radius: 9999px; /* rounded-full */
+  background: #eff6ff; /* bg-blue-50 */
+  padding: 0.125rem 0.5rem; /* py-0.5 px-2 */
+  font-size: 10px; /* text-[10px] = 10px */
+  line-height: 1rem;
+  font-weight: 500; /* font-medium = 500 */
+  color: #2563eb; /* text-blue-600 */
+}
+
+/* Exact Tailwind: text-[10px] text-gray-400 */
+.badge-helper-text {
+  font-size: 10px; /* text-[10px] = 10px */
+  line-height: 1rem;
+  color: #9ca3af; /* text-gray-400 */
+}
+
+/* FAQ Section - Exact Tailwind: px-5 py-4 */
+.faq-section {
+  padding: 1rem 1.25rem; /* py-4 px-5 */
+}
+
+/* Larger FAQ heading */
+.faq-heading {
+  font-size: 1.125rem; /* Increased from 0.875rem */
+  line-height: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.75rem 0;
+  text-align: left;
+}
+
+/* Exact Tailwind: space-y-3 */
+.faq-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem; /* space-y-3 = 0.75rem */
+}
+
+/* Exact Tailwind: rounded-lg border border-gray-200 p-3 */
+.faq-item {
+  border-radius: 0.5rem; /* rounded-lg = 0.5rem */
+  border: 1px solid #e5e7eb; /* border-gray-200 */
+  padding: 0.75rem; /* p-3 = 0.75rem */
+}
+
+/* Larger FAQ question */
+.faq-question {
+  font-size: 0.9375rem; /* Increased from 0.75rem */
+  line-height: 1.375rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 0.25rem 0;
+  text-align: left;
+}
+
+/* Larger FAQ answer */
+.faq-answer {
+  font-size: 0.875rem; /* Increased from 11px */
+  line-height: 1.25rem;
+  color: #6b7280;
+  margin: 0;
+  text-align: left;
+}
+
+/* Contact Section - Exact Tailwind: px-5 py-5 pb-32 */
+.contact-section {
+  padding: 1.25rem; /* px-5 py-5 = 1.25rem */
+  padding-bottom: 2rem; /* Adjusted for non-mobile */
+}
+
+/* Exact Tailwind: rounded-2xl border-2 border-dashed border-gray-200 p-4 text-center */
+.contact-card {
+  border-radius: 1rem; /* rounded-2xl = 1rem */
+  border: 2px dashed #e5e7eb; /* border-2 border-dashed border-gray-200 */
+  padding: 1rem; /* p-4 = 1rem */
+  text-align: center;
+}
+
+/* Exact Tailwind: h-12 w-12 rounded-full bg-gray-100 mb-3 */
+.contact-icon {
+  display: flex;
+  height: 3rem; /* h-12 = 3rem */
+  width: 3rem; /* w-12 = 3rem */
+  margin: 0 auto 0.75rem; /* mx-auto mb-3 */
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%; /* rounded-full */
+  background: #f3f4f6; /* bg-gray-100 */
+}
+
+/* Larger contact title - keep centered */
+.contact-title {
+  font-size: 1rem; /* Increased from 0.875rem */
+  line-height: 1.5rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 0.25rem 0;
+  text-align: center;
+}
+
+/* Larger contact description - keep centered */
+.contact-description {
+  font-size: 0.875rem; /* Increased from 0.75rem */
+  line-height: 1.25rem;
+  color: #6b7280;
+  margin: 0 0 0.75rem 0;
+  text-align: center;
+}
+
+/* Exact Tailwind: rounded-xl bg-gray-900 px-6 py-3 text-xs font-semibold */
+.contact-button {
+  border-radius: 0.75rem; /* rounded-xl = 0.75rem */
+  background: #111827; /* bg-gray-900 */
+  padding: 0.75rem 1.5rem; /* py-3 px-6 */
+  font-size: 0.75rem; /* text-xs = 0.75rem */
+  line-height: 1rem;
+  font-weight: 600; /* font-semibold = 600 */
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.contact-button:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}

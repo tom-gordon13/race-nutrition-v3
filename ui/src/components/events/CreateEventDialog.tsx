@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { InputText } from 'primereact/inputtext';
 import { InputSwitch } from 'primereact/inputswitch';
 import { Message } from 'primereact/message';
@@ -25,6 +25,7 @@ interface Event {
   event_type: string;
   expected_duration: number;
   private: boolean;
+  privacy_type?: 'PRIVATE' | 'SHARABLE_LIMITED' | 'SHARABLE_COMMUNITY';
   triathlonAttributes?: TriathlonAttributes | null;
 }
 
@@ -44,6 +45,24 @@ const eventTypeOptions = [
   { label: 'Other', value: 'OTHER' }
 ];
 
+const privacyOptions = [
+  {
+    label: 'Private',
+    value: 'PRIVATE',
+    description: 'Only you can see this plan'
+  },
+  {
+    label: 'Sharable',
+    value: 'SHARABLE_LIMITED',
+    description: 'People you share with can view this plan'
+  },
+  {
+    label: 'Open to Community',
+    value: 'SHARABLE_COMMUNITY',
+    description: 'Anyone in the community can discover and view this plan'
+  }
+];
+
 export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
   visible,
   onHide,
@@ -55,6 +74,8 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
   const [eventName, setEventName] = useState('');
   const [eventType, setEventType] = useState('OTHER');
   const [showEventTypeDropdown, setShowEventTypeDropdown] = useState(false);
+  const [privacyType, setPrivacyType] = useState<'PRIVATE' | 'SHARABLE_LIMITED' | 'SHARABLE_COMMUNITY'>('PRIVATE');
+  const [showPrivacyDropdown, setShowPrivacyDropdown] = useState(false);
 
   // Simple duration (when toggle is off or not triathlon)
   const [hours, setHours] = useState(0);
@@ -74,6 +95,9 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState<'below' | 'above'>('below');
+
+  const privacyDropdownRef = useRef<HTMLDivElement>(null);
 
   // Handle animation timing for smooth slide-up and slide-down
   useEffect(() => {
@@ -101,6 +125,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
       setHours(Math.floor(totalSeconds / 3600));
       setMinutes(Math.floor((totalSeconds % 3600) / 60));
       setIsPrivate(existingEvent.private ?? true);
+      setPrivacyType(existingEvent.privacy_type || 'PRIVATE');
 
       // Load existing triathlon attributes if they exist
       if (existingEvent.event_type === 'TRIATHLON' && existingEvent.triathlonAttributes) {
@@ -132,6 +157,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
       setRunMinutes(0);
       setUseTriathlonSegments(true);
       setIsPrivate(true);
+      setPrivacyType('PRIVATE');
       setError(null);
     }
   }, [visible, mode]);
@@ -142,16 +168,35 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
       if (showEventTypeDropdown) {
         setShowEventTypeDropdown(false);
       }
+      if (showPrivacyDropdown) {
+        setShowPrivacyDropdown(false);
+      }
     };
 
-    if (showEventTypeDropdown) {
+    if (showEventTypeDropdown || showPrivacyDropdown) {
       document.addEventListener('click', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('click', handleClickOutside);
     };
-  }, [showEventTypeDropdown]);
+  }, [showEventTypeDropdown, showPrivacyDropdown]);
+
+  // Calculate dropdown position when privacy dropdown opens
+  useEffect(() => {
+    if (showPrivacyDropdown && privacyDropdownRef.current) {
+      const rect = privacyDropdownRef.current.getBoundingClientRect();
+      const dropdownHeight = 250; // Approximate height of dropdown with 3 options
+      const spaceBelow = window.innerHeight - rect.bottom;
+
+      // If there's not enough space below, show it above
+      if (spaceBelow < dropdownHeight) {
+        setDropdownPosition('above');
+      } else {
+        setDropdownPosition('below');
+      }
+    }
+  }, [showPrivacyDropdown]);
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -172,6 +217,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
     setRunMinutes(0);
     setUseTriathlonSegments(true);
     setIsPrivate(true);
+    setPrivacyType('PRIVATE');
     setError(null);
     onHide();
   };
@@ -213,6 +259,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
         event_type: eventType,
         expected_duration: totalSeconds,
         private: isPrivate,
+        privacy_type: privacyType,
       };
 
       if (mode === 'create') {
@@ -750,34 +797,113 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
 
             {/* Privacy Section */}
             <div className="form-section">
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '1rem'
-              }}>
-                <div style={{ textAlign: 'left', flex: 1 }}>
-                  <div style={{
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    color: '#111827',
-                    marginBottom: '0.125rem'
-                  }}>
-                    {isPrivate ? 'Private' : 'Public'}
-                  </div>
-                  <div style={{
-                    fontSize: '0.75rem',
-                    color: '#6b7280'
-                  }}>
-                    {isPrivate ? 'Only you can see this plan' : 'Anyone with the link can view'}
-                  </div>
+              <label className="form-label">Privacy</label>
+
+              <div style={{ position: 'relative' }} ref={privacyDropdownRef}>
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!loading) setShowPrivacyDropdown(!showPrivacyDropdown);
+                  }}
+                  style={{
+                    width: '100%',
+                    fontSize: '1.0625rem',
+                    fontWeight: 500,
+                    border: 'none',
+                    borderBottom: '2px solid #e5e7eb',
+                    borderRadius: 0,
+                    padding: '0.875rem 0',
+                    outline: 'none',
+                    backgroundColor: 'white',
+                    cursor: loading ? 'default' : 'pointer',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    textAlign: 'left',
+                    color: '#a855f7'
+                  }}
+                >
+                  <span style={{ textAlign: 'left' }}>{privacyOptions.find(o => o.value === privacyType)?.label || 'Private'}</span>
+                  <span style={{ fontSize: '0.875rem', color: '#a855f7' }}>{dropdownPosition === 'above' ? '▲' : '▼'}</span>
                 </div>
-                <InputSwitch
-                  checked={!isPrivate}
-                  onChange={(e) => setIsPrivate(!e.value)}
-                  disabled={loading}
-                  style={{ flexShrink: 0 }}
-                />
+
+                {showPrivacyDropdown && (
+                  <div style={{
+                    position: 'absolute',
+                    ...(dropdownPosition === 'above' ? { bottom: '100%', marginBottom: '0.25rem' } : { top: '100%', marginTop: '0.25rem' }),
+                    left: 0,
+                    right: 0,
+                    backgroundColor: 'white',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                    zIndex: 1000,
+                    overflow: 'hidden'
+                  }}>
+                    {privacyOptions.map(option => (
+                      <div
+                        key={option.value}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPrivacyType(option.value as 'PRIVATE' | 'SHARABLE_LIMITED' | 'SHARABLE_COMMUNITY');
+                          setShowPrivacyDropdown(false);
+                        }}
+                        style={{
+                          padding: '0.875rem 1rem',
+                          cursor: 'pointer',
+                          backgroundColor: privacyType === option.value ? '#f3f4f6' : 'white',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '0.25rem'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (privacyType !== option.value) {
+                            e.currentTarget.style.backgroundColor = '#f9fafb';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (privacyType !== option.value) {
+                            e.currentTarget.style.backgroundColor = 'white';
+                          }
+                        }}
+                      >
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          textAlign: 'left'
+                        }}>
+                          {privacyType === option.value && <span style={{ color: '#6366f1', fontSize: '1.125rem' }}>✓</span>}
+                          <span style={{
+                            fontSize: '1.0625rem',
+                            fontWeight: privacyType === option.value ? 600 : 500,
+                            textAlign: 'left'
+                          }}>
+                            {option.label}
+                          </span>
+                        </div>
+                        <div style={{
+                          fontSize: '0.75rem',
+                          color: '#6b7280',
+                          marginLeft: privacyType === option.value ? '1.625rem' : '0',
+                          textAlign: 'left'
+                        }}>
+                          {option.description}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Helper text for selected option */}
+              <div style={{
+                fontSize: '0.75rem',
+                color: '#6b7280',
+                marginTop: '0.5rem',
+                textAlign: 'left'
+              }}>
+                {privacyOptions.find(o => o.value === privacyType)?.description}
               </div>
             </div>
           </div>
