@@ -55,6 +55,19 @@ const getNutrientUnit = (nutrient: Nutrient): string => {
   const nameLower = nutrient.nutrient_name.toLowerCase();
   const abbrevLower = nutrient.nutrient_abbreviation.toLowerCase();
 
+  // Nutrients that should be in milliliters (ml)
+  if (nameLower.includes('water') || abbrevLower.includes('water')) {
+    return 'ml';
+  }
+
+  // Nutrients that should be in micrograms (mcg)
+  const mcgNutrients = ['vitamin d', 'vitamin b12', 'b12', 'folate', 'biotin'];
+  for (const keyword of mcgNutrients) {
+    if (nameLower.includes(keyword) || abbrevLower.includes(keyword)) {
+      return 'mcg';
+    }
+  }
+
   // Nutrients that should be in milligrams (mg)
   const mgNutrients = [
     'sodium', 'caffeine', 'potassium', 'calcium', 'iron',
