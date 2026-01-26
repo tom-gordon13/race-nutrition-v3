@@ -48,6 +48,28 @@ const UNIT_OPTIONS = [
   { label: 'ml', value: 'ml' }
 ];
 
+// Nutrient-specific default units based on nutrient name
+const NUTRIENT_DEFAULT_UNITS: { [key: string]: string } = {
+  'water': 'ml',
+  'sodium': 'mg',
+  'caffeine': 'mg',
+  'carbohydrate': 'g',
+  'carbohydrates': 'g',
+  'carbs': 'g',
+  'protein': 'g',
+  'fat': 'g',
+  'fiber': 'g',
+  'sugar': 'g',
+  'potassium': 'mg',
+  'calcium': 'mg',
+  'iron': 'mg',
+  'magnesium': 'mg',
+  'zinc': 'mg',
+  'vitamin c': 'mg',
+  'vitamin d': 'mcg',
+  'vitamin b12': 'mcg'
+};
+
 export const NutrientGoalsDialog = ({
   visible,
   eventId,
@@ -133,6 +155,17 @@ export const NutrientGoalsDialog = ({
     }
   };
 
+  const getDefaultUnitForNutrient = (nutrientId: string): string => {
+    const nutrient = nutrients.find(n => n.id === nutrientId);
+    if (!nutrient) return 'g';
+
+    // Check for default unit based on nutrient name (case-insensitive)
+    const nutrientName = nutrient.nutrient_name.toLowerCase();
+    const defaultUnit = NUTRIENT_DEFAULT_UNITS[nutrientName];
+
+    return defaultUnit || 'g';
+  };
+
   const addBaseGoal = () => {
     if (!selectedNutrientId) {
       setError('Please select a nutrient');
@@ -145,10 +178,12 @@ export const NutrientGoalsDialog = ({
       return;
     }
 
+    const defaultUnit = getDefaultUnitForNutrient(selectedNutrientId);
+
     setBaseGoals([...baseGoals, {
       nutrient_id: selectedNutrientId,
       quantity: 0,
-      unit: 'g'
+      unit: defaultUnit
     }]);
     setSelectedNutrientId(null);
     setError(null);
